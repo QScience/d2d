@@ -94,7 +94,7 @@ The callback is given two arguments. The first argument is an array of arguments
       }
       return $imploded_return_array;
     }
-```php
+```
 
 To call such a secure remote procedure on a friend instance, `drupaltodrupal_call_secure_rpc` has to be invoked. `drupaltodrupal_call_secure_rpc` takes four arguments: the first one specifies the friend to call that method on, the second one gives the name of the remote function (as defined in the corresponding hook on the remote instance). The third argument should be an associative array defining the arguments. Note that the keys have to exactly match and be in the same order as in the corresponding definition in the hook on the remote instance. The fourth and last argument is passed by reference. On error, this variable will contain the error string. Finally, on success `drupaltodrupal_call_secure_rpc` return the string being returned by the friend instance, `FALSE` otherwise. An example follows.
 
