@@ -33,6 +33,8 @@ The _Friends of friends_-tab lists the instances that are friends of your friend
 The _Groups & Permissions_-tab allows groups to be created and give permissions to members of the groups. In the _Groups_-sub tab, new groups can be created. Optionally, newly added instances can be added to a group. Furthermore, similar to instances, a description can be provided.
 The _Permissions_-sub tab lists functions that can be called by friends on this instance and are defined by modules implementing `hook_drupaltodrupal_secure_rpc()`. The hook should return an array of methods that can be invoked. The key defines the name under which a remote function can be called, its value should be an array of key/value pairs, where the keys define `arguments`, `callback` and `description`. An example follows.
 
+
+```php
     /**
      * Implements hook_drupaltodrupal_secure_rpc().
      */
@@ -50,16 +52,20 @@ The _Permissions_-sub tab lists functions that can be called by friends on this 
       );
       return $methods;
     }
+```
 
 The value of the `callback`-key gives the name of a function being called internally when the specified function is called via remote. A description of how such a function should look like will follow.  The value belonging to the `arguments`-key has to be an array specifying the arguments being passed to the callback. The keys define the names of the arguments while the values specify functions being called for checking the corresponding argument. Therefore the function that checks the argument is called with the corresponding argument as reference argument and should return a boolean, in particular it should return `TRUE` if the argument is valid. Furthermore note that the argument gets its argument passed by reference and therefore cannot only do checks but also conversions.
 An example of how a callback should look like follows.
 
+```php
     function d2daddon_srpc_remote_control($arguments, $rpc_info) {
       return eval($arguments['code']);
     }
+```
 
 The callback is given two arguments. The first argument is an array of arguments as defined in the hook and also as checked by the functions specified in the hook. The second argument is an associative array with keys `url`, `id`, `public_key`, `ip` corresponding to the address of the friend instance invoking the call, the internal id of the calling instance, the public key of the caller and the IP address the call came from. A proper return value of the callback function has to be of type string. For a function to return more advanced values than just strings, they have to be converted to a string, an example imploding an array to a string follows.
 
+```php
     function d2daddon_srpc_info($arguments, $rpc_info) {
       $friends = drupaltodrupal_get_friends();
       $n_friends = sizeof($friends);
@@ -88,9 +94,11 @@ The callback is given two arguments. The first argument is an array of arguments
       }
       return $imploded_return_array;
     }
+```php
 
 To call such a secure remote procedure on a friend instance, `drupaltodrupal_call_secure_rpc` has to be invoked. `drupaltodrupal_call_secure_rpc` takes four arguments: the first one specifies the friend to call that method on, the second one gives the name of the remote function (as defined in the corresponding hook on the remote instance). The third argument should be an associative array defining the arguments. Note that the keys have to exactly match and be in the same order as in the corresponding definition in the hook on the remote instance. The fourth and last argument is passed by reference. On error, this variable will contain the error string. Finally, on success `drupaltodrupal_call_secure_rpc` return the string being returned by the friend instance, `FALSE` otherwise. An example follows.
 
+```php
     function d2daddon_remote_control_form() {
       $form = array();
       $friends = drupaltodrupal_get_friends();
@@ -147,6 +155,7 @@ To call such a secure remote procedure on a friend instance, `drupaltodrupal_cal
       }
       drupal_set_message('No friend selected.', 'warning');
     }
+```
 
 Note that with the installation a standard group is created with every new instance being added to this group by default. Permission to basic functions coming with D2D is given per default to members of this group.
 
