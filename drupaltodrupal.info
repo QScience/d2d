@@ -4,6 +4,4 @@ package = Drupal-To-Drupal
 core = 7.x
 php = 5.3
 
-files[] = drupaltodrupal.module
-files[] = drupaltodrupal.install
 configure=admin/config/drupaltodrupal/settings
