@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Defines constants used all over the module.
+ */
+
+// TODO: remove unused constants
+
+define('D2D_INSTANCE_URL_MAX_LENGTH', 128);
+define('D2D_INSTANCE_NAME_MAX_LENGTH', 64);
+define('D2D_INSTANCE_DESCRIPTION_MAX_LENGTH', 1024);
+define('D2D_PUBLIC_KEY_MAX_LENGTH', 1024);
+define('D2D_EMAIL_MAX_LENGTH', 128);
+define('D2D_REQUEST_MESSAGE_MAX_LENGTH', 1024);
+define('D2D_IP_LENGTH', 128);
+define('D2D_GROUP_NAME_MAX_LENGTH', 128);
+define('D2D_GROUP_DESCRIPTION_MAX_LENGTH', 1024);
+define('D2D_METHOD_NAME_MAX_LENGTH', 128);
+define('D2D_INSTANCE_IDENTIFIER_LENGTH', 32);
+define('D2D_NONCE_LENGTH', 32);
+
+// in seconds
+define('D2D_UTC_OFFSET_DEFAULT', 0);
+define('D2D_UTC_OFFSET_MIN', -86400);
+define('D2D_UTC_OFFSET_MAX', 86400);
+define('D2D_TIMEOUT_DEFAULT', 30);
+define('D2D_TIMEOUT_MIN', 1);
+define('D2D_TIMEOUT_MAX', 60);
+
+define('D2D_DELTA_0_DEFAULT', 600);
+define('D2D_DELTA_0_MIN', 0);
+define('D2D_DELTA_0_MAX', 600);
+define('D2D_DELTA_1_DEFAULT', 600);
+define('D2D_DELTA_1_MIN', 0);
+define('D2D_DELTA_1_MAX', 600);
+
+// in minutes
+//define('D2D_VALIDITY_DEFAULT', 40);
+define('D2D_VALIDITY_DEFAULT', 10080);
+define('D2D_VALIDITY_MIN', 1);
+define('D2D_VALIDITY_MAX', 10080);
+
+define('D2D_RENEW_TIME_DEFAULT', 200);
+define('D2D_RENEW_TIME_MIN', 1);
+define('D2D_RENEW_TIME_MAX', 1440);
+define('D2D_RESEND_TIME_DEFAULT', 10);
+define('D2D_RESEND_TIME_MIN', 1);
+define('D2D_RESEND_TIME_MAX', 720);
+
+define('D2D_GARBAGE_TIME_DEFAULT', 60);
+define('D2D_GARBAGE_TIME_MIN', 0);
+define('D2D_GARBAGE_TIME_MAX', 2880);
+
+define('D2D_REQUEST_MESSAGE_DEFAULT', 'please accept my friendship request');
+
+define('D2D_VERSION_STRING', 'd2d 0.2');
+define('D2D_AUTO_ACCEPT_DEFAULT', FALSE);
+
+define('D2D_NOTIFICATION_TYPE_MAX_LENGTH', 128);
+
+define('D2D_REQUEST_TYPE_MAX_LENGTH', 128);
+define('D2D_REQUEST_OPERATION_MAX_LENGTH', 128);
+
+define('D2D_REQUEST_VALIDITY', 2 * 24 * 60 * 60); // 2 days
+define('D2D_REQUEST_TIME_UNTIL_RESEND', 30 * 60); // 30 minutes
+define('D2D_REQUEST_MAX_NUMBER_OF_RESENDS', 50);
+
+define('D2D_IP_MAX_LENGTH', 128);
