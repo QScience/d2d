@@ -13,6 +13,15 @@ function d2d_show_init() {
 //  d2d_notify();
   return $build;
 }
+function _d2d_suggest_instance_name($base_url) {
+  $array = array_reverse(explode('/', $base_url));
+  foreach ($array as $token) {
+    if (!empty($token)) {
+      return $token;
+    }
+  }
+  return 'My D2D';
+}
 function d2d_form_init() {
   $form = array();
 
@@ -23,10 +32,10 @@ function d2d_form_init() {
     '#type' => 'textfield',
     '#title' => t('Name'),
     '#description' => t('A short name describing your instance.'),
-    '#default_value' => 'My D2D',
+    '#default_value' => _d2d_suggest_instance_name($GLOBALS['base_url']),
     '#size' => D2D_INSTANCE_NAME_MAX_LENGTH,
     '#maxlength' => D2D_INSTANCE_NAME_MAX_LENGTH,
-    '#required' => TRUE,
+    '#required' => FALSE,
   );
   $form['id'] = array(
     '#type' => 'textfield',
@@ -41,6 +50,21 @@ function d2d_form_init() {
     '#size' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#maxlength' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#required' => FALSE, // length is checked anyway, no error if 'generate'-button is pressed
+  );
+  $form['address'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Address'),
+    '#description' => t('The address under which this instance is reachable.'),
+    '#default_value' => $GLOBALS['base_url'] . '/xmlrpc.php',
+    '#size' => 40,
+    '#maxlength' => D2D_INSTANCE_URL_MAX_LENGTH,
+    '#required' => TRUE,
+  );
+  $form['auto_keys_and_online'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => FALSE,
+    '#title' => t('Automatically select public / private key pair and go online.'),
+    '#description' => t('If selected, a random public / private key pair is automatically chosen and the instance will be marked as online, i.e. other instances will be able to see this instance and to communicate with this instance. Do not select this option if you want to manually set your public / private key pair, e.g. to reuse keys you have used with an old installation or if you do not want your instance to be online immediatelly.'),
   );
   $form['submit'] = array(
     '#type' => 'submit', 
@@ -62,19 +86,43 @@ function d2d_form_init_validate($form, &$form_state) {
   if (!d2d_is_hex_string($id)) {
     form_set_error('id', t('Identifier must consists only of hexadecimal characters (A-F, 0-9).'));
   }
+  if (!d2d_check_url($form_state['values']['address'])) {
+    form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
+  }
 }
 function d2d_form_init_submit($form, &$form_state) {
-  $id = $form_state['values']['id'];
+  if ($form_state['values']['auto_keys_and_online']) {
+    if (!d2d_create_keys($my_public_key, $my_private_key)) {
+      drupal_set_message(t('Failed creating public / private key pair.'), 'error');
+      return;
+    }
+    variable_set('d2d_public_key', $my_public_key);
+    variable_set('d2d_private_key', $my_private_key);
+  }
+  $my_d2d_id = $form_state['values']['id'];
   // add own instance to database
   $my_id = db_insert('d2d_instances')->fields(array(
-      'name' => $form_state['values']['name'],
-      'url' => $GLOBALS['base_url'] . '/xmlrpc.php',
-      'd2d_id' => $id,
-      'description' => 'this instance.',
-      'time_inserted' => d2d_get_time(),
-      'public_key_id' => NULL,
-    ))->execute();
+    'name' => $form_state['values']['name'],
+    'url' => $GLOBALS['base_url'] . '/xmlrpc.php',
+    'd2d_id' => $my_d2d_id,
+    'description' => 'this instance.',
+    'time_inserted' => d2d_get_time(),
+    'public_key_id' => NULL,
+  ))->execute();
   variable_set('d2d_my_id', $my_id);
+  if ($form_state['values']['auto_keys_and_online']) {
+    $my_public_key_id = db_insert('d2d_public_keys')->fields(array(
+      'instance_id' => $my_id,
+      'public_key' => $my_public_key,
+    ))->execute();
+    $num_updated = db_update('d2d_instances')
+      ->fields(array(
+        'public_key_id' => $my_public_key_id,
+      ))
+      ->condition('id', $my_id)
+      ->execute();
+    variable_set('d2d_online', TRUE);
+  }
   menu_rebuild();
   drupal_set_message(t('Settings have been saved.'));
 }

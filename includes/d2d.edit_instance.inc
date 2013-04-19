@@ -86,7 +86,7 @@ function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
     '#description' => t('Address of the instance, e.g. http:/www.example.com/xmlrpc.php'),
     '#default_value' => $instance['url'],
     '#size' => 40,
-    '#maxlength' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH,
+    '#maxlength' => D2D_INSTANCE_URL_MAX_LENGTH,
     '#required' => TRUE,
   );
   $form['description'] = array(
@@ -120,6 +120,9 @@ function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
 function d2d_form_edit_instance_validate($form, &$form_state) {
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters', array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH)));
+  }
+  if (!d2d_check_url($form_state['values']['address'])) {
+    form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
   }
 }
 function d2d_form_edit_instance_submit($form, &$form_state) {
@@ -543,6 +546,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
   }
   $form['action'] = array(
     '#type' => 'radios',
+    '#default_value' => min(array_keys($options)),
     '#title' => t('State of friendship:') . ' ' . $friendship_text,
     '#options' => $options,
     '#required' => TRUE,
@@ -602,6 +606,7 @@ function d2d_form_force_friendship($form, &$form_state, $id, $old_friendship_sta
   unset($options[$old_friendship_state]);
   $form['new_friendship_state'] = array(
     '#type' => 'radios',
+    '#default_value' => min(array_keys($options)),
     '#title' => t('Force friendship state'),
     '#options' => $options,
     '#required' => TRUE,

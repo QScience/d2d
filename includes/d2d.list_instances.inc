@@ -23,7 +23,7 @@ function d2d_form_add_instance() {
     '#description' => t('Address of the instance, e.g. http://www.example.com/xmlrpc.php'),
     '#default_value' => $default_url,
     '#size' => 40,
-    '#maxlength' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH,
+    '#maxlength' => D2D_INSTANCE_URL_MAX_LENGTH,
     '#required' => TRUE,
   );
   $form['d2d_id'] = array(
@@ -74,6 +74,7 @@ function d2d_form_add_instance() {
   return $form;
 }
 function d2d_form_add_instance_submit_validate($form, &$form_state) {
+  d2d_form_add_instance_validate($form, $form_state);
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters'), array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH));
   }
