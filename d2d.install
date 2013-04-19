@@ -398,3 +398,32 @@ function d2d_schema() {
   
   return $schema;
 }
+
+/**
+ * Implements hook_requirements()
+ */
+function d2d_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  $openssl_installed = defined('OPENSSL_VERSION_TEXT');
+  $php_version = phpversion();
+  // report and test PHP version
+  $requirements['d2d_php'] = array(
+    'title' => $t('PHP'),
+    'value' => $php_version,
+  );
+  if (version_compare($php_version, D2D_MINIMUM_PHP) < 0) {
+    $requirements['d2d_php']['description'] = $t('Your PHP installation is too old. D2D requires at least PHP %version.', array('%version' => D2D_MINIMUM_PHP));
+    $requirements['d2d_php']['severity'] = REQUIREMENT_ERROR;
+  }
+  // report and test if OpenSSL is enabled
+  $requirements['d2d_openssl'] = array(
+    'title' => $t('OpenSSL'),
+    'value' => $openssl_installed ? $t('Enabled @version', array('@version' => OPENSSL_VERSION_TEXT)) : $t('Not found.'),
+  );
+  if (!$openssl_installed) {
+    $requirements['d2d_openssl']['description'] = $t('D2D requires OpenSSL extension in PHP being enabled');
+    $requirements['d2d_openssl']['severity'] = REQUIREMENT_ERROR;
+  }
+  return $requirements;
+}

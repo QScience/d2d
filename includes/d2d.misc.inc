@@ -170,11 +170,11 @@ function d2d_get_request_type($i) {
 }
 
 
-function d2d_get_friends() {
+function d2d_get_friends($d2d_id_as_key=TRUE) {
   $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.friendship_state=3');
   $friends = array();
   foreach ($result as $record) {
-    $friends[$record->d2d_id] = array(
+    $friends[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
       'id' => $record->id,
       'd2d_id' => $record->d2d_id,
       'name' => $record->name,
