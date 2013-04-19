@@ -87,7 +87,7 @@ function d2d_form_add_instance_submit_validate($form, &$form_state) {
         'd2d_id',
         t(
           'Instance with provided D2D identifier already exists in database, click !link to edit that instance.',
-          array('!link' => l(t('here'), 'admin/d2d/instances/' . $record['d2d_id'] . '/details'))
+          array('!link' => l(t('here'), 'admin/d2d/instances/' . $record['id'] . '/details'))
         )
       );
     }
