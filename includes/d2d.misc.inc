@@ -170,8 +170,8 @@ function d2d_get_request_type($i) {
 }
 
 
-function d2d_get_friend_by_url($url, $d2d_id_as_key = TRUE, $reset = FALSE) {
-	$friends = d2d_get_friends($d2d_id_as_key, $reset);
+function d2d_get_friend_by_url($url, $reset = FALSE) {
+	$friends = d2d_get_friends(TRUE, $reset);
   foreach ($friends as $friend) {
     if ($friend['url'] === $url) {
       return $friend;
@@ -179,6 +179,12 @@ function d2d_get_friend_by_url($url, $d2d_id_as_key = TRUE, $reset = FALSE) {
   }
   return FALSE;
 }
+
+function d2d_get_friend_by_d2d_id($d2d_id, $reset = FALSE) {
+	$friends = d2d_get_friends(TRUE, $reset);
+	return isset($friends[$d2d_id]) ? $friends[$d2d_id] : FALSE; 
+}
+
 
 function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
 	
