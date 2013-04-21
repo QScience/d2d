@@ -164,7 +164,7 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
 
 function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   $public_key_id = $form_state['values']['public_key_id'];
-	d2d_api_delete_public_key($public_key_id);
+	$num_updated = d2d_api_delete_public_key($public_key_id);
   if ($num_updated > 0) {
     drupal_set_message(t('Removed public key from the database'));
   }

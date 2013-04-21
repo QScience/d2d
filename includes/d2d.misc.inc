@@ -210,25 +210,30 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
   return $friends;
 }
 
-function d2d_get_instances($d2d_id_as_key) {
-  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, i.friendship_state as friendship_state, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id ORDER BY i.id ASC');
-  $my_id = variable_get('d2d_my_id');
-  $instances = array();
-  foreach ($result as $record) {
-    $instances[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
-      'id' => $record->id,
-      'd2d_id' => $record->d2d_id,
-      'name' => $record->name,
-      'url' => $record->url,
-      'description' => $record->description,
-      'time_inserted' => $record->time_inserted,
-      'last_alive' => $record->last_alive,
-      'public_key' => $record->public_key,
-      'friendship_state' => $record->friendship_state,
-      'is_friend' => ($record->friendship_state == 3),
-      'is_me' => ($my_id === $record->id),
-    );
-  }
+function d2d_get_instances($d2d_id_as_key, $rest = FALSE) {
+	
+	$instances = &drupal_static(__FUNCTION__);
+	
+	if ($reset || empty($instances)) {
+	  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, i.friendship_state as friendship_state, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id ORDER BY i.id ASC');
+	  $my_id = variable_get('d2d_my_id');
+	  $instances = array();
+	  foreach ($result as $record) {
+	    $instances[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
+	      'id' => $record->id,
+	      'd2d_id' => $record->d2d_id,
+	      'name' => $record->name,
+	      'url' => $record->url,
+	      'description' => $record->description,
+	      'time_inserted' => $record->time_inserted,
+	      'last_alive' => $record->last_alive,
+	      'public_key' => $record->public_key,
+	      'friendship_state' => $record->friendship_state,
+	      'is_friend' => ($record->friendship_state == 3),
+	      'is_me' => ($my_id === $record->id),
+	    );
+	  }
+	}
   return $instances;
 }
 

@@ -7,37 +7,24 @@
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
-    PATTERNS_INFO   => t('Add/Modify/Delete public keys'),
-    PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-    PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-    PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-    PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+    PATTERNS_INFO   => t('Create/Modify/Delete public keys for instances'),
+    PATTERNS_CREATE => array('d2d_patterns_save_public_keys'),
+    PATTERNS_MODIFY => array('d2d_patterns_save_public_keys'),
+    PATTERNS_DELETE => array('d2d_patterns_delete_public_key'),
     PATTERNS_EXPORT => array(
-                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
-                          // Commented are more options for extraction
-                          // This is not yet working
-                          // 'Cheat (I am doing terms)' => 'taxonomy_patterns_export_all_terms',
-                          //'Single Vocabulary' => array('callback' => 'taxonomy_patterns_export_single_vocabulary',
-                          //                             'arguments' => array('1', '2', '3'),
-                          //),
+                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_public_keys',
                         ),
   );
   
   
   $tags['d2d_instance'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
+    PATTERNS_INFO   => t('Create/Modify/Delete instances'),
     PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
     PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
     PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
     PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
-                          // Commented are more options for extraction
-                          // This is not yet working
-                          // 'Cheat (I am doing terms)' => 'taxonomy_patterns_export_all_terms',
-                          //'Single Vocabulary' => array('callback' => 'taxonomy_patterns_export_single_vocabulary',
-                          //                             'arguments' => array('1', '2', '3'),
-                          //),
                         ),
   );
   
@@ -49,12 +36,6 @@ function d2d_patterns($data = NULL){
     PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
-                          // Commented are more options for extraction
-                          // This is not yet working
-                          // 'Cheat (I am doing terms)' => 'taxonomy_patterns_export_all_terms',
-                          //'Single Vocabulary' => array('callback' => 'taxonomy_patterns_export_single_vocabulary',
-                          //                             'arguments' => array('1', '2', '3'),
-                          //),
                         ),
   );
   
@@ -66,29 +47,17 @@ function d2d_patterns($data = NULL){
     PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
-                          // Commented are more options for extraction
-                          // This is not yet working
-                          // 'Cheat (I am doing terms)' => 'taxonomy_patterns_export_all_terms',
-                          //'Single Vocabulary' => array('callback' => 'taxonomy_patterns_export_single_vocabulary',
-                          //                             'arguments' => array('1', '2', '3'),
-                          //),
                         ),
   );
   
-    $tags['d2d_permission'] = array(
-	    PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
-	    PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-	    PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-	    PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-	    PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
-	    PATTERNS_EXPORT => array(
+  $tags['d2d_permission'] = array(
+		PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
+	  PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
+	  PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
+	  PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
+	  PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+	  PATTERNS_EXPORT => array(
 	                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
-	                          // Commented are more options for extraction
-	                          // This is not yet working
-	                          // 'Cheat (I am doing terms)' => 'taxonomy_patterns_export_all_terms',
-	                          //'Single Vocabulary' => array('callback' => 'taxonomy_patterns_export_single_vocabulary',
-	                          //                             'arguments' => array('1', '2', '3'),
-	                          //),
                         ),
   );
   
@@ -99,22 +68,106 @@ function d2d_patterns($data = NULL){
 
 
 function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
-	
+	$actions = array();
 	$action_type = PATTERNS_MODIFY; // pre-init 
 	
-	if (isset($args['type'])) {
-      if ($args['type'] == PATTERNS_CREATE) {
-      	$action_type = PATTERNS_CREATE;
-      }
-      // other action types
+	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+  	$action_type = PATTERNS_CREATE;
 	}
 	
-  $info = d2d_patterns();
-  $form_id = current($info['d2d_public_key'][PATTERNS_MODIFY]);
-  $vocs = taxonomy_get_vocabularies();
-  $result = array();
-  foreach ($vocs as $voc) {
-    $result = array_merge($result, patterns_export_actions_from_form($form_id, $voc, 'vocabulary', $action_type));
+  $keys = d2d_api_get_public_keys_array();
+  
+  foreach ($keys as $k) {
+  	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
+  	array_push($actions, $action);
   }
-  return $result;
+  return $actions;
 }
+
+
+function d2d_patterns_save_public_keys($form_id, $form_state) {
+	$instances = d2d_get_instances(TRUE);
+	$iid = $instances[$form_state['values']['d2d_id']]['id'];
+	$public_key = $form_state['values']['public_key'];
+	d2d_api_insert_public_key($iid, $public_key);
+}
+
+
+// Validate the values for an action before running the pattern
+function d2d_patterns_validate($action, $tag, &$data) {
+ 	$result = array();
+  $status = PATTERNS_SUCCESS;
+  $msg = '';
+
+
+   
+  // SYNTACTIC VALIDATION
+  
+  if ($tag == 'd2d_public_key') {
+  	
+  	$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id'), $data);
+  	  		
+  	// It is sufficient to have either vid or machine_name
+  	if (!$kcheck['public_key'] || $kcheck['d2d_id']) {
+  	
+	  	$msg = t("The following mandatory keys are missing for tag %tag: ", array('%tag' => $tag));
+	  	foreach ($kcheck as $key => $exist) {
+				if (!$exist) {
+					$status = PATTERNS_ERR;
+					$msg .= $key . ', ';
+				} 
+	  	}
+  		$msg = substr($msg, 0, -2);
+  }
+  
+  if ($status == PATTERNS_ERR) {
+  	return patterns_results($status, $msg);	
+  }
+  
+  // SEMANTIC VALIDATION
+  
+  if ($tag == 'd2d_public_key') {
+  	
+  	$keys = d2d_api_get_public_keys_array();
+  	$instances = d2d_get_instances(TRUE);
+  
+  	$instance_exist = d2d_api_instance_exist($data['d2d_id']);
+  	
+  	if (!$instance_exist) {
+  		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        	t('No instance associated with key %k found.', array('%k' => $data['d2d_id'],)));
+  	}
+  	else {
+  		
+  		if (PATTERNS_)
+  		
+  	 	if ($voc_exists) {
+      	$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
+        	t('The vocabulary %voc already exists in the system.', array('%voc' => $data['machine_name'],)));
+      }
+  	}
+  	else if ($action == PATTERNS_MODIFY) {
+  		
+  		if (!$voc_exists) {
+      	$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        	t('The vocabulary %voc was not found in the system, and cannot be modified.', array('%voc' => $data['machine_name'],)));
+      }
+  		
+  	}
+  	
+  	else if ($action == PATTERNS_DELETE) {
+  		
+  		if (!$voc_exists) {
+      	$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        	t('The vocabulary %voc was not found in the system, and cannot be deleted.', array('%voc' => $data['machine_name'],)));
+      }
+  		
+  	}
+  	
+ 
+  return patterns_results($status, $msg, $result);	
+   
+}
+
+
+
