@@ -17,14 +17,10 @@ function d2d_form_delete_public_key($form, &$form_state, $id) {
   );
   return $form;
 }
+
 function d2d_form_delete_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  $num_updated = db_update('d2d_instances')
-    ->fields(array(
-      'public_key_id' => NULL,
-    ))
-    ->condition('id', $id)
-    ->execute();
+  $num_updated = d2d_api_unselect_public_key($id);
   if ($num_updated > 0) {
     drupal_set_message(t('Public key has been removed.'));
     $instance = d2d_get_instance2($id);
@@ -34,6 +30,7 @@ function d2d_form_delete_public_key_submit($form, &$form_state) {
     drupal_set_message(t('Error removing public key'), 'error');
   }
 }
+
 function d2d_form_receive_public_key($form, &$form_state, $id) {
   $form = array();
   $form['id'] = array(
@@ -46,6 +43,7 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
   );
   return $form;
 }
+
 function d2d_form_receive_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   if (($instance = d2d_get_instance2($id)) === FALSE) {
@@ -70,14 +68,12 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
       drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $record->id)), 'error');
     }
     else {
-      $id_pk = db_insert('d2d_public_keys')->fields(array(
-        'instance_id' => $id,
-        'public_key' => $res,
-      ))->execute();
+			d2d_api_insert_public_key($id, $res);
       drupal_set_message(t('Public key has been inserted into database. Click on \'select\' to associate the newly inserted public key with this instance.'));
     }
   }
 }
+
 function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
   $form = array();
   $form['address'] = array(
@@ -117,6 +113,7 @@ function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
   );
   return $form;
 }
+
 function d2d_form_edit_instance_validate($form, &$form_state) {
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters', array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH)));
@@ -125,21 +122,23 @@ function d2d_form_edit_instance_validate($form, &$form_state) {
     form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
   }
 }
+
 function d2d_form_edit_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $name = $form_state['values']['name'];
   $url = $form_state['values']['address'];
   $description = $form_state['values']['description'];
-  $num_updated = db_update('d2d_instances')
-    ->fields(array(
-      'name' => $name,
-      'url' => $url,
-      'description' => $description,
-    ))
-    ->condition('id', $id)
-    ->execute();
+	$update = array(
+  	'name' => $name,
+    'url' => $url,
+    'description' => $description,
+  );
+  
+  d2d_api_update_instance($id, $update);
+  
   drupal_set_message(t('Details have been saved.'));
 }
+
 function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id, $public_key_id) {
   $form = array();
   $form['id'] = array(
@@ -162,11 +161,10 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
   );
   return $form;
 }
+
 function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   $public_key_id = $form_state['values']['public_key_id'];
-  $num_updated = db_delete('d2d_public_keys')
-    ->condition('id', $public_key_id)
-    ->execute();
+	d2d_api_delete_public_key($public_key_id);
   if ($num_updated > 0) {
     drupal_set_message(t('Removed public key from the database'));
   }
@@ -174,17 +172,14 @@ function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
     drupal_set_message(t('Error removing public key from the database'), 'error');
   }
 }
+
 function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $public_key_id = $form_state['values']['public_key_id'];
 // TODO!!
 //  d2d_invalidate($id);
-  $num_updated = db_update('d2d_instances')
-    ->fields(array(
-      'public_key_id' => $public_key_id,
-    ))
-    ->condition('id', $id)
-    ->execute();
+	$num_updated = d2d_api_update_instance($id, array('public_key_id' => $public_key_id));
+  
   if ($num_updated > 0) {
     drupal_set_message(t('Chosen new public key.'));
   }
@@ -227,20 +222,14 @@ function d2d_form_groups_by_instance($form, &$form_state, $id) {
   );
   return $form;
 }
+
 function d2d_form_groups_by_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $ids = _d2d_get_ids($form_state, 'groups_table', 2);
-  db_delete('d2d_group_memberships')
-    ->condition('instance_id', $id)->execute();
-  if (!empty($ids)) {
-    $query = db_insert('d2d_group_memberships')->fields(array('group_id', 'instance_id'));
-    foreach ($ids as $gid) {
-      $query->values(array('group_id' => $gid, 'instance_id' => $id));
-    }
-    $query->execute();
-  }
+  d2d_api_update_group_memberships($id, $ids);
   drupal_set_message(t('The changes have been saved.'));
 }
+
 function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
   $form = array();
   $form['id'] = array(
@@ -257,6 +246,7 @@ function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
   );
   return $form;
 }
+
 function d2d_form_check_public_keys_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $d2d_id= $form_state['values']['d2d_id'];
@@ -293,6 +283,7 @@ function d2d_form_check_public_keys_submit($form, &$form_state) {
     drupal_set_message(t('No friends to compare public key with'));
   }
 }
+
 function _d2d_edit_instance_build_header($instance) {
   d2d_notify();
   $build = array();
@@ -316,41 +307,25 @@ function _d2d_edit_instance_build_header($instance) {
   );
   return $build;
 }
+
 function d2d_form_remove_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  $instance = d2d_get_instance2($id);
-  // remove group memberships
-  db_delete('d2d_group_memberships')
-    ->condition('instance_id', $id)
-    ->execute();
-  // remove public keys associated with this instance
-  db_delete('d2d_public_keys')
-    ->condition('instance_id', $id)
-    ->execute();
-  // remove incoming requests
-  db_delete('d2d_incoming_requests')
-    ->condition('sender_d2d_id', $instance['d2d_id'])
-    ->execute();
-  // remove outgoing requests
-  db_delete('d2d_outgoing_requests')
-    ->condition('receiver_id', $id)
-    ->execute();
-  // remove instance
-  db_delete('d2d_instances')
-    ->condition('id', $id)
-    ->execute();
+  d2d_api_remove_instance($id);
   drupal_set_message(t('Successfully removed instance from database.'));
   drupal_goto('admin/d2d');
 }
+
 function d2d_instance_delete_submit($form, &$form_state, $id) {
   // TODO
   //confirm_form($form, t('Do you really want to confirm this instance?'), '/admin/d2d');
 }
+
 function d2d_form_remove_instance_validate($form, &$form_state) {
   if (!$form_state['values']['remove']) {
     form_set_error('remove', t('Mark the checkbox to show that you understand the consequences of removing this instance.'));
   }
 }
+
 function d2d_form_remove_instance($form, &$form_state, $id) {
   $form = array();
   $form['id'] = array(
@@ -368,6 +343,7 @@ function d2d_form_remove_instance($form, &$form_state, $id) {
   );
   return $form;
 }
+
 function d2d_edit_instance_details($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $form_state = array();
@@ -388,6 +364,7 @@ function d2d_edit_instance_details($instance) {
   }
   return $build;
 }
+
 function d2d_public_key_exists($public_key_id, $instance_id) {
   $result = db_query('SELECT EXISTS(SELECT 1 FROM {d2d_public_keys} WHERE id=:public_key_id AND instance_id=:instance_id) ex', array(':public_key_id' => $public_key_id, ':instance_id' => $instance_id));
   if ($row = $result->fetchAssoc()) {
@@ -395,16 +372,12 @@ function d2d_public_key_exists($public_key_id, $instance_id) {
   }
   return FALSE;
 }
+
 function d2d_select_public_key($instance, $public_key_id) {
   $num_updated = 0;
   $instance_id = $instance['id'];
   if (d2d_public_key_exists($public_key_id, $instance_id) && $instance['public_key_id'] != $public_key_id) {
-    $num_updated = db_update('d2d_instances')
-      ->fields(array(
-        'public_key_id' => $public_key_id,
-      ))
-      ->condition('id', $instance_id)
-      ->execute();
+    $num_updated = d2d_api_select_public_key($instance_id, $public_key_id);
     $instance = d2d_get_instance2($instance_id);
     d2d_incoming_requests_reevaluate_signatures($instance); // TODO: recover on failure?
   }
@@ -416,16 +389,12 @@ function d2d_select_public_key($instance, $public_key_id) {
   }
   drupal_goto('admin/d2d/instances/' . $instance_id . '/public_key');
 }
+
 function d2d_unselect_public_key($instance, $public_key_id) {
   $num_updated = 0;
   $instance_id = $instance['id'];
   if ($instance['public_key_id'] == $public_key_id) {
-    $num_updated = db_update('d2d_instances')
-      ->fields(array(
-        'public_key_id' => NULL,
-      ))
-      ->condition('id', $instance_id)
-      ->execute();
+    $num_updated = d2d_api_unselect_public_key($instance_id);
     $instance = d2d_get_instance2($instance_id);
     d2d_incoming_requests_reevaluate_signatures($instance); // TODO: recover on failure?
   }
@@ -437,12 +406,11 @@ function d2d_unselect_public_key($instance, $public_key_id) {
   }
   drupal_goto('admin/d2d/instances/' . $instance_id . '/public_key');
 }
+
 function d2d_delete_public_key($instance, $public_key_id) {
   $num_updated = 0;
   if (!$instance['is_me'] && $instance['public_key_id'] != $public_key_id && d2d_check_convert_int($public_key_id)) {
-    $num_updated = db_delete('d2d_public_keys')
-      ->condition('id', $public_key_id)
-      ->execute();
+    $num_updated = d2d_api_delete_public_key($public_key_id);
   }
   if ($num_updated > 0) {
     drupal_set_message(t('Removed candidate public key from the database'));
@@ -452,6 +420,7 @@ function d2d_delete_public_key($instance, $public_key_id) {
   }
   drupal_goto('admin/d2d/instances/' . $instance['id'] . '/public_key');
 }
+
 function d2d_edit_instance_public_key($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $build['pk_manage'] = array(
@@ -500,23 +469,21 @@ function d2d_edit_instance_public_key($instance) {
   }
   return $build;
 }
+
 function d2d_form_force_friendship_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $new_friendship_state = $form_state['values']['new_friendship_state'];
-  db_update('d2d_instances')
-    ->fields(array(
-      'friendship_state' => $new_friendship_state,
-    ))
-    ->condition('id', $id)
-    ->execute();
+  d2d_api_update_friendship($id, $new_friendship_state);
   drupal_set_message(t('Manually changed the friendship state.'));
 }
+
 function d2d_form_force_friendship_validate($form, &$form_state) {
   $new_friendship_state = $form_state['values']['new_friendship_state'];
   if (!is_numeric($new_friendship_state)) {
     form_set_error('new_friendship_state', t('No option selected.'));
   }
 }
+
 function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_state, $has_public_key) {
   $form = array();
   $form['id'] = array(
@@ -564,6 +531,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
   );
   return $form;
 }
+
 function d2d_form_change_friendship_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $old_friendship_state = $form_state['input']['old_friendship_state'];
@@ -578,12 +546,7 @@ function d2d_form_change_friendship_submit($form, &$form_state) {
     $action = $form_state['values']['action'];
     $new_friendship_state = $action % 4;
     if ($new_friendship_state != $old_friendship_state) {
-      db_update('d2d_instances')
-        ->fields(array(
-          'friendship_state' => $new_friendship_state,
-        ))
-        ->condition('id', $id)
-        ->execute();
+      d2d_api_update_friendship($id, $new_friendship_state);
     }
     $request_id = d2d_add_request($id, 'd2d_friendship', array(), D2D_REQUEST_MAX_NUMBER_OF_RESENDS, TRUE);
     if ($form_state['values']['send_now']) {
@@ -591,6 +554,7 @@ function d2d_form_change_friendship_submit($form, &$form_state) {
     }
   }
 }
+
 function d2d_form_force_friendship($form, &$form_state, $id, $old_friendship_state) {
   $form = array();
   $form['id'] = array(
@@ -617,6 +581,7 @@ function d2d_form_force_friendship($form, &$form_state, $id, $old_friendship_sta
   );
   return $form;
 }
+
 function d2d_edit_instance_friendship($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $build['friendship'] = array(
@@ -641,6 +606,7 @@ function d2d_edit_instance_friendship($instance) {
   }
   return $build;
 }
+
 function d2d_edit_instance_groups($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $build['groups'] = array(
@@ -653,6 +619,7 @@ function d2d_edit_instance_groups($instance) {
   $build['groups'][] = drupal_build_form('d2d_form_groups_by_instance', $form_state);
   return $build;
 }
+
 function d2d_edit_instance_permissions($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $rows = array();
@@ -695,6 +662,7 @@ function d2d_edit_instance_permissions($instance) {
   );
   return $build;
 }
+
 function d2d_edit_instance_remote_permissions($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $build['remote_permissions'] = array(
