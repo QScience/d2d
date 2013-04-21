@@ -119,3 +119,32 @@ function d2d_api_add_group_memberships($instance_id, $group_ids = array()) {
 	}
 }
 
+function d2d_api_get_public_keys($id = NULL) {
+ 
+  $query = db_select('d2d_public_keys', 'k');
+
+	$query->join('d2d_instances', 'i', 'i.id = k.instance_id');
+	$query
+	 	->fields('i', array('d2d_id'))
+		->fields('k', array('public_key'));
+ 
+            
+	if (!empty($id)) {
+    $query = $query->condition('k.id', $id);
+  }
+
+ 	$keys = $query->execute()->FetchAll();
+
+  return $keys;
+}
+
+function d2d_api_get_public_keys_array($id = NULL) {
+	$keys = d2d_api_get_public_keys($id);
+  $out = array();
+	if (empty($keys)) return $out;
+
+  foreach ($keys as $k) {
+  	$out[] = get_object_vars($k);
+  }
+  return $out;
+}
