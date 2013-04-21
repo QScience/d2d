@@ -148,3 +148,39 @@ function d2d_api_get_public_keys_array($id = NULL) {
   }
   return $out;
 }
+
+function d2d_api_add_instance($instance) {
+	$id = db_insert('d2d_instances')->fields(array(
+      'd2d_id' => $instance['d2d_id'],
+      'name' => $instance['name'],
+      'url' => $instance['address'],
+      'description' => $instance['description'],
+      'time_inserted' => d2d_get_time(),
+      'public_key_id' => NULL,
+   ))->execute();
+    
+  d2d_set_default_group_memberships($id);
+}
+
+function d2d_api_instance_exist($d2d_id) {
+
+	$query = db_select('d2d_instances', 'i')
+		->condition('i.d2d_id', $d2d_id)s
+  
+	$res = $query->execute()->FetchObject();	
+  return empty($res);
+}
+
+function d2d_api_public_key_exist($d2d_id, $pubblic_key) {
+	$keys = d2d_api_get_public_keys();
+	if (!isset($keys[$d2d_id])) return FALSE;
+	foreach ($keys[$d2d_id]) as $k) {
+		if 
+	}
+  return empty($res);
+}
+
+
+
+
+
