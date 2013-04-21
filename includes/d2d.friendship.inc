@@ -3,6 +3,7 @@
  * @file
  * Callback functions for establishing friendship.
  */
+
 function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $instance, &$persistent_state) {
   $comment = '';
   if (is_null($persistent_state)) {
@@ -20,6 +21,7 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
   }
   return $return . ' ' . $comment;
 }
+
 function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $instance, &$persistent_state, &$arguments_send) {
   if (is_null($persistent_state)) {
     $persistent_state = TRUE;
@@ -34,6 +36,7 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
     default: $arguments_send = array('state' => 'TRUE'); return TRUE;
   }
 }
+
 function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return) {
   $return = NULL;
   if ($arguments['state'] !== 'TRUE' && $arguments['state'] !== 'FALSE') {
@@ -111,6 +114,7 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
   }
   return FALSE;
 }
+
 function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
   d2d_insert_notification('d2d_friendship', $d2d_id, 
     d2d_implode(
@@ -121,6 +125,7 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
     )
   );
 }
+
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {
   if ($return === FALSE) {
   }
@@ -142,6 +147,7 @@ function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $t
     }
   }
 }
+
 function d2d_get_friendship_simple($arguments, $attributes) {
   $type = $arguments['type'];
   $instance = d2d_get_instance_by_d2d_id($attributes['d2d_id']);
@@ -188,6 +194,7 @@ function d2d_get_friendship_simple($arguments, $attributes) {
   }
   return 'unknown request';
 }
+
 function d2d_get_friendship_detailed($arguments, $attributes) {
   $type = $arguments['type'];
   $instance = d2d_get_instance_by_d2d_id($attributes['d2d_id']);
@@ -215,6 +222,7 @@ function d2d_get_friendship_detailed($arguments, $attributes) {
   }
   return $build;
 }
+
 function d2d_add_instance_prefill() {
   if (isset($_SESSION['d2d_add_instance'])) {
     $_SESSION['d2d_add_instance']['prefill'] = TRUE;
