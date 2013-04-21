@@ -171,13 +171,15 @@ function d2d_api_instance_exist($d2d_id) {
   return empty($res);
 }
 
-function d2d_api_public_key_exist($d2d_id, $pubblic_key) {
+function d2d_api_public_key_exist($d2d_id, $public_key) {
 	$keys = d2d_api_get_public_keys();
 	if (!isset($keys[$d2d_id])) return FALSE;
 	foreach ($keys[$d2d_id]) as $k) {
-		if 
+		if ($k['public_key'] === $public_key) {
+			return TRUE;
+		}
 	}
-  return empty($res);
+  return FALSE;
 }
 
 
