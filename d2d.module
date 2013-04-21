@@ -9,6 +9,7 @@
 
 require_once 'includes/d2d.constants.inc';
 require_once 'includes/d2d.crypto.inc';
+require_once 'includes/d2d.api.inc';
 require_once 'includes/d2d.misc.inc';
 require_once 'includes/d2d.notifications.inc';
 require_once 'includes/d2d.settings.inc';
