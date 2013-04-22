@@ -67,14 +67,6 @@ function d2d_api_unselect_public_key($instance_id) {
 	return $num_updated;	
 }
 
-function d2d_api_delete_public_key($public_key_id) {
-	$num_updated = db_delete('d2d_public_keys')
-      ->condition('id', $public_key_id)
-      ->execute();
-      
-	return $num_updated;	
-}
-
 function d2d_api_insert_public_key($instance_id, $public_key) {
 	$id_pk = db_insert('d2d_public_keys')->fields(array(
   	'instance_id' => $instance_id,
@@ -92,6 +84,16 @@ function d2d_api_update_public_key($id, $update) {
  
   return $num_updated;
 }
+
+
+function d2d_api_delete_public_key($id) {
+	$num_deleted = db_delete('d2d_public_keys')
+		->condition('id', $id)
+	 	->execute();
+ 
+  return $num_deleted;
+}
+
 
 
 function d2d_api_update_instance($instance_id, $fields) {
@@ -181,15 +183,20 @@ function d2d_api_instance_exist($d2d_id) {
   return empty($res);
 }
 
-function d2d_api_public_key_exist($d2d_id, $public_key) {
+function d2d_api_get_public_key_id($d2d_id, $public_key) {
 	$keys = d2d_api_get_public_keys($d2d_id);
 	if (empty($keys)) return FALSE;
 	foreach ($keys as $k) {
 		if (d2d_public_key_eql($k->public_key, $public_key)) {
-			return TRUE;
+			return $k->id;
 		}
 	}
   return FALSE;
+}
+
+
+function d2d_api_public_key_exist($d2d_id, $public_key) {
+	 return d2d_api_get_public_key_id($d2d_id, $public_key) !== FALSE;
 }
 
 function d2d_api_get_public_key_by_id($id) {
