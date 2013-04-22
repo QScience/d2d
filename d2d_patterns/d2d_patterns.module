@@ -112,7 +112,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
  	$result = array();
   $status = PATTERNS_SUCCESS;
   $msg = '';
-
+  
   // SYNTACTIC VALIDATION
   
   if ($tag == 'd2d_public_key') {
@@ -123,7 +123,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
 	  	// It is sufficient to have either vid or machine_name
 	  	if (!($kcheck['public_key'] || $kcheck['d2d_id'])) {
 	  	
-		  	$msg = t("The following mandatory keys are missing for tag %tag: ", array('%tag' => $tag));
+		  	$msg = t("The following mandatory keys are missing: ");
 		  	foreach ($kcheck as $key => $exist) {
 					if (!$exist) {
 						$status = PATTERNS_ERR;
@@ -133,16 +133,27 @@ function d2d_patterns_validate($action, $tag, &$data) {
 	  		$msg = substr($msg, 0, -2);
 	  	}
   	}
-  	else { // PATTERNS_MODIFY or PATTERNS_DELETE
+  	
+  	if ($action == PATTERNS_MODIFY) {  
+  		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
+  			
+  		if (!$kcheck['id']) {
+  			$msg = t("The 'id' attribute is required.");
+  			$status = PATTERNS_ERR;
+  		}
+  		else if (!($kcheck['public_key'] && $kcheck['d2d_id'])) {
+  			$msg = t("Either the 'public_key' or the 'd2d_id' attributes or both are required");
+  			$status = PATTERNS_ERR;
+  		}
+  	}
+  	
+  	else { // PATTERNS_DELETE
   		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
   		
   		// Either the id or the combination d2d_id public_key
   		if (!$kcheck['id'] && !($kcheck['public_key'] && $kcheck['d2d_id'])) {
-				$params = array(
-  				'%tag' => $tag,
-  				'%action' => $action,
- 				);
-  			$msg = t("Tag %tag action %action needs either the 'id' attribute or the combination 'public_key' and 'd2d_id'", $params);
+
+  			$msg = t("Either the 'id' attribute or the combination 'public_key' and 'd2d_id' is required");
   			$status = PATTERNS_ERR;
   		}
   		
@@ -176,8 +187,18 @@ function d2d_patterns_validate($action, $tag, &$data) {
   		}
   	}
   	
-  	else { // PATTERNS_MODIFY or PATTERNS_DELETE
+  	if ($action == PATTERNS_MODIFY) {  
   		// modify by id	
+  		$key = d2d_api_get_public_key_by_id($id);
+  			
+  		if (empty($key)) {
+  			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        	t('No public key to modify with \'id\' :id', array(':id' => $id,)));
+  		}	
+  	}	
+  	
+  	else { // PATTERS_DELETE
+  		// delete by id	
   		if (isset($data['id'])) {
   			$key = d2d_api_get_public_key_by_id($id);
   			
@@ -191,7 +212,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
         		t('The pair instance-public key (%i-%k) was not found.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
   		}	
-  	}	
+  	}
   	
   }
   	
