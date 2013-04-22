@@ -207,7 +207,7 @@ function d2d_api_get_public_key_by_id($id) {
 	$query
 	 	->fields('i', array('d2d_id'))
 		->fields('k', array('id', 'public_key'))
- 		->condition('i.id', $id);
+ 		->condition('k.id', $id);
             
   return $query->execute()->FetchObject();
 }

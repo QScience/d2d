@@ -202,6 +202,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	else { // PATTERS_DELETE
   		// delete by id	
   		if (isset($data['id'])) {
+  			$id = $data['id'];
   			$key = d2d_api_get_public_key_by_id($id);
   			
   			if (empty($key)) {
