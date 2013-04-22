@@ -97,8 +97,13 @@ function d2d_patterns_insert_public_keys($form_id, $form_state) {
 
 function d2d_patterns_update_public_keys($form_id, $form_state) {
 	$update = array();
-	if (isset($form_state['values']['d2d_id'])) $update['instance_id'] = $form_state['values']['d2d_id'];
-	if (isset($form_state['values']['public_key'])) $update['public_key'] = $form_state['values']['public_key'];
+	if (isset($form_state['values']['d2d_id'])) {
+		$keys = d2d_api_get_public_keys($form_state['values']['d2d_id']);
+		$update['instance_id'] = $keys[0]->id;
+	}
+	if (isset($form_state['values']['public_key'])) {
+		$update['public_key'] = $form_state['values']['public_key'];
+	} 
 	d2d_api_update_public_key($form_state['values']['id'], $update);
 }
 
