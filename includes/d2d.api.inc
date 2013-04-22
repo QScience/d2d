@@ -119,7 +119,7 @@ function d2d_api_add_group_memberships($instance_id, $group_ids = array()) {
 	}
 }
 
-function d2d_api_get_public_keys($id = NULL) {
+function d2d_api_get_public_keys($d2d_id = NULL) {
  
   $query = db_select('d2d_public_keys', 'k');
 
@@ -129,8 +129,8 @@ function d2d_api_get_public_keys($id = NULL) {
 		->fields('k', array('public_key'));
  
             
-	if (!empty($id)) {
-    $query = $query->condition('k.id', $id);
+	if (!empty($d2d_id)) {
+    $query = $query->condition('i.d2d_id', $d2d_id);
   }
 
  	$keys = $query->execute()->FetchAll();
@@ -138,8 +138,8 @@ function d2d_api_get_public_keys($id = NULL) {
   return $keys;
 }
 
-function d2d_api_get_public_keys_array($id = NULL) {
-	$keys = d2d_api_get_public_keys($id);
+function d2d_api_get_public_keys_array($d2d_id = NULL) {
+	$keys = d2d_api_get_public_keys($d2d_id);
   $out = array();
 	if (empty($keys)) return $out;
 
@@ -165,24 +165,22 @@ function d2d_api_add_instance($instance) {
 function d2d_api_instance_exist($d2d_id) {
 
 	$query = db_select('d2d_instances', 'i')
-		->condition('i.d2d_id', $d2d_id)s
+		->condition('i.d2d_id', $d2d_id);
   
 	$res = $query->execute()->FetchObject();	
   return empty($res);
 }
 
 function d2d_api_public_key_exist($d2d_id, $public_key) {
-	$keys = d2d_api_get_public_keys();
-	if (!isset($keys[$d2d_id])) return FALSE;
-	foreach ($keys[$d2d_id]) as $k) {
+	$keys = d2d_api_get_public_keys($d2d_id);
+	if (empty($keys)) return FALSE;
+	foreach ($keys as $k) {
 		if ($k['public_key'] === $public_key) {
 			return TRUE;
 		}
 	}
   return FALSE;
 }
-
-
 
 
 

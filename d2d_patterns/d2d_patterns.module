@@ -7,7 +7,7 @@
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete public keys for instances'),
+    PATTERNS_INFO   => t('Create/Modify/Delete the value pair public key - instance'),
     PATTERNS_CREATE => array('d2d_patterns_save_public_keys'),
     PATTERNS_MODIFY => array('d2d_patterns_save_public_keys'),
     PATTERNS_DELETE => array('d2d_patterns_delete_public_key'),
@@ -99,8 +99,6 @@ function d2d_patterns_validate($action, $tag, &$data) {
   $status = PATTERNS_SUCCESS;
   $msg = '';
 
-
-   
   // SYNTACTIC VALIDATION
   
   if ($tag == 'd2d_public_key') {
@@ -118,6 +116,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
 				} 
 	  	}
   		$msg = substr($msg, 0, -2);
+  	}
   }
   
   if ($status == PATTERNS_ERR) {
@@ -128,10 +127,17 @@ function d2d_patterns_validate($action, $tag, &$data) {
   
   if ($tag == 'd2d_public_key') {
   	
-  	$keys = d2d_api_get_public_keys_array();
+  	$d2d_id = $data['d2d_id'];
+  	$public_key = $data['public_key'];
+  	$public_key_short = substr($public_key, 0, 10) . '...';
+  	
+  	$keys = d2d_api_get_public_keys_array($d2d_id);
   	$instances = d2d_get_instances(TRUE);
   
-  	$instance_exist = d2d_api_instance_exist($data['d2d_id']);
+  	$instance = d2d_get_instance_by_d2d_id($d2d_id);
+  	
+  	$instance_exist = FALSE === $instance; //d2d_api_instance_exist($data['d2d_id']);
+  	
   	
   	if (!$instance_exist) {
   		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
@@ -139,35 +145,28 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   	else {
   		
-  		if (PATTERNS_)
+  		// Is the public key already assigned to the instance?
+  		$instance_has_already_key = d2d_api_public_key_exist($d2d_id, $public_key);
   		
-  	 	if ($voc_exists) {
-      	$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
-        	t('The vocabulary %voc already exists in the system.', array('%voc' => $data['machine_name'],)));
-      }
+  		
+  		if ($action == PATTERNS_CREATE) {
+  		
+  	 		if ($instance_has_already_key) {
+      		$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
+        		t('Instance %i has already public key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
+      	}
+  		}
+  		else { // DELETE AND MODIFY
+  		
+  			if (!$instance_has_already_key) {
+      		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        		t('Instance %i has no key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
+      	}
+  		
+  		}
   	}
-  	else if ($action == PATTERNS_MODIFY) {
-  		
-  		if (!$voc_exists) {
-      	$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
-        	t('The vocabulary %voc was not found in the system, and cannot be modified.', array('%voc' => $data['machine_name'],)));
-      }
-  		
-  	}
+  } 
   	
-  	else if ($action == PATTERNS_DELETE) {
-  		
-  		if (!$voc_exists) {
-      	$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
-        	t('The vocabulary %voc was not found in the system, and cannot be deleted.', array('%voc' => $data['machine_name'],)));
-      }
-  		
-  	}
-  	
- 
   return patterns_results($status, $msg, $result);	
    
 }
-
-
-
