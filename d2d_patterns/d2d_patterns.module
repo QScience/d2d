@@ -129,17 +129,14 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   	$d2d_id = $data['d2d_id'];
   	$public_key = $data['public_key'];
-  	$public_key_short = substr($public_key, 0, 10) . '...';
+  	$public_key_short =  '...' . d2d_substr_public_key($public_key);
   	
   	$keys = d2d_api_get_public_keys_array($d2d_id);
   	$instances = d2d_get_instances(TRUE);
   
   	$instance = d2d_get_instance_by_d2d_id($d2d_id);
   	
-  	$instance_exist = FALSE === $instance; //d2d_api_instance_exist($data['d2d_id']);
-  	
-  	
-  	if (!$instance_exist) {
+  	if ($instance === FALSE) {
   		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
         	t('No instance associated with key %k found.', array('%k' => $data['d2d_id'],)));
   	}

@@ -175,7 +175,7 @@ function d2d_api_public_key_exist($d2d_id, $public_key) {
 	$keys = d2d_api_get_public_keys($d2d_id);
 	if (empty($keys)) return FALSE;
 	foreach ($keys as $k) {
-		if ($k['public_key'] === $public_key) {
+		if ($k->public_key === $public_key) {
 			return TRUE;
 		}
 	}
