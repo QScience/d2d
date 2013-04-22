@@ -198,3 +198,58 @@ function d2d_check_nonce($nonce) {
 function d2d_random_nonce() {
   return d2d_random_hex_string(D2D_NONCE_LENGTH);
 }
+
+/**
+ * 
+ * Shortens a public key string to N characters
+ * 
+ * Useful to display part of a key in status messages.
+ * 
+ * Comments are automatically excluded from the N chars.
+ * Negative N will start counting from the ending of the key.
+ * 
+ * @param string $key The public key to shorten for preview
+ * @param integer $N Optional. The number of characters to keep. Defaults, -10
+ * @return string The shortened key
+ */
+function d2d_substr_public_key($key, $N = -10) {
+	$key = d2d_clean_public_key($key);
+
+	if ($N < 0) {
+		return mb_substr($key, mb_strlen($key) + $N);
+	}
+	else {
+		return mb_substr($key, 0, $N);
+	}
+	
+}
+
+/**
+ * 
+ * Cleans the public key string
+ * 
+ * Trim, removes comments and other characters. 
+ * 
+ * @param string $key The public key to clean
+ * @param boolean $keep_comment Optional. Keeps comment about begin/end 
+ * 	public key. Defaults, FALSE
+ * @return string The cleaned key
+ */
+function d2d_clean_public_key($key, $keep_comment = FALSE) {
+	$key = trim(str_replace(array("\n", "\t", "\r"), '', $key));
+
+	$limit = 0;
+	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
+	if ($comment_begin !== FALSE) {
+		$limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
+		$key = substr($key, $limit);
+	}
+	
+	$comment_end = strpos($key, '-----END PUBLIC KEY-----');
+	if ($comment_end !== FALSE) {
+		$limit = $keep_comment ? $comment_end + 25 : $comment_end; //
+		$key = substr($key, 0, $limit);
+	}
+	return trim($key);
+}
+
