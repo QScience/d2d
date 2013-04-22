@@ -78,7 +78,7 @@ function d2d_api_insert_public_key($instance_id, $public_key) {
 
 function d2d_api_update_public_key($id, $update) {
 	$num_updated = db_update('d2d_public_keys')
-  	>fields($update)
+  	->fields($update)
   	->condition('id', $id)
   	->execute();
  
