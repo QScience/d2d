@@ -84,6 +84,16 @@ function d2d_api_insert_public_key($instance_id, $public_key) {
   return $id_pk;
 }
 
+function d2d_api_update_public_key($id, $update) {
+	$num_updated = db_update('d2d_public_keys')
+  	>fields($update)
+  	->condition('id', $id)
+  	->execute();
+ 
+  return $num_updated;
+}
+
+
 function d2d_api_update_instance($instance_id, $fields) {
 	$num_updated = db_update('d2d_instances')
   	->fields($fields)
@@ -126,7 +136,7 @@ function d2d_api_get_public_keys($d2d_id = NULL) {
 	$query->join('d2d_instances', 'i', 'i.id = k.instance_id');
 	$query
 	 	->fields('i', array('d2d_id'))
-		->fields('k', array('public_key'));
+		->fields('k', array('id', 'public_key'));
  
             
 	if (!empty($d2d_id)) {
@@ -175,12 +185,23 @@ function d2d_api_public_key_exist($d2d_id, $public_key) {
 	$keys = d2d_api_get_public_keys($d2d_id);
 	if (empty($keys)) return FALSE;
 	foreach ($keys as $k) {
-		if ($k->public_key === $public_key) {
+		if (d2d_public_key_eql($k->public_key, $public_key)) {
 			return TRUE;
 		}
 	}
   return FALSE;
 }
 
+function d2d_api_get_public_key_by_id($id) {
+ 
+  $query = db_select('d2d_public_keys', 'k');
 
+	$query->join('d2d_instances', 'i', 'i.id = k.instance_id');
+	$query
+	 	->fields('i', array('d2d_id'))
+		->fields('k', array('id', 'public_key'))
+ 		->condition('i.id', $id);
+            
+  return $query->execute()->FetchObject();
+}
 

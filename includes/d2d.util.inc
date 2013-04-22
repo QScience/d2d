@@ -211,6 +211,8 @@ function d2d_random_nonce() {
  * @param string $key The public key to shorten for preview
  * @param integer $N Optional. The number of characters to keep. Defaults, -10
  * @return string The shortened key
+ * 
+ * @see d2d_clean_public_key
  */
 function d2d_substr_public_key($key, $N = -10) {
 	$key = d2d_clean_public_key($key);
@@ -236,7 +238,6 @@ function d2d_substr_public_key($key, $N = -10) {
  * @return string The cleaned key
  */
 function d2d_clean_public_key($key, $keep_comment = FALSE) {
-	$key = trim(str_replace(array("\n", "\t", "\r"), '', $key));
 
 	$limit = 0;
 	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
@@ -250,6 +251,25 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
 		$limit = $keep_comment ? $comment_end + 25 : $comment_end; //
 		$key = substr($key, 0, $limit);
 	}
-	return trim($key);
+	
+	return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
+}
+
+/**
+ * 
+ * Compares two strings containing public keys
+ * 
+ * Both keys are cleaned, and then compared
+ * 
+ * @param string $key1 The first public key to compare
+ * @param string $key2 The second public key to compare
+ * @return boolean TRUE if the public keys equal
+ * 
+ * @see d2d_clean_public_key
+ */
+function d2d_public_key_eql($key1, $key2) {
+	$key1 = d2d_clean_public_key($key1);
+	$key2 = d2d_clean_public_key($key2);
+	return $key1 === $key2;
 }
 
