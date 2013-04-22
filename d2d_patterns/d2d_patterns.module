@@ -8,9 +8,9 @@ function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
     PATTERNS_INFO   => t('Create/Modify/Delete the value pair public key - instance'),
-    PATTERNS_CREATE => array('d2d_patterns_save_public_keys'),
-    PATTERNS_MODIFY => array('d2d_patterns_save_public_keys'),
-    PATTERNS_DELETE => array('d2d_patterns_delete_public_key'),
+    PATTERNS_CREATE => array('d2d_patterns_insert_public_keys'),
+    PATTERNS_MODIFY => array('d2d_patterns_update_public_keys'),
+    PATTERNS_DELETE => array('d2d_patterns_delete_public_keys'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_public_keys',
                         ),
@@ -79,19 +79,33 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
   
   foreach ($keys as $k) {
   	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
+  	if ($action_type == PATTERNS_MODIFY) {
+  		$action[$action_type]['id'] = $k['id'];
+  	}
   	array_push($actions, $action);
   }
   return $actions;
 }
 
 
-function d2d_patterns_save_public_keys($form_id, $form_state) {
+function d2d_patterns_insert_public_keys($form_id, $form_state) {
 	$instances = d2d_get_instances(TRUE);
 	$iid = $instances[$form_state['values']['d2d_id']]['id'];
 	$public_key = $form_state['values']['public_key'];
 	d2d_api_insert_public_key($iid, $public_key);
 }
 
+function d2d_patterns_update_public_keys($form_id, $form_state) {
+	d2d_api_update_public_key($form_state['values']['id']);
+}
+
+function d2d_patterns_delete_public_keys($form_id, $form_state) {
+	if (!isset($form_state['values']['id'])) {
+
+	}
+	
+	d2d_api_delete_public_key($iid, $public_key);
+}
 
 // Validate the values for an action before running the pattern
 function d2d_patterns_validate($action, $tag, &$data) {
@@ -103,19 +117,35 @@ function d2d_patterns_validate($action, $tag, &$data) {
   
   if ($tag == 'd2d_public_key') {
   	
-  	$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id'), $data);
-  	  		
-  	// It is sufficient to have either vid or machine_name
-  	if (!$kcheck['public_key'] || $kcheck['d2d_id']) {
-  	
-	  	$msg = t("The following mandatory keys are missing for tag %tag: ", array('%tag' => $tag));
-	  	foreach ($kcheck as $key => $exist) {
-				if (!$exist) {
-					$status = PATTERNS_ERR;
-					$msg .= $key . ', ';
-				} 
+  	if ($action == PATTERNS_CREATE) {
+	  	$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id'), $data);
+	  	  		
+	  	// It is sufficient to have either vid or machine_name
+	  	if (!($kcheck['public_key'] || $kcheck['d2d_id'])) {
+	  	
+		  	$msg = t("The following mandatory keys are missing for tag %tag: ", array('%tag' => $tag));
+		  	foreach ($kcheck as $key => $exist) {
+					if (!$exist) {
+						$status = PATTERNS_ERR;
+						$msg .= $key . ', ';
+					} 
+		  	}
+	  		$msg = substr($msg, 0, -2);
 	  	}
-  		$msg = substr($msg, 0, -2);
+  	}
+  	else { // PATTERNS_MODIFY or PATTERNS_DELETE
+  		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
+  		
+  		// Either the id or the combination d2d_id public_key
+  		if (!$kcheck['id'] && !($kcheck['public_key'] && $kcheck['d2d_id'])) {
+				$params = array(
+  				'%tag' => $tag,
+  				'%action' => $action,
+ 				);
+  			$msg = t("Tag %tag action %action needs either the 'id' attribute or the combination 'public_key' and 'd2d_id'", $params);
+  			$status = PATTERNS_ERR;
+  		}
+  		
   	}
   }
   
@@ -126,43 +156,44 @@ function d2d_patterns_validate($action, $tag, &$data) {
   // SEMANTIC VALIDATION
   
   if ($tag == 'd2d_public_key') {
+  	$d2d_id = @$data['d2d_id'];
+  	$public_key = @$data['public_key'];
+  	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
-  	$d2d_id = $data['d2d_id'];
-  	$public_key = $data['public_key'];
-  	$public_key_short =  '...' . d2d_substr_public_key($public_key);
+  	$keys = @d2d_api_get_public_keys_array($d2d_id);
   	
-  	$keys = d2d_api_get_public_keys_array($d2d_id);
-  	$instances = d2d_get_instances(TRUE);
-  
-  	$instance = d2d_get_instance_by_d2d_id($d2d_id);
-  	
-  	if ($instance === FALSE) {
-  		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+  	if ($action == PATTERNS_CREATE) {  
+  		
+  		$instance = d2d_get_instance_by_d2d_id($d2d_id);
+
+  		if ($instance === FALSE) {
+  			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
         	t('No instance associated with key %k found.', array('%k' => $data['d2d_id'],)));
-  	}
-  	else {
-  		
-  		// Is the public key already assigned to the instance?
-  		$instance_has_already_key = d2d_api_public_key_exist($d2d_id, $public_key);
-  		
-  		
-  		if ($action == PATTERNS_CREATE) {
-  		
-  	 		if ($instance_has_already_key) {
-      		$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
-        		t('Instance %i has already public key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
-      	}
   		}
-  		else { // DELETE AND MODIFY
-  		
-  			if (!$instance_has_already_key) {
-      		$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
-        		t('Instance %i has no key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
-      	}
-  		
+  		else if (d2d_api_public_key_exist($d2d_id, $public_key)) {
+				$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
+        	t('Instance %i has already public key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
   		}
   	}
-  } 
+  	
+  	else { // PATTERNS_MODIFY or PATTERNS_DELETE
+  		// modify by id	
+  		if (isset($data['id'])) {
+  			$key = d2d_api_get_public_key_by_id($id);
+  			
+  			if (empty($key)) {
+  				$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        		t('No public key to modify with \'id\' :id', array(':id' => $id,)));
+  			}	
+  		}
+  		// pub_key and d2d_id are set
+  		else if (!d2d_api_public_key_exist($d2d_id, $public_key)) { 
+  			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
+        		t('The pair instance-public key (%i-%k) was not found.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
+  		}	
+  	}	
+  	
+  }
   	
   return patterns_results($status, $msg, $result);	
    

@@ -210,7 +210,7 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
   return $friends;
 }
 
-function d2d_get_instances($d2d_id_as_key, $rest = FALSE) {
+function d2d_get_instances($d2d_id_as_key, $reset = FALSE) {
 	
 	$instances = &drupal_static(__FUNCTION__);
 	
