@@ -189,7 +189,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   		}
   	}
   	
-  	if ($action == PATTERNS_MODIFY) {  
+  	else if ($action == PATTERNS_MODIFY) {  
   		// modify by id	
   		$key = d2d_api_get_public_key_by_id($id);
   			
