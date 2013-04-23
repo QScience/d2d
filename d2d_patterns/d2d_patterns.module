@@ -75,7 +75,7 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
   	$action_type = PATTERNS_CREATE;
 	}
 	
-  $keys = d2d_api_get_public_keys_array();
+  $keys = d2d_api_public_key_get_array();
   
   foreach ($keys as $k) {
   	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
@@ -98,7 +98,7 @@ function d2d_patterns_insert_public_keys($form_id, $form_state) {
 function d2d_patterns_update_public_keys($form_id, $form_state) {
 	$update = array();
 	if (isset($form_state['values']['d2d_id'])) {
-		$keys = d2d_api_get_public_keys($form_state['values']['d2d_id']);
+		$keys = d2d_api_public_key_get($form_state['values']['d2d_id']);
 		$update['instance_id'] = $keys[0]->id;
 	}
 	if (isset($form_state['values']['public_key'])) {
@@ -109,7 +109,7 @@ function d2d_patterns_update_public_keys($form_id, $form_state) {
 
 function d2d_patterns_delete_public_keys($form_id, $form_state) {
 	if (!isset($form_state['values']['id'])) {
-		$id = d2d_api_get_public_key_id($form_state['values']['d2d_id'], $form_state['values']['public_key']);
+		$id = d2d_api_public_key_return_id($form_state['values']['d2d_id'], $form_state['values']['public_key']);
 	}
 	else {
 		$id = $form_state['values']['id'];
@@ -181,7 +181,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	$public_key = @$data['public_key'];
   	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
-  	$keys = @d2d_api_get_public_keys_array($d2d_id);
+  	$keys = @d2d_api_public_key_get_array($d2d_id);
   	
   	if ($action == PATTERNS_CREATE) {  
   		
@@ -200,7 +200,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	else if ($action == PATTERNS_MODIFY) {  
   		$id = $data['id'];
   		// modify by id	
-  		$key = d2d_api_get_public_key_by_id($id);
+  		$key = d2d_api_public_key_get_by_id($id);
   			
   		if (empty($key)) {
   			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
@@ -212,7 +212,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   		// delete by id	
   		if (isset($data['id'])) {
   			$id = $data['id'];
-  			$key = d2d_api_get_public_key_by_id($id);
+  			$key = d2d_api_public_key_get_by_id($id);
   			
   			if (empty($key)) {
   				$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
