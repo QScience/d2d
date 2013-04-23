@@ -4,7 +4,7 @@
  * Low levels functions used by the forms submit handlers of the D2D module.
  */
 
-function d2d_api_update_friendship($friend_id, $friendship_state) {
+function d2d_api_friendship_update($friend_id, $friendship_state) {
 	db_update('d2d_instances')
   	->fields(array(
     		'friendship_state' => $friendship_state,
@@ -16,7 +16,7 @@ function d2d_api_update_friendship($friend_id, $friendship_state) {
 	module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state);       
 }
 
-function d2d_api_remove_instance($instance_id) {
+function d2d_api_instance_remove($instance_id) {
 	
 	$instance = d2d_get_instance2($id);
 	
@@ -45,7 +45,7 @@ function d2d_api_remove_instance($instance_id) {
 	module_invoke_all('d2d_instance_removed', $instance); 
 }
 
-function d2d_api_select_public_key($instance_id, $public_key_id) {
+function d2d_api_public_key_select($instance_id, $public_key_id) {
 	$num_updated = db_update('d2d_instances')
 		->fields(array(
         'public_key_id' => $public_key_id,
@@ -56,7 +56,7 @@ function d2d_api_select_public_key($instance_id, $public_key_id) {
 	return $num_updated;
 }
 
-function d2d_api_unselect_public_key($instance_id) {
+function d2d_api_public_key_unselect($instance_id) {
 	$num_updated = db_update('d2d_instances')
 		->fields(array(
     		'public_key_id' => NULL,
@@ -96,7 +96,7 @@ function d2d_api_public_key_delete($id) {
 
 
 
-function d2d_api_update_instance($instance_id, $fields) {
+function d2d_api_instance_update($instance_id, $fields) {
 	$num_updated = db_update('d2d_instances')
   	->fields($fields)
     ->condition('id', $instance_id)
@@ -105,12 +105,12 @@ function d2d_api_update_instance($instance_id, $fields) {
 	return $num_updated;
 }
 
-function d2d_api_update_group_memberships($instance_id, $group_ids = array()) {
+function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
 	db_delete('d2d_group_memberships')
 		->condition('instance_id', $instance_id)->execute();
   
 	if (!empty($group_ids)) {	
-		d2d_api_add_group_memberships($instance_id, $group_ids);
+		d2d_api_group_memberships_add($instance_id, $group_ids);
 	}
 	else {
 		// call hook  
@@ -118,7 +118,7 @@ function d2d_api_update_group_memberships($instance_id, $group_ids = array()) {
 	}
 }
 
-function d2d_api_add_group_memberships($instance_id, $group_ids = array()) {
+function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
 	if (!empty($group_ids)) {	
 		$query = db_insert('d2d_group_memberships')->fields(array('group_id', 'instance_id'));
 	  foreach ($group_ids as $gid) {
@@ -131,7 +131,7 @@ function d2d_api_add_group_memberships($instance_id, $group_ids = array()) {
 	}
 }
 
-function d2d_api_get_public_keys($d2d_id = NULL) {
+function d2d_api_public_key_get($d2d_id = NULL) {
  
   $query = db_select('d2d_public_keys', 'k');
 
@@ -150,8 +150,8 @@ function d2d_api_get_public_keys($d2d_id = NULL) {
   return $keys;
 }
 
-function d2d_api_get_public_keys_array($d2d_id = NULL) {
-	$keys = d2d_api_get_public_keys($d2d_id);
+function d2d_api_public_key_get_array($d2d_id = NULL) {
+	$keys = d2d_api_public_key_get($d2d_id);
   $out = array();
 	if (empty($keys)) return $out;
 
@@ -161,7 +161,7 @@ function d2d_api_get_public_keys_array($d2d_id = NULL) {
   return $out;
 }
 
-function d2d_api_add_instance($instance) {
+function d2d_api_instance_add($instance) {
 	$id = db_insert('d2d_instances')->fields(array(
       'd2d_id' => $instance['d2d_id'],
       'name' => $instance['name'],
@@ -183,8 +183,8 @@ function d2d_api_instance_exist($d2d_id) {
   return empty($res);
 }
 
-function d2d_api_get_public_key_id($d2d_id, $public_key) {
-	$keys = d2d_api_get_public_keys($d2d_id);
+function d2d_api_public_key_return_id($d2d_id, $public_key) {
+	$keys = d2d_api_public_key_get($d2d_id);
 	if (empty($keys)) return FALSE;
 	foreach ($keys as $k) {
 		if (d2d_public_key_eql($k->public_key, $public_key)) {
@@ -196,10 +196,10 @@ function d2d_api_get_public_key_id($d2d_id, $public_key) {
 
 
 function d2d_api_public_key_exist($d2d_id, $public_key) {
-	 return d2d_api_get_public_key_id($d2d_id, $public_key) !== FALSE;
+	 return d2d_api_public_key_return_id($d2d_id, $public_key) !== FALSE;
 }
 
-function d2d_api_get_public_key_by_id($id) {
+function d2d_api_public_key_get_by_id($id) {
  
   $query = db_select('d2d_public_keys', 'k');
 
