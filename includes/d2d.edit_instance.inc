@@ -68,7 +68,7 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
       drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $record->id)), 'error');
     }
     else {
-			d2d_api_insert_public_key($id, $res);
+			d2d_api_public_key_insert($id, $res);
       drupal_set_message(t('Public key has been inserted into database. Click on \'select\' to associate the newly inserted public key with this instance.'));
     }
   }
@@ -164,7 +164,7 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
 
 function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   $public_key_id = $form_state['values']['public_key_id'];
-	$num_updated = d2d_api_delete_public_key($public_key_id);
+	$num_updated = d2d_api_public_key_delete($public_key_id);
   if ($num_updated > 0) {
     drupal_set_message(t('Removed public key from the database'));
   }
@@ -410,7 +410,7 @@ function d2d_unselect_public_key($instance, $public_key_id) {
 function d2d_delete_public_key($instance, $public_key_id) {
   $num_updated = 0;
   if (!$instance['is_me'] && $instance['public_key_id'] != $public_key_id && d2d_check_convert_int($public_key_id)) {
-    $num_updated = d2d_api_delete_public_key($public_key_id);
+    $num_updated = d2d_api_public_key_delete($public_key_id);
   }
   if ($num_updated > 0) {
     drupal_set_message(t('Removed candidate public key from the database'));
