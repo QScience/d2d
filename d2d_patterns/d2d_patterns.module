@@ -92,7 +92,7 @@ function d2d_patterns_insert_public_keys($form_id, $form_state) {
 	$instances = d2d_get_instances(TRUE);
 	$iid = $instances[$form_state['values']['d2d_id']]['id'];
 	$public_key = $form_state['values']['public_key'];
-	d2d_api_insert_public_key($iid, $public_key);
+	d2d_api_public_key_insert($iid, $public_key);
 }
 
 function d2d_patterns_update_public_keys($form_id, $form_state) {
@@ -104,7 +104,7 @@ function d2d_patterns_update_public_keys($form_id, $form_state) {
 	if (isset($form_state['values']['public_key'])) {
 		$update['public_key'] = $form_state['values']['public_key'];
 	} 
-	d2d_api_update_public_key($form_state['values']['id'], $update);
+	d2d_api_public_key_update($form_state['values']['id'], $update);
 }
 
 function d2d_patterns_delete_public_keys($form_id, $form_state) {
@@ -114,7 +114,7 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
 	else {
 		$id = $form_state['values']['id'];
 	}
-	d2d_api_delete_public_key($id);
+	d2d_api_public_key_delete($id);
 }
 
 // Validate the values for an action before running the pattern

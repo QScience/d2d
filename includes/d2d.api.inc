@@ -67,7 +67,7 @@ function d2d_api_unselect_public_key($instance_id) {
 	return $num_updated;	
 }
 
-function d2d_api_insert_public_key($instance_id, $public_key) {
+function d2d_api_public_key_insert($instance_id, $public_key) {
 	$id_pk = db_insert('d2d_public_keys')->fields(array(
   	'instance_id' => $instance_id,
     'public_key' => $public_key,
@@ -76,7 +76,7 @@ function d2d_api_insert_public_key($instance_id, $public_key) {
   return $id_pk;
 }
 
-function d2d_api_update_public_key($id, $update) {
+function d2d_api_public_key_update($id, $update) {
 	$num_updated = db_update('d2d_public_keys')
   	->fields($update)
   	->condition('id', $id)
@@ -86,7 +86,7 @@ function d2d_api_update_public_key($id, $update) {
 }
 
 
-function d2d_api_delete_public_key($id) {
+function d2d_api_public_key_delete($id) {
 	$num_deleted = db_delete('d2d_public_keys')
 		->condition('id', $id)
 	 	->execute();
