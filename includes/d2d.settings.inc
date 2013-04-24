@@ -193,7 +193,7 @@ function d2d_form_settings_keys_validate($form, &$form_state) {
     form_set_error('', t('Public / private key pair erroneous.'));
   }
 }
-
+/* OLD
 function d2d_form_settings_keys_submit($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
   $private_key = $form_state['values']['private_key'];
@@ -214,14 +214,15 @@ function d2d_form_settings_keys_submit($form, &$form_state) {
   variable_set('d2d_private_key', $private_key);
   drupal_set_message(t('Settings have been saved.'));
 }
-/*
+*/
+
 function d2d_form_settings_keys_submit($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
   $private_key = $form_state['values']['private_key'];  
 	d2d_api_own_public_key_set($public_key);
   d2d_api_own_private_key_set($private_key);
   drupal_set_message(t('Settings have been saved.'));
-}*/
+}
 
 function d2d_form_settings_keys_generate_validate($form, &$form_state) {
   if (!d2d_create_keys($public_key, $private_key)) {
