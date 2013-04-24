@@ -96,8 +96,7 @@ function d2d_form_init_submit($form, &$form_state) {
       drupal_set_message(t('Failed creating public / private key pair.'), 'error');
       return;
     }
-    variable_set('d2d_public_key', $my_public_key);
-    variable_set('d2d_private_key', $my_private_key);
+    d2d_api_own_private_key_set($my_private_key);
   }
   $my_d2d_id = $form_state['values']['id'];
   // add own instance to database
@@ -109,7 +108,10 @@ function d2d_form_init_submit($form, &$form_state) {
     'time_inserted' => d2d_get_time(),
     'public_key_id' => NULL,
   ))->execute();
-  variable_set('d2d_my_id', $my_id);
+  
+  d2d_api_own_instance_id_set($my_id);
+  d2d_api_own_d2d_id_set($my_d2d_id);
+  
   if ($form_state['values']['auto_keys_and_online']) {
     $my_public_key_id = db_insert('d2d_public_keys')->fields(array(
       'instance_id' => $my_id,
@@ -121,6 +123,7 @@ function d2d_form_init_submit($form, &$form_state) {
       ))
       ->condition('id', $my_id)
       ->execute();
+      
     variable_set('d2d_online', TRUE);
   }
   menu_rebuild();

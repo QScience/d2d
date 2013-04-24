@@ -68,6 +68,7 @@ function d2d_api_public_key_unselect($instance_id) {
 }
 
 function d2d_api_public_key_set($d2d_id, $public_key) {
+	debug($d2d_id);
 	$instance_id = d2d_convert_d2d_id_to_id($d2d_id);
 	$id_pk = db_insert('d2d_public_keys')->fields(array(
   	'instance_id' => $instance_id,
@@ -228,7 +229,7 @@ function d2d_api_own_public_key_get($reset = FALSE) {
 
 function d2d_api_own_public_key_set($public_key) {
 	$my_d2d_id = d2d_api_own_d2d_id_get();
-	$id = d2d_api_own_instance_id();
+	$id = d2d_api_own_instance_id_get();
 	$id_pk = d2d_api_public_key_set($my_d2d_id, $public_key);
   d2d_api_instance_update($id, array(
       'public_key_id' => $id_pk,
@@ -267,33 +268,33 @@ function d2d_api_own_private_key_del() {
 function d2d_api_own_d2d_id_get() {
 	$my_d2d_id = &drupal_static(__FUNCTION__);
 	if (empty($my_d2d_id)) {
-		$my_d2d_id = variable_get('my_d2d_id');
+		$my_d2d_id = variable_get('d2d_my_id');
 	}
 	return $my_d2d_id;
 }
 
 function d2d_api_own_d2d_id_set($d2d_id) {	
-	return variable_set('my_d2d_id', $d2d_id);
+	return variable_set('d2d_my_id', $d2d_id);
 }
 
 function d2d_api_own_d2d_id_del($d2d_id) {	
-	return variable_del('my_d2d_id');
+	return variable_del('d2d_my_id');
 }
 
-function d2d_api_own_instance_id() {
+function d2d_api_own_instance_id_get() {
 	$id = &drupal_static(__FUNCTION__);
 	if (empty($id)) {
-		$id = variable_get('my_instance_id');
+		$id = variable_get('d2d_my_instance_id');
 	}
 	return $id;
 }
 
 function d2d_api_own_instance_id_set($id) {	
-	return variable_set('my_instance_id', $d2d_id);
+	return variable_set('d2d_my_instance_id', $id);
 }
 
 function d2d_api_own_instance_id_del($id) {	
-	return variable_del('my_instance_id');
+	return variable_del('d2d_my_instance_id');
 }
 
 

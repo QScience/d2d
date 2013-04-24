@@ -42,6 +42,7 @@ function d2d_uninstall() {
   variable_del('d2d_delta_1');
   variable_del('d2d_private_key');
   variable_del('d2d_public_key');
+  
   drupal_uninstall_schema('d2d');
 }
 
