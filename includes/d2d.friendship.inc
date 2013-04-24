@@ -150,7 +150,7 @@ function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $t
 
 function d2d_get_friendship_simple($arguments, $attributes) {
   $type = $arguments['type'];
-  $instance = d2d_get_instance_by_d2d_id($attributes['d2d_id']);
+  $instance = d2d_api_instance_get($attributes['d2d_id']);
   if ($instance) {
     $instance_name = check_plain($instance['name']);
     $instance_str = l(check_plain($instance_name), 'admin/d2d/instances/' . $instance['id'] . '/details');
@@ -197,7 +197,7 @@ function d2d_get_friendship_simple($arguments, $attributes) {
 
 function d2d_get_friendship_detailed($arguments, $attributes) {
   $type = $arguments['type'];
-  $instance = d2d_get_instance_by_d2d_id($attributes['d2d_id']);
+  $instance = d2d_api_instance_get($attributes['d2d_id']);
   $instance_str = check_plain($instance['name']);
   $build['notifications'] = array(
     '#title' => t('Notification') . ' #' . $attributes['id'],
@@ -210,7 +210,7 @@ function d2d_get_friendship_detailed($arguments, $attributes) {
     $build['notifications']['#description'] .= '<br/>';
     if ($description['reason'] === 'public_key') {
       $build['notifications']['#description'] .= t('The reason why the signature could not be checked is that you don\'t have a public key associated with that instace.');
-      $instance = d2d_get_instance_by_d2d_id($attributes['d2d_id']);
+      $instance = d2d_api_instance_get($attributes['d2d_id']);
       if ($instance) {
         $build['notifications']['#description'] .= ' ' . t('Click !link to associate a public key with that instance.', array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/public_key')));
       }

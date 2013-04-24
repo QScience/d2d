@@ -306,7 +306,7 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
       catch (D2DRemoteException $e) {
         $keep = FALSE;
       }
-      $instance = d2d_get_instance_by_d2d_id($instance['d2d_id']);
+      $instance = d2d_api_instance_get($instance['d2d_id']);
       $delete = !$keep;
     }
     if ($delete) {
@@ -347,7 +347,7 @@ function d2d_secure_request($request64, $version) {
   }
   $encrypted_data = $message['data'];
   $signature = $message['signature'];
-  $instance = d2d_get_instance_by_d2d_id($signer);
+  $instance = d2d_api_instance_get($signer);
   if ($instance === FALSE || is_null($instance['public_key'])) {
     $signature_valid = FALSE;
   }

@@ -18,7 +18,7 @@ function d2d_api_friendship_update($friend_id, $friendship_state) {
 
 function d2d_api_instance_remove($instance_id) {
 	
-	$instance = d2d_get_instance2($id);
+	$instance = d2d_get_instance2($instance_id);
 	
 	  // remove group memberships
   db_delete('d2d_group_memberships')
@@ -67,7 +67,8 @@ function d2d_api_public_key_unselect($instance_id) {
 	return $num_updated;	
 }
 
-function d2d_api_public_key_insert($instance_id, $public_key) {
+function d2d_api_public_key_set($d2d_id, $public_key) {
+	$instance_id = d2d_convert_d2d_id_to_id($d2d_id);
 	$id_pk = db_insert('d2d_public_keys')->fields(array(
   	'instance_id' => $instance_id,
     'public_key' => $public_key,
@@ -220,21 +221,22 @@ function d2d_api_own_public_key_get($reset = FALSE) {
   if ($reset || empty($key)) {
   	$my_d2d_id = d2d_api_own_d2d_id_get();
   	$key = d2d_api_public_key_get($my_d2d_id);
-  	$key = $key[0]->public_key; // there must be always only one public key 
+  	$key = empty($key) ? FALSE: $key[0]->public_key; 
   }
 	return $key;
 }
 
 function d2d_api_own_public_key_set($public_key) {
 	$my_d2d_id = d2d_api_own_d2d_id_get();
-	$id_pk = d2d_api_public_key_insert($my_d2d_id, $public_key);
+	$id = d2d_api_own_instance_id();
+	$id_pk = d2d_api_public_key_set($my_d2d_id, $public_key);
   d2d_api_instance_update($id, array(
       'public_key_id' => $id_pk,
   )); 
 
   db_delete('d2d_public_keys')
     ->condition('id', $id_pk, '<>')
-    ->condition('id_instance', $id)
+    ->condition('instance_id', $id)
 		->execute();
 	
 	return $id_pk;
@@ -251,7 +253,7 @@ function d2d_api_own_public_key_del() {
 
 
 function d2d_api_own_private_key_get() {
-	return variable_get('d2d_private_key');
+	return variable_get('d2d_private_key', FALSE);
 }
 
 function d2d_api_own_private_key_set($private_key) {
@@ -278,17 +280,33 @@ function d2d_api_own_d2d_id_del($d2d_id) {
 	return variable_del('my_d2d_id');
 }
 
+function d2d_api_own_instance_id() {
+	$id = &drupal_static(__FUNCTION__);
+	if (empty($id)) {
+		$id = variable_get('my_instance_id');
+	}
+	return $id;
+}
+
+function d2d_api_own_instance_id_set($id) {	
+	return variable_set('my_instance_id', $d2d_id);
+}
+
+function d2d_api_own_instance_id_del($id) {	
+	return variable_del('my_instance_id');
+}
+
 
 function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
 	if (empty($d2d_id)) return FALSE;
 	$instance = d2d_api_instance_get($d2d_id);
-	return isset($instance[$d2d_id]) ? $instance[$d2d_id]['id'] : FALSE;
+	return $instance !== FALSE ? $instance['id'] : FALSE;
 }
 
 function d2d_convert_id_to_d2d_id($id = NULL) {
 	if (empty($id)) return FALSE;
 	$instance = d2d_api_instance_get_by_id($id);
-	return isset($instance[$id]) ? $instance[$id]['d2d_id'] : FALSE;
+	return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
 }
 
 function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
@@ -301,7 +319,7 @@ function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
 	
 	if ($reset || empty($instances) || empty($instances[$id])) {
 		$query = db_select('d2d_instances', 'i');
-		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
 		$query
 			->fields('k', array('public_key'))
 	 		->fields('i')
@@ -312,7 +330,8 @@ function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
 			$query = $query->condition('i.id', $id);
 			$result = $query->execute();
 			$instance = $result->fetchAssoc();
-
+			if (empty($instance)) return FALSE;
+			
 			_d2d_decorate_instance_array($instance);
 			return $instance;
 		}
@@ -346,12 +365,11 @@ function _d2d_decorate_instance_array(&$instance) {
 }
 
 function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
-	
 	$instances = &drupal_static(__FUNCTION__);
 		
 	if ($reset || empty($instances) || empty($instances[$d2d_id])) {
 		$query = db_select('d2d_instances', 'i');
-		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
 		$query
 			->fields('k', array('public_key'))
 	 		->fields('i');
@@ -361,7 +379,9 @@ function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
 			$query = $query->condition('i.d2d_id', $d2d_id);
 			$result = $query->execute();
 			$instance = $result->fetchAssoc();
-
+			
+			if (empty($instance)) return FALSE;		
+			
 			_d2d_decorate_instance_array($instance);
 			return $instance;
 		}
