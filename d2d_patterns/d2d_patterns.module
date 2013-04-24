@@ -16,15 +16,14 @@ function d2d_patterns($data = NULL){
                         ),
   );
   
-  
-  $tags['d2d_instance'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete instances'),
-    PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-    PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-    PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-    PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+  $tags['d2d_own_keys'] = array(
+    PATTERNS_INFO   => t('Create/Modify/Delete public and or private key for the own instance. Must be called after a D2D id is set.'),
+    PATTERNS_CREATE => array('d2d_patterns_insert_own_keys'),
+    PATTERNS_MODIFY => array('d2d_patterns_update_own_keys'),
+    PATTERNS_DELETE => array('d2d_patterns_delete_own_keys'),
     PATTERNS_EXPORT => array(
-                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
+                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_own_keys',
+                          'Only the public key' => 'd2d_patterns_export_own_public_key',
                         ),
   );
   
@@ -66,6 +65,49 @@ function d2d_patterns($data = NULL){
   
 }
 
+function d2d_patterns_insert_own_keys($form_id, $form_state) {
+	if (isset($form_state['values']['d2d_own_keys']['public'])) {
+		d2d_api_own_public_key_set($form_state['values']['d2d_own_keys']['public']);
+	}
+	if (isset($form_state['values']['d2d_own_keys']['private'])) {
+		d2d_api_own_private_key_set($form_state['values']['d2d_own_keys']['private']);
+	}
+}
+
+function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
+	$actions = array();
+	$action_type = PATTERNS_MODIFY; // pre-init 
+	
+	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+  	$action_type = PATTERNS_CREATE;
+	}
+	
+	$keys = array($action_type => array(
+		'tag' => 'd2d_own_keys',
+		'public' => d2d_api_own_public_key_get(),
+		'private' => d2d_api_own_private_key_get(),
+	));
+  
+  return $keys;
+}
+
+
+
+function d2d_patterns_export_own_public_key($args = NULL, &$result = NULL) {
+	$actions = array();
+	$action_type = PATTERNS_MODIFY; // pre-init 
+	
+	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+  	$action_type = PATTERNS_CREATE;
+	}
+	
+	$keys = array($action_type => array(
+		'tag' => 'd2d_own_keys',
+		'public' => d2d_api_own_public_key_get(),
+	));
+  
+  return $keys;
+}
 
 function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
 	$actions = array();
