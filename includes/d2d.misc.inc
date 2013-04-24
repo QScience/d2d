@@ -53,6 +53,7 @@ function d2d_get_instance_by_d2d_id($d2d_id) {
   }
 }
 
+// search by id
 function d2d_get_instance2($id) {
   $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.friendship_state as friendship_state FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
   if ($row = $result->fetchAssoc()) {

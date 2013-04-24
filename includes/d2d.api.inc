@@ -213,41 +213,213 @@ function d2d_api_public_key_get_by_id($id) {
 }
 
 
-function d2d_api_own_public_key_get() {
-	return variable_get('d2d_public_key');
-}
+function d2d_api_own_public_key_get($reset = FALSE) {
+	
+	$key = &drupal_static(__FUNCTION__);
 
-function d2d_api_own_private_key_get() {
-	return variable_get('d2d_private_key');
+  if ($reset || empty($key)) {
+  	$my_d2d_id = d2d_api_own_d2d_id_get();
+  	$key = d2d_api_public_key_get($my_d2d_id);
+  	$key = $key[0]->public_key; // there must be always only one public key 
+  }
+	return $key;
 }
 
 function d2d_api_own_public_key_set($public_key) {
-	return variable_set('d2d_public_key', $public_key);
+	$my_d2d_id = d2d_api_own_d2d_id_get();
+	$id_pk = d2d_api_public_key_insert($my_d2d_id, $public_key);
+  d2d_api_instance_update($id, array(
+      'public_key_id' => $id_pk,
+  )); 
+
+  db_delete('d2d_public_keys')
+    ->condition('id', $id_pk, '<>')
+    ->condition('id_instance', $id)
+		->execute();
+	
+	return $id_pk;
+}
+
+function d2d_api_own_public_key_del() {
+	
+	$num_deleted = db_delete('d2d_public_keys')
+		->condition('id_instance', $id)
+	 	->execute();
+	 	
+	return variable_del('d2d_public_key');
+}
+
+
+function d2d_api_own_private_key_get() {
+	return variable_get('d2d_private_key');
 }
 
 function d2d_api_own_private_key_set($private_key) {
 	return variable_set('d2d_private_key', $private_key);
 }
 
-function d2d_api_own_public_key_del() {
-	return variable_del('d2d_public_key');
-}
-
 function d2d_api_own_private_key_del() {
 	return variable_del('d2d_private_key');
 }
 
-function d2d_api_own_d2d_id_get() {	
-	return variable_get('d2d_my_id');
+function d2d_api_own_d2d_id_get() {
+	$my_d2d_id = &drupal_static(__FUNCTION__);
+	if (empty($my_d2d_id)) {
+		$my_d2d_id = variable_get('my_d2d_id');
+	}
+	return $my_d2d_id;
 }
 
 function d2d_api_own_d2d_id_set($d2d_id) {	
-	return variable_set('d2d_my_id', $d2d_id);
+	return variable_set('my_d2d_id', $d2d_id);
 }
 
 function d2d_api_own_d2d_id_del($d2d_id) {	
-	return variable_del('d2d_my_id');
+	return variable_del('my_d2d_id');
 }
 
+
+function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
+	if (empty($d2d_id)) return FALSE;
+	$instance = d2d_api_instance_get($d2d_id);
+	return isset($instance[$d2d_id]) ? $instance[$d2d_id]['id'] : FALSE;
+}
+
+function d2d_convert_id_to_d2d_id($id = NULL) {
+	if (empty($id)) return FALSE;
+	$instance = d2d_api_instance_get_by_id($id);
+	return isset($instance[$id]) ? $instance[$id]['d2d_id'] : FALSE;
+}
+
+function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
+	
+	$instances = &drupal_static(__FUNCTION__);
+		
+	if (!empty($d2d_id)) {
+    $query = $query->condition('i.d2d_id', $d2d_id);
+  }
+	
+	if ($reset || empty($instances) || empty($instances[$id])) {
+		$query = db_select('d2d_instances', 'i');
+		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query
+			->fields('k', array('public_key'))
+	 		->fields('i')
+			->orderBy('i.id', 'asc');
+			
+	 	// Return only one instance
+		if (!empty($id)) {
+			$query = $query->condition('i.id', $id);
+			$result = $query->execute();
+			$instance = $result->fetchAssoc();
+
+			_d2d_decorate_instance_array($instance);
+			return $instance;
+		}
+
+		// Return multiple instance in associative array
+  	$result = $query->execute();
+	  $instances = array();
+	  foreach ($result as $record) {
+	    $instances[$record->id] = array(
+	      'id' => $record->id,
+	      'd2d_id' => $record->d2d_id,
+	      'name' => $record->name,
+	      'url' => $record->url,
+	      'description' => $record->description,
+	      'time_inserted' => $record->time_inserted,
+	      'last_alive' => $record->last_alive,
+	      'public_key' => $record->public_key,
+	      'friendship_state' => $record->friendship_state,
+	    );
+	    _d2d_decorate_instance_array($instances[$record->id]);
+	  }
+	}
+	
+  return $instances;
+}
+
+function _d2d_decorate_instance_array(&$instance) {
+	if (empty($instance)) return;
+	$instance['is_friend'] = $instance['friendship_state'] == 3;
+	$instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
+}
+
+function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
+	
+	$instances = &drupal_static(__FUNCTION__);
+		
+	if ($reset || empty($instances) || empty($instances[$d2d_id])) {
+		$query = db_select('d2d_instances', 'i');
+		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query
+			->fields('k', array('public_key'))
+	 		->fields('i');
+		
+	 	// Return only one instance
+		if (!empty($d2d_id)) {
+			$query = $query->condition('i.d2d_id', $d2d_id);
+			$result = $query->execute();
+			$instance = $result->fetchAssoc();
+
+			_d2d_decorate_instance_array($instance);
+			return $instance;
+		}
+
+		// Return multiple instance in associative array
+		$result = $query->execute();
+	  $instances = array();
+	  foreach ($result as $record) {
+	    $instances[$record->d2d_id] = array(
+	      'id' => $record->id,
+	      'd2d_id' => $record->d2d_id,
+	      'name' => $record->name,
+	      'url' => $record->url,
+	      'description' => $record->description,
+	      'time_inserted' => $record->time_inserted,
+	      'last_alive' => $record->last_alive,
+	      'public_key' => $record->public_key,
+	      'friendship_state' => $record->friendship_state,
+	    );
+	    _d2d_decorate_instance_array($instances[$record->d2d_id]);
+	  }
+	}
+	
+  return $instances;
+}
+
+
+function d2d_api_friends_get($d2d_id = NULL, $reset = FALSE) {
+	
+	$friends = &drupal_static(__FUNCTION__);
+
+  if ($reset || empty($friends) || empty($d2d_id)) {
+  	$query = db_select('d2d_instances', 'i');
+		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query = 	$query->condition('i.friendship_state', 3);
+		
+		if (!empty($d2d_id)) {
+			$query = $query->condition('i.d2d_id', $d2d_id);
+		}
+	           
+  	$result = $query->execute();
+  	
+  	$friends = array();
+	  foreach ($result as $record) {
+	    $friends[$record->d2d_id] = array(
+	      'id' => $record->id,
+	      'd2d_id' => $record->d2d_id,
+	      'name' => $record->name,
+	      'url' => $record->url,
+	      'description' => $record->description,
+	      'time_inserted' => $record->time_inserted,
+	      'last_alive' => $record->last_alive,
+	      'public_key' => $record->public_key,
+	    );
+	  }
+  }
+
+  return $friends;
+}
 
 
