@@ -212,3 +212,42 @@ function d2d_api_public_key_get_by_id($id) {
   return $query->execute()->FetchObject();
 }
 
+
+function d2d_api_own_public_key_get() {
+	return variable_get('d2d_public_key');
+}
+
+function d2d_api_own_private_key_get() {
+	return variable_get('d2d_private_key');
+}
+
+function d2d_api_own_public_key_set($public_key) {
+	return variable_set('d2d_public_key', $public_key);
+}
+
+function d2d_api_own_private_key_set($private_key) {
+	return variable_set('d2d_private_key', $private_key);
+}
+
+function d2d_api_own_public_key_del() {
+	return variable_del('d2d_public_key');
+}
+
+function d2d_api_own_private_key_del() {
+	return variable_del('d2d_private_key');
+}
+
+function d2d_api_own_d2d_id_get() {	
+	return variable_get('d2d_my_id');
+}
+
+function d2d_api_own_d2d_id_set($d2d_id) {	
+	return variable_set('d2d_my_id', $d2d_id);
+}
+
+function d2d_api_own_d2d_id_del($d2d_id) {	
+	return variable_del('d2d_my_id');
+}
+
+
+

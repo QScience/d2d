@@ -64,6 +64,7 @@ function d2d_get_instance2($id) {
     return FALSE;
   }
 }
+
 function d2d_get_self_instance2() {
   $id = variable_get('d2d_my_id');
   return d2d_get_instance2($id);
