@@ -148,7 +148,7 @@ function d2d_show_settings_keys() {
   return $build;
 }
 function d2d_form_settings_keys() {
-  d2d_get_self_instance($id, $d2d_id, $url, $public_key);
+
   $form = array();
   $form['public_key'] = array(
     '#type' => 'textarea',
@@ -156,7 +156,7 @@ function d2d_form_settings_keys() {
     '#description' => t('The public key of this instance'),
     '#rows' => 4,
     '#cols' => 60,
-    '#default_value' => $public_key,
+    '#default_value' => d2d_api_own_public_key_get(),
   );
   $form['private_key'] = array(
     '#type' => 'textarea',
@@ -164,7 +164,7 @@ function d2d_form_settings_keys() {
     '#description' => t('The private key of this instance'),
     '#rows' => 4,
     '#cols' => 60,
-    '#default_value' => variable_get('d2d_private_key', ''),
+    '#default_value' => d2d_api_own_public_key_get(),
   );
   $form['submit'] = array(
     '#type' => 'submit', 
