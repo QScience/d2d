@@ -124,8 +124,8 @@ function d2d_form_settings_advanced() {
     '#type' => 'submit', 
     '#value' => t('Save'),
   );
-  $public_key = variable_get('d2d_public_key', FALSE);
-  $private_key = variable_get('d2d_private_key', FALSE);
+  $public_key = d2d_api_own_public_key_get();
+  $private_key = d2d_api_own_private_key_get();
   if (!d2d_check_key_pair($public_key, $private_key)) {
     $form['#disabled'] = TRUE;
     drupal_set_message(t('Click !link to associate a private / public key pair first before switching to online mode.', array('!link' => l(t('here'), 'admin/d2d/settings/keys'))), 'warning');
@@ -181,7 +181,7 @@ function d2d_form_settings_keys() {
   if (d2d_is_online()) {
     $form['submit']['#disabled'] = TRUE;
     $form['generate_keys']['#disabled'] = TRUE;
-    drupal_set_message(t('Click !link to switch to offline mode before changing the public / private key pair.', array('!link' => l('here', 'admin/d2d/settings/advanced'))), 'warning');
+    drupal_set_message(t('You must be in !link to change the public / private key pair.', array('!link' => l('offline mode', 'admin/d2d/settings/advanced'))), 'warning');
   }
   return $form;
 }
@@ -196,11 +196,32 @@ function d2d_form_settings_keys_validate($form, &$form_state) {
 
 function d2d_form_settings_keys_submit($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
+  $private_key = $form_state['values']['private_key'];
+  variable_set('d2d_public_key', $public_key);
+  $id = variable_get('d2d_my_id');
+  $id_pk = db_insert('d2d_public_keys')->fields(array(
+      'instance_id' => $id,
+      'public_key' => $public_key,
+    ))->execute();
+  $num_updated = db_update('d2d_instances')
+    ->fields(array(
+      'public_key_id' => $id_pk,
+    ))
+    ->condition('id', $id)
+    ->execute();
+  db_delete('d2d_public_keys')
+    ->condition('id', $id_pk, '<>')->execute();
+  variable_set('d2d_private_key', $private_key);
+  drupal_set_message(t('Settings have been saved.'));
+}
+/*
+function d2d_form_settings_keys_submit($form, &$form_state) {
+  $public_key = $form_state['values']['public_key'];
   $private_key = $form_state['values']['private_key'];  
 	d2d_api_own_public_key_set($public_key);
   d2d_api_own_private_key_set($private_key);
   drupal_set_message(t('Settings have been saved.'));
-}
+}*/
 
 function d2d_form_settings_keys_generate_validate($form, &$form_state) {
   if (!d2d_create_keys($public_key, $private_key)) {

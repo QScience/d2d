@@ -182,7 +182,7 @@ function d2d_secure_rpc($request64, $version) {
   }
   $encrypted_data = $message['data'];
   $signature = $message['signature'];
-  $friend = d2d_get_instance_by_d2d_id($signer);
+  $friend = d2d_api_instance_get($signer);
   if ($friend === FALSE || !$friend['is_friend'] || is_null($friend['public_key']) || openssl_verify($encrypted_data, $signature, $friend['public_key']) !== 1) {
     return xmlrpc_error(0, 'no friendship found or wrong signature');
   }

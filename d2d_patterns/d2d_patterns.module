@@ -140,10 +140,9 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
 
 
 function d2d_patterns_insert_public_keys($form_id, $form_state) {
-	$instances = d2d_get_instances(TRUE);
-	$iid = $instances[$form_state['values']['d2d_id']]['id'];
+	$d2d_id = $form_state['values']['d2d_id'];
 	$public_key = $form_state['values']['public_key'];
-	d2d_api_public_key_insert($iid, $public_key);
+	d2d_api_public_key_set($d2d_id, $public_key);
 }
 
 function d2d_patterns_update_public_keys($form_id, $form_state) {
@@ -236,7 +235,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   	if ($action == PATTERNS_CREATE) {  
   		
-  		$instance = d2d_get_instance_by_d2d_id($d2d_id);
+  		$instance = d2d_api_instance_get($d2d_id);
 
   		if ($instance === FALSE) {
   			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 

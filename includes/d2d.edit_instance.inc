@@ -46,7 +46,8 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
 
 function d2d_form_receive_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  if (($instance = d2d_get_instance2($id)) === FALSE) {
+  $instance = d2d_get_instance2($id);
+  if ($instance === FALSE) {
     drupal_set_message(t('Instance not found.'), 'error');
     return;
   }
@@ -68,7 +69,7 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
       drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $record->id)), 'error');
     }
     else {
-			d2d_api_public_key_insert($id, $res);
+			d2d_api_public_key_set($instance['d2d_id'], $res);
       drupal_set_message(t('Public key has been inserted into database. Click on \'select\' to associate the newly inserted public key with this instance.'));
     }
   }
