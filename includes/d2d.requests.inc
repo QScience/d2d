@@ -537,7 +537,7 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
   // get hooks that handle outgoing requests
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
   // get information about all instances
-  $instances = d2d_get_instances(FALSE);
+  $instances = d2d_api_instance_get_by_id();
   // get ids of requests to be sent now
   $send_now = TRUE;
   if (is_null($ids)) {

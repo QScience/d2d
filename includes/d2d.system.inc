@@ -23,7 +23,7 @@ function d2d_form_send_requests_submit($form, &$form_state) {
  * the table contains notifications of any type.
  */
 function d2d_built_outgoing_requests_table($types) {
-  $instances = d2d_get_instances(FALSE);
+  $instances = d2d_api_instance_get_by_id();
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
   $rows = array();
   if (is_array($types)) {
