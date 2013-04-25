@@ -18,7 +18,7 @@ function d2d_api_friendship_update($friend_id, $friendship_state) {
 
 function d2d_api_instance_remove($instance_id) {
 	
-	$instance = d2d_get_instance2($instance_id);
+	$instance = d2d_api_instance_get_by_id($instance_id);
 	
 	  // remove group memberships
   db_delete('d2d_group_memberships')
@@ -68,7 +68,6 @@ function d2d_api_public_key_unselect($instance_id) {
 }
 
 function d2d_api_public_key_set($d2d_id, $public_key) {
-	debug($d2d_id);
 	$instance_id = d2d_convert_d2d_id_to_id($d2d_id);
 	$id_pk = db_insert('d2d_public_keys')->fields(array(
   	'instance_id' => $instance_id,
@@ -279,6 +278,11 @@ function d2d_api_own_d2d_id_set($d2d_id) {
 
 function d2d_api_own_d2d_id_del($d2d_id) {	
 	return variable_del('d2d_my_id');
+}
+
+function d2d_api_own_instance_get() {
+  $id = d2d_api_own_instance_id_get();
+  return d2d_api_instance_get_by_id($id);
 }
 
 function d2d_api_own_instance_id_get() {

@@ -42,7 +42,7 @@ function d2d_get_public_key($d2d_id) {
   if (!d2d_is_online()) {
     return FALSE;
   }
-  $my_instance = d2d_get_self_instance2();
+  $my_instance = d2d_api_own_instance_get();
   if ($my_instance['d2d_id'] !== $d2d_id) {
     return xmlrpc_error(1, 'Provided d2d-id does not match.');
   }
@@ -57,7 +57,7 @@ function d2d_get_instance_information() {
   if (!d2d_is_online()) {
     return FALSE;
   }
-  $instance = d2d_get_self_instance2();
+  $instance = d2d_api_own_instance_get();
   $res = array(
     'd2d_id' => $instance['d2d_id'],
     'name' => $instance['name'],

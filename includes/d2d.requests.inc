@@ -532,7 +532,7 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
   }
   // get current time and keys, url, d2d id of own instance
   $t = d2d_get_time();
-  $my_instance = d2d_get_self_instance2();
+  $my_instance = d2d_api_own_instance_get();
   $my_private_key = variable_get('d2d_private_key');
   // get hooks that handle outgoing requests
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
