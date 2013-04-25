@@ -41,6 +41,8 @@ function d2d_format_unit($v, $unit, $skip=FALSE) {
     return strval($v) . ' ' . $unit . ($v != 1 ? 's' : '');
   }
 }
+
+/*
 function d2d_get_instance_by_d2d_id($d2d_id) {
   $result = db_query('SELECT p.public_key as public_key, i.id as id, i.name as name, i.url as url, i.description as description, i.friendship_state as friendship_state FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.d2d_id=:d2d_id', array(':d2d_id' => $d2d_id));
   if ($row = $result->fetchAssoc()) {
@@ -53,7 +55,7 @@ function d2d_get_instance_by_d2d_id($d2d_id) {
   }
 }
 
-/*
+
 // search by id
 function d2d_get_instance2($id) {
   $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.friendship_state as friendship_state FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
@@ -174,20 +176,6 @@ function d2d_get_request_type($i) {
 }
 
 
-function d2d_get_friend_by_url($url, $reset = FALSE) {
-	$friends = d2d_get_friends(TRUE, $reset);
-  foreach ($friends as $friend) {
-    if ($friend['url'] === $url) {
-      return $friend;
-    }
-  }
-  return FALSE;
-}
-
-function d2d_get_friend_by_d2d_id($d2d_id, $reset = FALSE) {
-	$friends = d2d_get_friends(TRUE, $reset);
-	return isset($friends[$d2d_id]) ? $friends[$d2d_id] : FALSE; 
-}
 
 
 function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
@@ -215,6 +203,17 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
 }
 
 /*
+
+function d2d_get_friend_by_url($url, $reset = FALSE) {
+	$friends = d2d_get_friends(TRUE, $reset);
+  foreach ($friends as $friend) {
+    if ($friend['url'] === $url) {
+      return $friend;
+    }
+  }
+  return FALSE;
+}
+
 function d2d_get_instances($d2d_id_as_key, $reset = FALSE) {
 	
 	$instances = &drupal_static(__FUNCTION__);
@@ -273,4 +272,16 @@ function d2d_verify_nonce($timestamp, $nonce) {
     return FALSE;
   }
   return TRUE;
+}
+
+function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
+	if (empty($d2d_id)) return FALSE;
+	$instance = d2d_api_instance_get($d2d_id);
+	return $instance !== FALSE ? $instance['id'] : FALSE;
+}
+
+function d2d_convert_id_to_d2d_id($id = NULL) {
+	if (empty($id)) return FALSE;
+	$instance = d2d_api_instance_get_by_id($id);
+	return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
 }

@@ -17,7 +17,7 @@
  * 	used as the content of each option element. Defaults, 'url'.
  */
 function d2d_forms_select_friends(&$form = array(), $value = 'd2d_id', $display = 'url') {
-	$friends = d2d_get_friends();
+	$friends = d2d_api_friend_get();
 	
 	$options = array();
 	foreach($friends as $f) {

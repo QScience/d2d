@@ -301,19 +301,6 @@ function d2d_api_own_instance_id_del($id) {
 	return variable_del('d2d_my_instance_id');
 }
 
-
-function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
-	if (empty($d2d_id)) return FALSE;
-	$instance = d2d_api_instance_get($d2d_id);
-	return $instance !== FALSE ? $instance['id'] : FALSE;
-}
-
-function d2d_convert_id_to_d2d_id($id = NULL) {
-	if (empty($id)) return FALSE;
-	$instance = d2d_api_instance_get_by_id($id);
-	return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
-}
-
 function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
 	
 	$instances = &drupal_static(__FUNCTION__);
@@ -413,20 +400,28 @@ function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
   return $instances;
 }
 
+function d2d_friend_get_by_url($url, $reset = FALSE) {
+	$friends = d2d_api_friend_get($reset);
+  foreach ($friends as $friend) {
+    if ($friend['url'] === $url) {
+      return $friend;
+    }
+  }
+  return FALSE;
+}
 
-function d2d_api_friends_get($d2d_id = NULL, $reset = FALSE) {
+function d2d_api_friend_get($reset = FALSE) {
 	
 	$friends = &drupal_static(__FUNCTION__);
-
-  if ($reset || empty($friends) || empty($d2d_id)) {
+	
+  if ($reset || empty($friends)) {
   	$query = db_select('d2d_instances', 'i');
-		$query->join('d2d_public_keys', 'k', 'i.public_key_id = k.id');
-		$query = 	$query->condition('i.friendship_state', 3);
-		
-		if (!empty($d2d_id)) {
-			$query = $query->condition('i.d2d_id', $d2d_id);
-		}
-	           
+		$query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query = $query	
+								->fields('i')
+								->fields('k', array('public_key'))
+								->condition('i.friendship_state', 3);
+			           
   	$result = $query->execute();
   	
   	$friends = array();
@@ -448,3 +443,34 @@ function d2d_api_friends_get($d2d_id = NULL, $reset = FALSE) {
 }
 
 
+function d2d_api_friend_get_by_id($reset = FALSE) {
+	
+	$friends = &drupal_static(__FUNCTION__);
+	
+  if ($reset || empty($friends)) {
+  	$query = db_select('d2d_instances', 'i');
+		$query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+		$query = $query	
+								->fields('i')
+								->fields('k', array('public_key'))
+								->condition('i.friendship_state', 3);
+			           
+  	$result = $query->execute();
+  	
+  	$friends = array();
+	  foreach ($result as $record) {
+	    $friends[$record->id] = array(
+	      'id' => $record->id,
+	      'd2d_id' => $record->d2d_id,
+	      'name' => $record->name,
+	      'url' => $record->url,
+	      'description' => $record->description,
+	      'time_inserted' => $record->time_inserted,
+	      'last_alive' => $record->last_alive,
+	      'public_key' => $record->public_key,
+	    );
+	  }
+  }
+
+  return $friends;
+}
