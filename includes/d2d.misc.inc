@@ -67,12 +67,12 @@ function d2d_get_instance2($id) {
 }
 
 function d2d_get_self_instance2() {
-  $id = variable_get('d2d_my_id');
+  $id = d2d_api_own_instance_id_get();
   return d2d_get_instance2($id);
 }
 
 function d2d_get_self_instance(&$id, &$d2d_id, &$url, &$public_key) {
-  $id = variable_get('d2d_my_id');
+  $id = d2d_api_own_instance_id_get();
   $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.url as url FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
   if ($row = $result->fetchAssoc()) {
     $url = $row['url'];
@@ -218,7 +218,7 @@ function d2d_get_instances($d2d_id_as_key, $reset = FALSE) {
 	
 	if ($reset || empty($instances)) {
 	  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, i.friendship_state as friendship_state, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id ORDER BY i.id ASC');
-	  $my_id = variable_get('d2d_my_id');
+	  $my_id = d2d_api_own_instance_id_get();
 	  $instances = array();
 	  foreach ($result as $record) {
 	    $instances[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
