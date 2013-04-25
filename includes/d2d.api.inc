@@ -350,12 +350,6 @@ function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
   return $instances;
 }
 
-function _d2d_decorate_instance_array(&$instance) {
-	if (empty($instance)) return;
-	$instance['is_friend'] = $instance['friendship_state'] == 3;
-	$instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
-}
-
 function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
 	$instances = &drupal_static(__FUNCTION__);
 		
@@ -400,7 +394,7 @@ function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
   return $instances;
 }
 
-function d2d_friend_get_by_url($url, $reset = FALSE) {
+function d2d_api_friend_get_by_url($url, $reset = FALSE) {
 	$friends = d2d_api_friend_get($reset);
   foreach ($friends as $friend) {
     if ($friend['url'] === $url) {

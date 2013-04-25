@@ -42,39 +42,6 @@ function d2d_format_unit($v, $unit, $skip=FALSE) {
   }
 }
 
-/*
-function d2d_get_instance_by_d2d_id($d2d_id) {
-  $result = db_query('SELECT p.public_key as public_key, i.id as id, i.name as name, i.url as url, i.description as description, i.friendship_state as friendship_state FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.d2d_id=:d2d_id', array(':d2d_id' => $d2d_id));
-  if ($row = $result->fetchAssoc()) {
-    $row['d2d_id'] = $d2d_id;
-    $row['is_friend'] = ($row['friendship_state'] == 3);
-    return $row;
-  }
-  else {
-    return FALSE;
-  }
-}
-
-
-// search by id
-function d2d_get_instance2($id) {
-  $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.friendship_state as friendship_state FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
-  if ($row = $result->fetchAssoc()) {
-    $row['id'] = $id;
-    $row['is_friend'] = ($row['friendship_state'] == 3);
-    return $row;
-  }
-  else {
-    return FALSE;
-  }
-}
-
-function d2d_get_self_instance2() {
-  $id = d2d_api_own_instance_id_get();
-  return d2d_get_instance2($id);
-}
-*/
-
 function d2d_get_self_instance(&$id, &$d2d_id, &$url, &$public_key) {
   $id = d2d_api_own_instance_id_get();
   $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.url as url FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
@@ -202,45 +169,11 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
   return $friends;
 }
 
-/*
-
-function d2d_get_friend_by_url($url, $reset = FALSE) {
-	$friends = d2d_get_friends(TRUE, $reset);
-  foreach ($friends as $friend) {
-    if ($friend['url'] === $url) {
-      return $friend;
-    }
-  }
-  return FALSE;
+function _d2d_decorate_instance_array(&$instance) {
+	if (empty($instance)) return;
+	$instance['is_friend'] = $instance['friendship_state'] == 3;
+	$instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
 }
-
-function d2d_get_instances($d2d_id_as_key, $reset = FALSE) {
-	
-	$instances = &drupal_static(__FUNCTION__);
-	
-	if ($reset || empty($instances)) {
-	  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, i.friendship_state as friendship_state, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id ORDER BY i.id ASC');
-	  $my_id = d2d_api_own_instance_id_get();
-	  $instances = array();
-	  foreach ($result as $record) {
-	    $instances[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
-	      'id' => $record->id,
-	      'd2d_id' => $record->d2d_id,
-	      'name' => $record->name,
-	      'url' => $record->url,
-	      'description' => $record->description,
-	      'time_inserted' => $record->time_inserted,
-	      'last_alive' => $record->last_alive,
-	      'public_key' => $record->public_key,
-	      'friendship_state' => $record->friendship_state,
-	      'is_friend' => ($record->friendship_state == 3),
-	      'is_me' => ($my_id === $record->id),
-	    );
-	  }
-	}
-  return $instances;
-}
-*/
 
 /**
  * Include the instance with the provided ID in all groups that are marked as default.
