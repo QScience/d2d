@@ -256,7 +256,7 @@ function d2d_form_check_public_keys_submit($form, &$form_state) {
   foreach ($result as $record) {
     $public_keys[$record->public_key] = $record->public_key_id;
   }
-  $friends = d2d_get_friends();
+  $friends = d2d_api_friend_get();
   $n_checked = 0;
   foreach ($friends as $friend) {
     if ($id == $friend['id']) {
