@@ -180,7 +180,7 @@ function theme_d2d_table_instances($variables) {
   ));
 }
 function d2d_table_instances($form, &$form_state) {
-  $instances = d2d_get_instances(FALSE);
+  $instances = d2d_api_instance_get_by_id();
   $form['instances'] = array(
     '#tree' => TRUE,
     '#theme' => 'd2d_table_instances',
@@ -246,7 +246,7 @@ function d2d_table_instances($form, &$form_state) {
 
 function d2d_list_instances() {
   d2d_notify(array('public_key'));
-  $instances = d2d_get_instances(FALSE);
+  $instances = d2d_api_instance_get_by_id();
   $rows = array();
   foreach ($instances as $instance) {
     $rows[] = array(
