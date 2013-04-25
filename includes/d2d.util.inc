@@ -31,6 +31,56 @@ function d2d_replace($search, $replace, $string) {
 }
 
 /**
+ * Encodes both the type and the value of the argument
+ *
+ * If $value === NULL it is encoded as "n$",
+ * if $value is a boolean it is encoded as either
+ * "b$0" or "b$1". Otherwise, $value is encoded as
+ * "s$" . $string, where $string = strval($value).
+ *
+ * @param mixed $value the value to be encoded
+ * @return string the encoded value or FALSE; if encoding failed
+ */
+function d2d_value_encode($value) {
+  if (is_null($value)) {
+    $type = 'n';
+    $string = '';
+  }
+  elseif (is_bool($value)) {
+    $type = 'b';
+    $string = $value ? '1' : '0';
+  }
+  else {
+    $type = 's';
+    $string = strval($value);
+  }
+  return $type . '$' . $string;
+}
+
+/**
+ * Decodes a string that has been encoded by d2d_value_encode
+ *
+ * @see d2d_value_encode
+ *
+ * @param string $string the string to be decoded
+ * @return array an array of two elements; the first value in that array
+ *   contains a flag which is TRUE if and only if the decoind succeeded.
+ *   On success, the second is the decoded version of $string.
+ */
+function d2d_value_decode($string) {
+  $array = preg_split('/\$/', $string, 2);
+  if (sizeof($array) != 2) {
+    return array(FALSE, '');
+  }
+  switch ($array[0]) {
+    case 'n': return array(TRUE, NULL);
+    case 'b': return array(TRUE, $array[1] ? TRUE : FALSE);
+    case 's': return array(TRUE, $array[1]);
+  }
+  return array(FALSE, '');
+}
+
+/**
  * Implode an array using its key and value pair
  *
  * Returns FALSE if there is a key or value not of type integer or string. The
@@ -58,7 +108,9 @@ function d2d_implode($array) {
     if ($key === FALSE) { // replacement failed
       return FALSE;
     }
-    // escape separators and escape-character in $key
+    // encode $value
+    $value = d2d_value_encode($value);
+    // escape separators and escape-character in $value
     $value = d2d_replace(array('\\', ',', '='), array('\\\\', '\\,', '\\='), $value);
     if ($value === FALSE) { // replacement failed
       return FALSE;
@@ -107,7 +159,11 @@ function d2d_explode($string) {
     // unescape, i.e. remove slashes followed by a single character
     $parsed_key = preg_replace('/\\\\(.)/', '\\1', $parsed_key);
     $parsed_value = preg_replace('/\\\\(.)/', '\\1', $parsed_value);
-    $return_array[$parsed_key] = $parsed_value;
+    list($success, $decoded_parsed_value) = d2d_value_decode($parsed_value);
+    if (!$success) {
+      return FALSE;
+    }
+    $return_array[$parsed_key] = $decoded_parsed_value;
   }
   return $return_array;
 }
@@ -200,7 +256,6 @@ function d2d_random_nonce() {
 }
 
 /**
- * 
  * Shortens a public key string to N characters
  * 
  * Useful to display part of a key in status messages.
@@ -227,7 +282,6 @@ function d2d_substr_public_key($key, $N = -10) {
 }
 
 /**
- * 
  * Cleans the public key string
  * 
  * Trim, removes comments and other characters. 
@@ -238,7 +292,6 @@ function d2d_substr_public_key($key, $N = -10) {
  * @return string The cleaned key
  */
 function d2d_clean_public_key($key, $keep_comment = FALSE) {
-
 	$limit = 0;
 	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
 	if ($comment_begin !== FALSE) {
@@ -256,7 +309,6 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
 }
 
 /**
- * 
  * Compares two strings containing public keys
  * 
  * Both keys are cleaned, and then compared
