@@ -23,7 +23,7 @@ function d2d_form_delete_public_key_submit($form, &$form_state) {
   $num_updated = d2d_api_public_key_unselect($id);
   if ($num_updated > 0) {
     drupal_set_message(t('Public key has been removed.'));
-    $instance = d2d_get_instance2($id);
+    $instance = d2d_api_instance_get_by_id($id);
     d2d_incoming_requests_reevaluate_signatures($instance);
   }
   else {
@@ -46,7 +46,7 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
 
 function d2d_form_receive_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  $instance = d2d_get_instance2($id);
+  $instance = d2d_api_instance_get_by_id($id);
   if ($instance === FALSE) {
     drupal_set_message(t('Instance not found.'), 'error');
     return;
@@ -187,7 +187,7 @@ function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
   else {
     drupal_set_message(t('Error choosing public key'), 'error');
   }
-  $instance = d2d_get_instance2($id);
+  $instance = d2d_api_instance_get_by_id($id);
   d2d_incoming_requests_reevaluate_signatures($instance);
 }
 
@@ -379,7 +379,7 @@ function d2d_select_public_key($instance, $public_key_id) {
   $instance_id = $instance['id'];
   if (d2d_public_key_exists($public_key_id, $instance_id) && $instance['public_key_id'] != $public_key_id) {
     $num_updated = d2d_api_public_key_select($instance_id, $public_key_id);
-    $instance = d2d_get_instance2($instance_id);
+    $instance = d2d_api_instance_get_by_id($instance_id);
     d2d_incoming_requests_reevaluate_signatures($instance); // TODO: recover on failure?
   }
   if ($num_updated > 0) {
@@ -396,7 +396,7 @@ function d2d_unselect_public_key($instance, $public_key_id) {
   $instance_id = $instance['id'];
   if ($instance['public_key_id'] == $public_key_id) {
     $num_updated = d2d_api_public_key_unselect($instance_id);
-    $instance = d2d_get_instance2($instance_id);
+    $instance = d2d_api_instance_get_by_id($instance_id);
     d2d_incoming_requests_reevaluate_signatures($instance); // TODO: recover on failure?
   }
   if ($num_updated > 0) {
@@ -536,7 +536,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
 function d2d_form_change_friendship_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $old_friendship_state = $form_state['input']['old_friendship_state'];
-  $instance = d2d_get_instance2($id);
+  $instance = d2d_api_instance_get_by_id($id);
   if ($instance === FALSE) {
     drupal_set_message(t('Instance does not exist anymore'), 'error');
   }
