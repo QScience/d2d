@@ -53,11 +53,11 @@ function d2d_form_edit_group_validate($form, &$form_state) {
   $id = $form_state['values']['id'];
   $name = $form_state['values']['name'];
   $description = $form_state['values']['description'];
-  $result = db_query('SELECT * FROM {d2d_groups} WHERE name=:name AND id<>:id', array(':name' => $name, ':id' => $id));
-  if ($result->fetchAssoc()) {
+  $group = d2d_api_group_get_by_name($name);
+  if (!is_null($group) && $group['id'] != $id) {
     form_set_error('name', t('Group name already exists in database.'));
   }
-  if (strlen($form_state['values']['description']) > D2D_GROUP_DESCRIPTION_MAX_LENGTH) {
+  if (strlen($description) > D2D_GROUP_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters.', array('@max_length' => D2D_GROUP_DESCRIPTION_MAX_LENGTH)));
   }
 }
@@ -69,14 +69,8 @@ function d2d_form_edit_group_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $name = $form_state['values']['name'];
   $description = $form_state['values']['description'];
-  $num_updated = db_update('d2d_groups')
-    ->fields(array(
-      'name' => $name,
-      'description' => $description,
-      'auto_member' => $form_state['values']['default'] ? 1 : 0,
-    ))
-    ->condition('id', $id)
-    ->execute();
+  $auto_member = $form_state['values']['default'];
+  $num_updated = d2d_api_group_update($id, $name, $description, $auto_member);
   if ($num_updated > 0) {
     drupal_set_message(t('The changes have been saved.'));
   }
@@ -87,17 +81,17 @@ function d2d_form_edit_group_submit($form, &$form_state) {
  */
 function d2d_edit_group($id) {
   $build = array();
+  $group = d2d_api_group_get($id);
+  if (is_null($group)) {
+    drupal_set_message(t('Group not found in database.'), 'error');
+    return $build;
+  }
   $build['main'] = array(
     '#title' => 'Group #' . $id,
     '#type' => 'fieldset',
   );
   $form_state = array();
-  $result = db_query('SELECT name, description, auto_member FROM {d2d_groups} WHERE id=:id', array(':id' => $id));
-  if (!($record = $result->fetchAssoc())) {
-    drupal_set_message(t('Group not found in database.'), 'error');
-    return $build;
-  }
-  $form_state['build_info']['args'] = array($id, $record['name'], $record['description'], $record['auto_member']);
+  $form_state['build_info']['args'] = array($id, $group['name'], $group['description'], $group['auto_member']);
   $build['main']['details'] = drupal_build_form('d2d_form_edit_group', $form_state);
   return $build;
 }
