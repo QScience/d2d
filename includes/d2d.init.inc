@@ -46,7 +46,7 @@ function d2d_form_init() {
         'Note: once you have saved the global identifier, it cannot be changed anymore.',
         array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)
       ),
-    '#default_value' => '',
+    '#default_value' => d2d_random_d2d_id(),
     '#size' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#maxlength' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#required' => FALSE, // length is checked anyway, no error if 'generate'-button is pressed
@@ -72,7 +72,7 @@ function d2d_form_init() {
   );
   $form['generate'] = array(
     '#type' => 'submit', 
-    '#value' => t('Generate random identifier'),
+    '#value' => t('Generate different random identifier'),
     '#validate' => array('d2d_form_init_generate_validate'),
     '#submit' => array(),
   );

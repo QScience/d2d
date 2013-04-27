@@ -31,16 +31,11 @@ function d2d_srpc_get_public_key($arguments, $rpc_info) {
 }
 function d2d_srpc_list_permissions($arguments, $rpc_info) {
   $id = $rpc_info['id'];
-  $result = db_query('SELECT DISTINCT p.method as method FROM {d2d_instances} i, {d2d_group_memberships} g, {d2d_permissions} p WHERE i.id=:id AND i.id=g.instance_id AND g.group_id=p.group_id', array(':id' => $id));
-  $records = $result->fetchAll();
-  $allowed_methods = array();
-  foreach ($records as $record) {
-    $allowed_methods[$record->method] = 1;
-  }
+  $method_table = d2d_api_method_get($id, TRUE);
   $return_array = array();
   $hks = module_invoke_all('d2d_secure_rpc');
   foreach ($hks as $key => $value) {
-    if (array_key_exists($key, $allowed_methods)) {
+    if (array_key_exists($key, $method_table)) {
       $args = '?';
       if (isset($value['arguments'])) {
         $arguments = $value['arguments'];

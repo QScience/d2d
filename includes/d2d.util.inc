@@ -5,7 +5,7 @@
  */
 
 /**
- * Replace all occurrences of the search string with the replacement string
+ * Replaces all occurrences of the search string with the replacement string.
  *
  * This function is just a wrapper for str_replace that also checks if the
  * given string is really is a string. If $string is an integer, it will be
@@ -31,7 +31,7 @@ function d2d_replace($search, $replace, $string) {
 }
 
 /**
- * Encodes both the type and the value of the argument
+ * Encodes both the type and the value of the argument.
  *
  * If $value === NULL it is encoded as "n$",
  * if $value is a boolean it is encoded as either
@@ -58,7 +58,7 @@ function d2d_value_encode($value) {
 }
 
 /**
- * Decodes a string that has been encoded by d2d_value_encode
+ * Decodes a string that has been encoded by d2d_value_encode.
  *
  * @see d2d_value_encode
  *
@@ -81,7 +81,7 @@ function d2d_value_decode($string) {
 }
 
 /**
- * Implode an array using its key and value pair
+ * Implodes an array using its key and value pair.
  *
  * Returns FALSE if there is a key or value not of type integer or string. The
  * key-value-pair is separated using a '='-character as a separator, several
@@ -121,7 +121,7 @@ function d2d_implode($array) {
 }
 
 /**
- * Explode a string into an array of key and value pairs
+ * Explodes a string into an array of key and value pairs.
  *
  * Returns FALSE if the explosion failed, otherwise the array resulting from
  * exploding the given string into key-value-pairs is returned. Note that
@@ -169,7 +169,7 @@ function d2d_explode($string) {
 }
 
 /**
- * Checks values of an array using user defined functions
+ * Checks values of an array using user defined functions.
  *
  * The check fails if the check for one value of the provided array fails. Note
  * that the check only succeeds if each keys of both provided arrays are the
@@ -198,6 +198,77 @@ function d2d_check_array(&$array, $checks) {
   $array = $tmp_array;
   return TRUE;
 }
+
+/**
+ * Shortens a public key string to N characters.
+ * 
+ * Useful to display part of a key in status messages.
+ * 
+ * Comments are automatically excluded from the N chars.
+ * Negative N will start counting from the ending of the key.
+ * 
+ * @param string $key The public key to shorten for preview
+ * @param integer $N Optional. The number of characters to keep. Defaults, -10
+ * @return string The shortened key
+ * 
+ * @see d2d_clean_public_key
+ */
+function d2d_substr_public_key($key, $N = -10) {
+	$key = d2d_clean_public_key($key);
+
+	if ($N < 0) {
+		return mb_substr($key, mb_strlen($key) + $N);
+	}
+	else {
+		return mb_substr($key, 0, $N);
+	}
+	
+}
+
+/**
+ * Cleans the public key string.
+ * 
+ * Trim, removes comments and other characters. 
+ * 
+ * @param string $key The public key to clean
+ * @param boolean $keep_comment Optional. Keeps comment about begin/end 
+ * 	public key. Defaults, FALSE
+ * @return string The cleaned key
+ */
+function d2d_clean_public_key($key, $keep_comment = FALSE) {
+	$limit = 0;
+	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
+	if ($comment_begin !== FALSE) {
+		$limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
+		$key = substr($key, $limit);
+	}
+	
+	$comment_end = strpos($key, '-----END PUBLIC KEY-----');
+	if ($comment_end !== FALSE) {
+		$limit = $keep_comment ? $comment_end + 25 : $comment_end; //
+		$key = substr($key, 0, $limit);
+	}
+	
+	return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
+}
+
+/**
+ * Compares two strings containing public keys.
+ * 
+ * Both keys are cleaned, and then compared
+ * 
+ * @param string $key1 The first public key to compare
+ * @param string $key2 The second public key to compare
+ * @return boolean TRUE if the public keys are equal
+ * 
+ * @see d2d_clean_public_key
+ */
+function d2d_public_key_eql($key1, $key2) {
+	$key1 = d2d_clean_public_key($key1);
+	$key2 = d2d_clean_public_key($key2);
+	return $key1 === $key2;
+}
+
 //////////////////////////////////////////////////////////
 // The following tiny functions should be self-describing.
 //////////////////////////////////////////////////////////
@@ -254,74 +325,3 @@ function d2d_check_nonce($nonce) {
 function d2d_random_nonce() {
   return d2d_random_hex_string(D2D_NONCE_LENGTH);
 }
-
-/**
- * Shortens a public key string to N characters
- * 
- * Useful to display part of a key in status messages.
- * 
- * Comments are automatically excluded from the N chars.
- * Negative N will start counting from the ending of the key.
- * 
- * @param string $key The public key to shorten for preview
- * @param integer $N Optional. The number of characters to keep. Defaults, -10
- * @return string The shortened key
- * 
- * @see d2d_clean_public_key
- */
-function d2d_substr_public_key($key, $N = -10) {
-	$key = d2d_clean_public_key($key);
-
-	if ($N < 0) {
-		return mb_substr($key, mb_strlen($key) + $N);
-	}
-	else {
-		return mb_substr($key, 0, $N);
-	}
-	
-}
-
-/**
- * Cleans the public key string
- * 
- * Trim, removes comments and other characters. 
- * 
- * @param string $key The public key to clean
- * @param boolean $keep_comment Optional. Keeps comment about begin/end 
- * 	public key. Defaults, FALSE
- * @return string The cleaned key
- */
-function d2d_clean_public_key($key, $keep_comment = FALSE) {
-	$limit = 0;
-	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
-	if ($comment_begin !== FALSE) {
-		$limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
-		$key = substr($key, $limit);
-	}
-	
-	$comment_end = strpos($key, '-----END PUBLIC KEY-----');
-	if ($comment_end !== FALSE) {
-		$limit = $keep_comment ? $comment_end + 25 : $comment_end; //
-		$key = substr($key, 0, $limit);
-	}
-	
-	return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
-}
-
-/**
- * Compares two strings containing public keys
- * 
- * Both keys are cleaned, and then compared
- * 
- * @param string $key1 The first public key to compare
- * @param string $key2 The second public key to compare
- * @return boolean TRUE if the public keys equal
- * 
- * @see d2d_clean_public_key
- */
-function d2d_public_key_eql($key1, $key2) {
-	$key1 = d2d_clean_public_key($key1);
-	$key2 = d2d_clean_public_key($key2);
-	return $key1 === $key2;
-}
-

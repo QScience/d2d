@@ -194,16 +194,16 @@ function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
 function d2d_form_groups_by_instance($form, &$form_state, $id) {
   $rows = array();
   $default_value = array();
-  $result = db_query('SELECT g.id as id, g.name as name, g.description as description, gm.group_id as flag FROM {d2d_groups} g LEFT OUTER JOIN {d2d_group_memberships} gm ON g.id=gm.group_id AND gm.instance_id=:id', array(':id' => $id));
-  foreach ($result as $record) {
-    $group = array(
+  $groups = d2d_api_group_membership_get($id);
+  foreach ($groups as $group) {
+    $group_entry = array(
       '#type' => 'item',
-      '#markup' => $record->name,
-      '#description' => $record->description,
+      '#markup' => $group['name'],
+      '#description' => $group['description'],
     );
-    $row = array($record->id, drupal_render($group)); //, $record->description, $record->flag ? 'yes' : 'no');
-    $rows['id' . $record->id] = $row;
-    $default_value['id' . $record->id] = $record->flag ? 'id' . $record->id : 0;
+    $row = array($group['id'], drupal_render($group_entry));
+    $rows['id' . $group['id']] = $row;
+    $default_value['id' . $group['id']] = $group['is_member'] ? 'id' . $group['id'] : 0;
   }
   $form['id'] = array(
     '#type' => 'hidden',
@@ -625,15 +625,10 @@ function d2d_edit_instance_permissions($instance) {
   $build = _d2d_edit_instance_build_header($instance);
   $rows = array();
   if (!$instance['is_me']) {
-    $result = db_query('SELECT DISTINCT p.method as method FROM {d2d_instances} i, {d2d_group_memberships} g, {d2d_permissions} p WHERE i.id=:id AND i.id=g.instance_id AND g.group_id=p.group_id', array(':id' => $instance['id']));
-    $records = $result->fetchAll();
-    $allowed_methods = array();
-    foreach ($records as $record) {
-      $allowed_methods[$record->method] = 1;
-    }
+    $method_table = d2d_api_method_get($instance['id'], TRUE);
     $hks = module_invoke_all('d2d_secure_rpc');
     foreach ($hks as $key => $value) {
-      if (array_key_exists($key, $allowed_methods)) {
+      if (array_key_exists($key, $method_table)) {
         $col1 = array(
           '#type' => 'item',  
           '#markup' => $key,

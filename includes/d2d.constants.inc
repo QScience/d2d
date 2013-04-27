@@ -5,8 +5,6 @@
  * Defines constants used all over the module.
  */
 
-// TODO: remove unused constants
-
 define('D2D_INSTANCE_URL_MAX_LENGTH', 128);
 define('D2D_INSTANCE_NAME_MAX_LENGTH', 64);
 define('D2D_INSTANCE_DESCRIPTION_MAX_LENGTH', 1024);
@@ -32,7 +30,7 @@ define('D2D_DELTA_1_DEFAULT', 600);
 define('D2D_DELTA_1_MIN', 0);
 define('D2D_DELTA_1_MAX', 600);
 
-define('D2D_VERSION_STRING', 'd2d 0.2');
+define('D2D_VERSION_STRING', '0.2.0');
 
 define('D2D_NOTIFICATION_TYPE_MAX_LENGTH', 128);
 

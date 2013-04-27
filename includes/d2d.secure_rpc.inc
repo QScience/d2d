@@ -248,8 +248,7 @@ function d2d_secure_rpc($request64, $version) {
   if (!is_array($hk)) {
     return xmlrpc_error(0, 'method exists but is not properly implemented');
   }
-  $result = db_query('SELECT * FROM {d2d_group_memberships} g, {d2d_permissions} p WHERE g.instance_id=:id AND g.group_id=p.group_id AND p.method=:method', array(':id' => $friend['id'], ':method' => $method_name));
-  if (!$result->rowCount()) {
+  if (!d2d_api_method_permission_exists($friend['id'], $method_name)) {
     return xmlrpc_error(0, 'permission denied');
   }
   $argument_checks = (array_key_exists('arguments', $hk) ? $hk['arguments'] : array());
