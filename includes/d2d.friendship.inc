@@ -116,7 +116,7 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
 }
 
 function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
-  d2d_insert_notification('d2d_friendship', $d2d_id, 
+  d2d_api_notification_insert('d2d_friendship', $d2d_id, 
     d2d_implode(
       array(
         'type' => $type,
