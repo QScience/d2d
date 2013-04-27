@@ -685,3 +685,55 @@ function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
     module_invoke_all('d2d_group_membership', $instance_id, $group_ids); 
   }
 }
+
+// notification
+/**
+ * Counts the number of unread notifications.
+ * TODO: some of the notifications might not have a callback that allows to
+ *       view them, hence they are counted as unread but also are not listed
+ */
+function d2d_api_notification_count_unread() {
+  $query = db_select('d2d_notifications', 'n');
+  $query = $query->condition('n.seen', 0);
+  $query = $query->fields('n', array('id'));
+  $result = $query->execute();
+  return $result->rowCount();
+}
+
+/**
+ * Inserts a notification into the database.
+ */
+function d2d_api_notification_insert($type, $d2d_id, $content) {
+  db_insert('d2d_notifications')->fields(array('type', 'd2d_id', 'content', 'timestamp'))
+    ->values(array('type' => $type, 'd2d_id' => $d2d_id, 'content' => $content, 'timestamp' => d2d_get_time()))
+    ->execute();
+}
+/**
+ * Marks a notification as read or unread.
+ */
+function d2d_api_notification_change_read($notification_id, $seen) {
+  return db_update('d2d_notifications')
+    ->fields(array(
+      'seen' => $seen ? 1 : 0,
+    ))
+    ->condition('id', $notification_id)
+    ->execute();
+}
+
+/**
+ * Deletes a notification.
+ */
+function d2d_api_notification_delete($notification_id) {
+  return db_delete('d2d_notifications')
+    ->condition('id', $notification_id)
+    ->execute();
+}
+
+function d2d_api_notification_get($notification_id) {
+  $query = db_select('d2d_notifications', 'n');
+  $query = $query->condition('n.id', $notification_id);
+  $query = $query->fields('n');
+  $result = $query->execute();
+  $notification = $result->fetchAssoc();
+  return $notification ? $notification : NULL;
+}

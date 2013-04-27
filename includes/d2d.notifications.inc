@@ -27,7 +27,7 @@ function d2d_notify($exclude=array()) {
     }
   }
   if (!in_array('notifications', $exclude)) {
-    $n_unread = d2d_count_unread_notifications();
+    $n_unread = d2d_api_notification_count_unread();
     if ($n_unread > 0) {
       if ($n_unread == 1) {
         drupal_set_message(t('You have @count unread notification. Click !link to read it.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
@@ -39,20 +39,6 @@ function d2d_notify($exclude=array()) {
   }
 }
 
-/**
- * Count the number of unread notifications.
- * TODO: some of the notifications might not have a callback that allows to
- *       view them, hence they are counted as unread but also are not listed
- */
-function d2d_count_unread_notifications() {
-  $result = db_query('SELECT count(*) as unread_count FROM {d2d_notifications} WHERE seen=0');
-  if ($row = $result->fetchAssoc()) {
-    return $row['unread_count'];
-  }
-  else {
-    return 0;
-  }
-}
 /**
  * Returns TRUE iff there is an instance without a public key.
  *
@@ -105,14 +91,6 @@ function d2d_get_message_detailed($arguments, $attributes) {
   return $build;
 }
 
-/**
- * Insert a notification into the database.
- */
-function d2d_insert_notification($type, $d2d_id, $content) {
-  db_insert('d2d_notifications')->fields(array('type', 'd2d_id', 'content', 'timestamp'))
-    ->values(array('type' => $type, 'd2d_id' => $d2d_id, 'content' => $content, 'timestamp' => d2d_get_time()))
-    ->execute();
-}
 /**
  * Builts a table with notifications of type specified in $types
  *
@@ -212,13 +190,15 @@ function d2d_show_notification_details($id) {
     $id_not_found = TRUE;
   }
   if (!$id_not_found) {
+    $notification = d2d_api_notification_get($id);
+    // TODO
     $record = db_query('SELECT id, type, d2d_id, content, timestamp, seen FROM {d2d_notifications} WHERE id=:id', array(':id' => $id));
     if ($row = $record->fetchObject()) {
       $content = $row->content;
       $attributes = array(
         'id' => $row->id,
         'd2d_id' => $row->d2d_id,
-        'timestampe' => $row->timestamp,
+        'timestamp' => $row->timestamp,
       );
       $seen = $row->seen;
       $type = $row->type;
@@ -232,12 +212,7 @@ function d2d_show_notification_details($id) {
     drupal_goto('admin/d2d/notifications');
   }
   if (!$seen) {
-    db_update('d2d_notifications')
-      ->fields(array(
-        'seen' => 1,
-      ))
-      ->condition('id', $id)
-      ->execute();
+    d2d_api_notification_change_read($id, TRUE);
   }
   $hooks = module_invoke_all('d2d_handle_notification');  
   $hook = $hooks[$type];
@@ -256,9 +231,7 @@ function d2d_show_notification_details($id) {
  */
 function d2d_notification_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
-    db_delete('d2d_notifications')
-      ->condition('id', $id)
-      ->execute();
+    d2d_api_notification_delete($id);
   }
   drupal_goto('admin/d2d/notifications');
 }
@@ -268,12 +241,7 @@ function d2d_notification_delete_submit($form, &$form_state, $id) {
  */
 function d2d_notification_mark_read_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
-    $num_updated = db_update('d2d_notifications')
-      ->fields(array(
-        'seen' => 1,
-      ))
-      ->condition('id', $id)
-      ->execute();
+    d2d_api_notification_change_read($id, TRUE);
   }
   drupal_goto('admin/d2d/notifications');
 }
@@ -283,12 +251,7 @@ function d2d_notification_mark_read_submit($form, &$form_state, $id) {
  */
 function d2d_notification_mark_unread_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
-    $num_updated = db_update('d2d_notifications')
-      ->fields(array(
-        'seen' => 0,
-      ))
-      ->condition('id', $id)
-      ->execute();
+    d2d_api_notification_change_read($id, FALSE);
   }
   drupal_goto('admin/d2d/notifications');
 }
