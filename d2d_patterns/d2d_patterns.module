@@ -27,6 +27,16 @@ function d2d_patterns($data = NULL){
                         ),
   );
   
+  $tags['d2d_instance'] = array(
+    PATTERNS_INFO   => t('Create/Modify/Delete D2D instances.'),
+    PATTERNS_CREATE => array('d2d_form_add_instance'),
+    PATTERNS_MODIFY => array('d2d_edit_instance_details'),
+    PATTERNS_DELETE => array('d2d_edit_instance_details'),
+    PATTERNS_EXPORT => array(
+                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_instances',
+                        ),
+  );
+  
   $tags['d2d_friendship'] = array(
     PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
     PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
@@ -84,9 +94,8 @@ function d2d_patterns_delete_own_keys($form_id, $form_state) {
 }
 
 function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
-	$actions = array();
-	$action_type = PATTERNS_MODIFY; // pre-init 
-	
+
+	$action_type = PATTERNS_MODIFY;
 	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
   	$action_type = PATTERNS_CREATE;
 	}
@@ -100,11 +109,34 @@ function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
   return $keys;
 }
 
-
+function d2d_patterns_export_all_instances($args = NULL, &$result = NULL) {
+	
+	$action_type = PATTERNS_MODIFY;
+	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+  	$action_type = PATTERNS_CREATE;
+	}
+	
+  $instances = d2d_api_instance_get();
+  $actions = array();
+  foreach ($instances as $i) {
+  	$action = array($action_type => array(
+  		'tag' => 'd2d_instance', 
+  		'd2d_id' => $i['d2d_id'],
+  		'address' => $i['address'],
+  		'name' => $i['name'],
+  		'description' => $i['description'],
+  	));
+  	if ($action_type == PATTERNS_MODIFY) {
+  		$action[$action_type]['id'] = $i['id'];
+  	}
+  	array_push($actions, $action);
+  }
+  return $actions;
+}
 
 function d2d_patterns_export_own_public_key($args = NULL, &$result = NULL) {
 	$actions = array();
-	$action_type = PATTERNS_MODIFY; // pre-init 
+	$action_type = PATTERNS_MODIFY; // pre-init
 	
 	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
   	$action_type = PATTERNS_CREATE;
@@ -220,6 +252,37 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   }
   
+  else if ($tag = 'd2d_instance') {
+  	if ($action == PATTERNS_CREATE) {
+	  	$status = patterns_check_mandatory_keys($data, array('name', 'd2d_id', 'address',), $msg);
+  	}
+  	else if ($action == PATTERNS_MODIFY) {  
+  		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
+  			
+  		if (!$kcheck['id']) {
+  			$msg = t("The 'id' attribute is required.");
+  			$status = PATTERNS_ERR;
+  		}
+  		else if (!($kcheck['public_key'] && $kcheck['d2d_id'])) {
+  			$msg = t("Either the 'public_key' or the 'd2d_id' attributes or both are required");
+  			$status = PATTERNS_ERR;
+  		}
+  	}
+  	
+  	else { // PATTERNS_DELETE
+  		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
+  		
+  		// Either the id or the combination d2d_id public_key
+  		if (!$kcheck['id'] && !($kcheck['public_key'] && $kcheck['d2d_id'])) {
+
+  			$msg = t("Either the 'id' attribute or the combination 'public_key' and 'd2d_id' is required");
+  			$status = PATTERNS_ERR;
+  		}
+  		
+  	}
+  }
+  
+  
   if ($status == PATTERNS_ERR) {
   	return patterns_results($status, $msg);	
   }
@@ -280,4 +343,36 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   return patterns_results($status, $msg, $result);	
    
+}
+
+function patterns_check_mandatory_keys($data, &$msg, $keys = array()) { {
+	$kcheck = patterns_utils_key_exists($keys, $data);
+	
+	
+	$msg_mandatory = NULL;
+	$msg_init_mandatory = t("The following mandatory keys are missing: ");
+	
+	$msg_exclusive = NULL;
+	$msg_init_mandatory = t("The following keys are mutually exclusive: ");
+	
+	$msg_at_least = NULL;
+	$msg_init_mandatory = t("At least one key of the following must be present: ");
+	
+	$status = PATTERNS_SUCCESS;
+	foreach ($kcheck as $key) {
+		if (!$kcheck[$key] && isset($keys['mandatory'][$key])) {
+			if ($status == PATTERNS_SUCCESS) $msg = $msg_init;	
+			$status = PATTERNS_ERR;
+			$msg .= $key . ', ';
+		}
+		
+		
+	}
+		
+	if ($status == PATTERNS_ERR) {
+		$msg = substr($msg, 0, -2);
+		return PATTERNS_ERR;
+	}	
+	  		
+	
 }
