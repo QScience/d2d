@@ -729,6 +729,30 @@ function d2d_api_notification_delete($notification_id) {
     ->execute();
 }
 
+function d2d_api_notification_get_by_type($types) {
+  $query = db_select('d2d_notifications', 'n');
+  if (!is_null($types)) {
+    if (empty($types)) {
+      return array();
+    }
+    $query = $query->condition('n.type', $types);
+  }
+  $query = $query->fields('n')
+                 ->orderBy('n.id', 'DESC');
+  $result = $query->execute();
+  $notifications = array();
+  foreach ($result as $record) {
+    $notifications[] = array(
+      'id' => $record->id,
+      'type' => $record->type,
+      'd2d_id' => $record->d2d_id,
+      'content' => $record->content,
+      'timestamp' => $record->timestamp,
+      'seen' => $record->seen,
+    );
+  }
+  return $notifications;
+}
 function d2d_api_notification_get($notification_id) {
   $query = db_select('d2d_notifications', 'n');
   $query = $query->condition('n.id', $notification_id);
