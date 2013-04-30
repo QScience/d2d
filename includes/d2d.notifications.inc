@@ -105,6 +105,8 @@ function d2d_built_notification_table($types) {
   );
   $hooks = module_invoke_all('d2d_handle_notification');
   $rows = array();
+//  $notifications = d2d_api_notification_get($
+/*
   if (is_array($types)) {
     if (empty($types)) {
       $result = array();
@@ -116,46 +118,48 @@ function d2d_built_notification_table($types) {
   else {
     $result = db_query('SELECT id, type, d2d_id, content, timestamp, seen FROM {d2d_notifications} ORDER BY id DESC');
   }
-  foreach ($result as $record) {
-    if (!array_key_exists($record->type, $hooks)) {
+*/
+  $notifications = d2d_api_notification_get_by_type($types);
+  foreach ($notifications as $notification) {
+    if (!array_key_exists($notification['type'], $hooks)) {
       continue;
     }
-    $hook = $hooks[$record->type];
+    $hook = $hooks[$notification['type']];
     $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
-    $arguments = d2d_explode($record->content);
+    $arguments = d2d_explode($notification['content']);
     if (!d2d_check_array($arguments, $argument_checks)) {
       continue;
     }
     $attributes = array(
-      'id' => $record->id,
-      'd2d_id' => $record->d2d_id,
-      'timestampe' => $record->timestamp,
+      'id' => $notification['id'],
+      'd2d_id' => $notification['d2d_id'],
+      'timestamp' => $notification['timestamp'],
     );
     $type = $hook['name'];
     $message = call_user_func($hook['callback_simple'], $arguments, $attributes);
-    if ($record->seen) {
+    if ($notification['seen']) {
       $read_text = t('mark as unread');
-      $read_link = 'admin/d2d/notifications/' . $record->id . '/mark_unread';
+      $read_link = 'admin/d2d/notifications/' . $notification['id'] . '/mark_unread';
     }
     else {
       $read_text = t('mark as read');
-      $read_link = 'admin/d2d/notifications/' . $record->id . '/mark_read';
+      $read_link = 'admin/d2d/notifications/' . $notification['id'] . '/mark_read';
     }
     $row = array(
-      $record->id,
+      $notification['id'],
       $type,
       $message,
-      d2d_get_absolute_time($record->timestamp),
-      l(t('details'), 'admin/d2d/notifications/' . $record->id . '/details'),
+      d2d_get_absolute_time($notification['timestamp']),
+      l(t('details'), 'admin/d2d/notifications/' . $notification['id'] . '/details'),
       l($read_text, $read_link),
-      l(t('delete'), 'admin/d2d/notifications/' . $record->id . '/delete'),
+      l(t('delete'), 'admin/d2d/notifications/' . $notification['id'] . '/delete'),
     );
-    if (!$record->seen) {
+    if (!$notification['seen']) {
       foreach ($row as &$cell) {
-        $cell = '<b>' . $cell . '</b>';
+        $cell = '<strong>' . $cell . '</strong>';
       }
     }
-    $rows['id' . $record->id] = $row;
+    $rows['id' . $notification['id']] = $row;
   }
   $table = array(
     '#theme' => 'table',
@@ -176,7 +180,6 @@ function d2d_show_notifications() {
     '#title' => t('Notifications'),
     '#type' => 'fieldset',
   );
-  //$build['notifications'][] = d2d_built_notification_table(array('d2d_message'));
   $build['notifications'][] = d2d_built_notification_table(NULL); 
   return $build;
 }
@@ -185,45 +188,30 @@ function d2d_show_notifications() {
  * Shows details for the notification with id $id.
  */
 function d2d_show_notification_details($id) {
-  $id_not_found = FALSE;
-  if (!d2d_check_convert_int($id)) {
-    $id_not_found = TRUE;
-  }
-  if (!$id_not_found) {
-    $notification = d2d_api_notification_get($id);
-    // TODO
-    $record = db_query('SELECT id, type, d2d_id, content, timestamp, seen FROM {d2d_notifications} WHERE id=:id', array(':id' => $id));
-    if ($row = $record->fetchObject()) {
-      $content = $row->content;
-      $attributes = array(
-        'id' => $row->id,
-        'd2d_id' => $row->d2d_id,
-        'timestamp' => $row->timestamp,
-      );
-      $seen = $row->seen;
-      $type = $row->type;
-    }
-    else {
-      $id_not_found = TRUE;
-    }
-  }
-  if ($id_not_found) {
+  if (!d2d_check_convert_int($id) || is_null($notification = d2d_api_notification_get($id))) {
     drupal_set_message(t('Notification not found'), 'error');
     drupal_goto('admin/d2d/notifications');
   }
-  if (!$seen) {
-    d2d_api_notification_change_read($id, TRUE);
+  else {
+    if (!$notification['seen']) {
+      d2d_api_notification_change_read($id, TRUE);
+    }
+    $hooks = module_invoke_all('d2d_handle_notification');  
+    $hook = $hooks[$notification['type']];
+    $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
+    $arguments = d2d_explode($notification['content']);
+    if (!d2d_check_array($arguments, $argument_checks)) {
+      drupal_set_message('Notification erroneous', 'error');
+      drupal_goto('admin/d2d/notifications');
+    }
+    $attributes = array(
+      'id' => $notification['id'],
+      'd2d_id' => $notification['d2d_id'],
+      'timestamp' => $notification['timestamp'],
+    );
+    $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
+    return $build;
   }
-  $hooks = module_invoke_all('d2d_handle_notification');  
-  $hook = $hooks[$type];
-  $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
-  $arguments = d2d_explode($content);
-  if (!d2d_check_array($arguments, $argument_checks)) {
-    drupal_set_message('Notification erroneous', 'error');
-    drupal_goto('admin/d2d/notifications');
-  }
-  $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
-  return $build;
 }
 
 /**
