@@ -274,6 +274,21 @@ function d2d_secure_rpc($request64, $version) {
   catch (D2DRemoteException $e) {
     return xmlrpc_error(0, $e->getMessage());
   }
+  catch (Exception $e) {
+    // In case an exception occurs that is not a D2DRemoteException we log the
+    // exception message together with name and arguments of the function being
+    // called. The string representation of $exploded_arguments can be
+    // arbitrarily long and is truncated in case it is too long.
+    $arguments_string = var_export($exploded_arguments, TRUE);
+    if (!is_string($arguments_string)) {
+      $arguments_string = '';
+    }
+    elseif (strlen($arguments_string) > 1024) {
+      $arguments_string = substr($arguments_string, 0, 1024);
+    }
+    watchdog('D2D', 'Exception in d2d_secure_rpc: \'%exception_message\', $callback=%callback, $arguments=%arguments, $rpc_info=%rpc_info', array('%callback' => var_export($callback, TRUE), '%exception_message' => $e->getMessage(), '%arguments' => $arguments_string, '%rpc_info' => var_export($rpc_info, TRUE)));
+    return xmlrpc_error(0, 'exception in the function called on remote host');
+  }
   if (!is_string($ret)) {
     return xmlrpc_error(0, 'called function did not return string');
   }
