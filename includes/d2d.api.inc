@@ -212,7 +212,9 @@ function d2d_api_own_public_key_set($public_key) {
 }
 
 // TODO: used by d2d_patterns only, can possibly break things
-//   variable_del has no return value
+//   variable_del has no return value, there should be no method
+//   to delete the own public key without deleting the private
+//   key
 function d2d_api_own_public_key_del() {
   
   $num_deleted = db_delete('d2d_public_keys')
