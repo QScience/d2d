@@ -129,14 +129,12 @@ function d2d_form_edit_instance_submit($form, &$form_state) {
   $name = $form_state['values']['name'];
   $url = $form_state['values']['address'];
   $description = $form_state['values']['description'];
-	$update = array(
-  	'name' => $name,
+  $update = array(
+    'name' => $name,
     'url' => $url,
     'description' => $description,
   );
-  
   d2d_api_instance_update($id, $update);
-  
   drupal_set_message(t('Details have been saved.'));
 }
 
