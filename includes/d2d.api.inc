@@ -4,18 +4,9 @@
  * Database related functions.
  */
 
-// Update state of friendship.
-function d2d_api_friendship_update($friend_id, $friendship_state) {
-  db_update('d2d_instances')
-    ->fields(array('friendship_state' => $friendship_state))
-    ->condition('id', $friend_id)
-    ->execute();
-  // call hook  
-  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state);       
-}
-
-
+//////////////
 // PUBLIC KEY
+//////////////
 
 // Selects public key of an instance.
 function d2d_api_public_key_select($instance_id, $public_key_id) {
@@ -41,7 +32,7 @@ function d2d_api_public_key_update($id, $update) {
 }
 
 // Removes public key from the database.
-function d2d_api_public_key_del($id) {
+function d2d_api_public_key_delete($id) {
   $num_deleted = db_delete('d2d_public_keys')
     ->condition('id', $id)
     ->execute();
@@ -84,10 +75,12 @@ function d2d_api_public_key_get($d2d_id = NULL) {
   return $keys;
 }
 
+//////////////
 // INSTANCE
+//////////////
 
 // Remove instance and all associated entries from the database.
-function d2d_api_instance_remove($instance_id) {
+function d2d_api_instance_delete($instance_id) {
   $instance = d2d_api_instance_get_by_id($instance_id);
   // remove group memberships
   db_delete('d2d_group_memberships')
@@ -148,7 +141,9 @@ function d2d_api_instance_exist($d2d_id) {
   return empty($res);
 }
 
+//////////////
 // PUBLIC KEY
+//////////////
 
 /**
  * Retrieves the numeric id of a public key identified 
@@ -190,8 +185,9 @@ function d2d_api_public_key_get_by_id($id) {
   return $query->execute()->FetchObject();
 }
 
+/////////////////
 // OWN PUBLIC KEY
-
+/////////////////
 /**
  * Retrieves own public key (plain text)
  * 
@@ -232,7 +228,7 @@ function d2d_api_own_public_key_set($public_key) {
  * Warning: deleting own public key might make communication impossible
  * 
  */
-function d2d_api_own_public_key_del() {
+function d2d_api_own_public_key_delete() {
 
   $num_deleted = db_delete('d2d_public_keys')
   ->condition('id_instance', $id)
@@ -242,7 +238,10 @@ function d2d_api_own_public_key_del() {
 
 }
 
+///////////////////
 // OWN PRIVATE KEY
+///////////////////
+
 
 function d2d_api_own_private_key_get() {
   return variable_get('d2d_private_key', FALSE);
@@ -252,11 +251,13 @@ function d2d_api_own_private_key_set($private_key) {
   variable_set('d2d_private_key', $private_key);
 }
 
-function d2d_api_own_private_key_del() {
+function d2d_api_own_private_key_delete() {
   variable_del('d2d_private_key');
 }
 
+//////////////
 // OWN D2D_ID
+//////////////
 
 function d2d_api_own_d2d_id_get() {
   return variable_get('d2d_my_id');
@@ -266,11 +267,13 @@ function d2d_api_own_d2d_id_set($d2d_id) {
   variable_set('d2d_my_id', $d2d_id);
 }
 
-function d2d_api_own_d2d_id_del($d2d_id) {  
+function d2d_api_own_d2d_id_delete($d2d_id) {  
   variable_del('d2d_my_id');
 }
 
+///////////////////
 // OWN INSTANCE_ID
+///////////////////
 
 function d2d_api_own_instance_id_get() {
   return variable_get('d2d_my_instance_id');
@@ -280,7 +283,7 @@ function d2d_api_own_instance_id_set($id) {
   variable_set('d2d_my_instance_id', $id);
 }
 
-function d2d_api_own_instance_id_del($id) {
+function d2d_api_own_instance_id_delete($id) {
   variable_del('d2d_my_instance_id');
 }
 
@@ -290,7 +293,9 @@ function d2d_api_own_instance_get() {
   return d2d_api_instance_get_by_id($id);
 }
 
+//////////////
 // INSTANCE
+//////////////
 
 function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
 
@@ -333,7 +338,10 @@ function d2d_api_instance_update($instance_id, $fields) {
   return $num_updated;
 }
 
+///////////
 // FRIENDS
+///////////
+
 
 function _d2d_api_friend_get($d2d_id) {
 
@@ -368,8 +376,24 @@ function d2d_api_friend_get_by_url($url) {
   return FALSE;
 }
 
+//////////////
+// FRIENDSHIP
+//////////////
 
-/////////////////////////////////////////////////////////////////
+// Update state of friendship.
+function d2d_api_friendship_update($friend_id, $friendship_state) {
+  db_update('d2d_instances')
+  ->fields(array('friendship_state' => $friendship_state))
+  ->condition('id', $friend_id)
+  ->execute();
+  // call hook
+  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state);
+}
+
+
+/////////
+// GROUP
+////////
 
 /**
  * Returns a group by its id resp. all groups.
@@ -421,6 +445,110 @@ function d2d_api_group_delete($group_ids) {
       ->execute();
   }
 }
+
+
+/**
+ * Creates a new group.
+ */
+function d2d_api_group_add($name, $description, $auto_member) {
+  try {
+    $id = db_insert('d2d_groups')->fields(
+        array(
+            'name' => $name,
+            'description' => $description,
+            'auto_member' => $auto_member ? 1 : 0,
+        ))->execute();
+    return $id;
+  }
+  catch (Exception $e) {
+    return NULL;
+  }
+}
+
+/**
+ * Updates attributes of a group.
+ */
+function d2d_api_group_update($id, $name, $description, $auto_member) {
+  return db_update('d2d_groups')
+  ->fields(array(
+      'name' => $name,
+      'description' => $description,
+      'auto_member' => $auto_member ? 1 : 0,
+  ))
+  ->condition('id', $id)
+  ->execute();
+}
+
+////////////////////
+// GROUP MEMBERSHIP
+///////////////////
+
+/**
+ * Returns all groups with a flag indicating group membership of given instance.
+ */
+function d2d_api_group_membership_get($instance_id) {
+  $query = db_select('d2d_groups', 'g');
+  $query->leftJoin('d2d_group_memberships', 'gm', '(g.id = gm.group_id AND gm.instance_id = :instance_id)', array(':instance_id' => $instance_id));
+  $query = $query->fields('g')
+  ->fields('gm', array('group_id'));
+  $result = $query->execute();
+  $groups = array();
+  foreach ($result as $record) {
+    $groups[$record->id] = array(
+        'id' => $record->id,
+        'name' => $record->name,
+        'description' => $record->description,
+        'auto_member' => $record->auto_member,
+        'is_member' => !is_null($record->group_id),
+    );
+  }
+  return $groups;
+}
+
+/**
+ * Removes all instances from groups specified as argument.
+ */
+function d2d_api_group_membership_delete($group_ids) {
+  if (empty($group_ids)) {
+    return 0;
+  }
+  else {
+    return db_delete('d2d_group_memberships')
+    ->condition('group_id', $group_ids)
+    ->execute();
+  }
+}
+
+
+function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
+  db_delete('d2d_group_memberships')
+  ->condition('instance_id', $instance_id)->execute();
+
+  if (!empty($group_ids)) {
+    d2d_api_group_membership_add($instance_id, $group_ids);
+  }
+  else {
+    // call hook
+    module_invoke_all('d2d_group_membership', $instance_id, $group_ids);
+  }
+}
+
+function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
+  if (!empty($group_ids)) {
+    $query = db_insert('d2d_group_memberships')->fields(array('group_id', 'instance_id'));
+    foreach ($group_ids as $group_id) {
+      $query->values(array('group_id' => $group_id, 'instance_id' => $instance_id));
+    }
+    $query->execute();
+
+    // call hook
+    module_invoke_all('d2d_group_membership', $instance_id, $group_ids);
+  }
+}
+
+//////////////
+// PERMISSION
+//////////////
 
 /**
  * Returns permissions.
@@ -480,74 +608,6 @@ function d2d_api_permission_delete($group_ids) {
 }
 
 /**
- * Creates a new group.
- */
-function d2d_api_group_add($name, $description, $auto_member) {
-  try {
-    $id = db_insert('d2d_groups')->fields(
-      array(
-        'name' => $name,
-        'description' => $description,
-        'auto_member' => $auto_member ? 1 : 0,
-      ))->execute();
-    return $id;
-  }
-  catch (Exception $e) {
-    return NULL;
-  }
-}
-
-/**
- * Updates attributes of a group.
- */
-function d2d_api_group_update($id, $name, $description, $auto_member) {
-  return db_update('d2d_groups')
-    ->fields(array(
-      'name' => $name,
-      'description' => $description,
-      'auto_member' => $auto_member ? 1 : 0,
-    ))
-    ->condition('id', $id)
-    ->execute();
-}
-
-/**
- * Returns all groups with a flag indicating group membership of given instance.
- */
-function d2d_api_group_membership_get($instance_id) {
-  $query = db_select('d2d_groups', 'g');
-  $query->leftJoin('d2d_group_memberships', 'gm', '(g.id = gm.group_id AND gm.instance_id = :instance_id)', array(':instance_id' => $instance_id));
-  $query = $query->fields('g')
-                 ->fields('gm', array('group_id'));
-  $result = $query->execute();
-  $groups = array();
-  foreach ($result as $record) {
-    $groups[$record->id] = array(
-      'id' => $record->id,
-      'name' => $record->name,
-      'description' => $record->description,
-      'auto_member' => $record->auto_member,
-      'is_member' => !is_null($record->group_id),
-    );
-  }
-  return $groups;
-}
-
-/**
- * Removes all instances from groups specified as argument.
- */
-function d2d_api_group_membership_delete($group_ids) {
-  if (empty($group_ids)) {
-    return 0;
-  }
-  else {
-    return db_delete('d2d_group_memberships')
-      ->condition('group_id', $group_ids)
-      ->execute();
-  }
-}
-
-/**
  * Checks if instance may call a mathod if it is a friend.
  */
 function d2d_api_method_permission_exists($instance_id, $method) {
@@ -559,59 +619,10 @@ function d2d_api_method_permission_exists($instance_id, $method) {
   return $result->fetchAssoc() ? TRUE : FALSE;
 }
 
-/**
- * Returns a list of methods an instance may call if it is a friend.
- */
-function d2d_api_method_get($instance_id, $look_up_table=FALSE) {
-  $query = db_select('d2d_group_memberships', 'gm');
-  $query = $query->condition('gm.instance_id', $instance_id);
-  $query->join('d2d_permissions', 'p', 'gm.group_id = p.group_id');
-  $query = $query->fields('p', array('method'));
-  $query = $query->distinct();
-  $result = $query->execute();
-  if ($look_up_table) {
-    $method_table = array();
-    foreach ($result as $record) {
-      $method_table[$record->method] = 1;
-    }
-    return $method_table;
-  }
-  else {
-    $methods = array();
-    foreach ($result as $record) {
-      $methods[] = $record->method;
-    }
-    return $methods;
-  }
-}
+////////////////
+// NOTIFICATION
+////////////////
 
-function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
-  db_delete('d2d_group_memberships')
-    ->condition('instance_id', $instance_id)->execute();
-  
-  if (!empty($group_ids)) {  
-    d2d_api_group_membership_add($instance_id, $group_ids);
-  }
-  else {
-    // call hook  
-    module_invoke_all('d2d_group_membership', $instance_id, $group_ids); 
-  }
-}
-
-function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
-  if (!empty($group_ids)) {  
-    $query = db_insert('d2d_group_memberships')->fields(array('group_id', 'instance_id'));
-    foreach ($group_ids as $group_id) {
-      $query->values(array('group_id' => $group_id, 'instance_id' => $instance_id));
-    }
-    $query->execute();
-  
-    // call hook  
-    module_invoke_all('d2d_group_membership', $instance_id, $group_ids); 
-  }
-}
-
-// notification
 /**
  * Counts the number of unread notifications.
  * TODO: some of the notifications might not have a callback that allows to
@@ -685,4 +696,34 @@ function d2d_api_notification_get($notification_id) {
   $result = $query->execute();
   $notification = $result->fetchAssoc();
   return $notification ? $notification : NULL;
+}
+
+//////////
+// METHOD
+//////////
+
+/**
+ * Returns a list of methods an instance may call if it is a friend.
+ */
+function d2d_api_method_get($instance_id, $look_up_table=FALSE) {
+  $query = db_select('d2d_group_memberships', 'gm');
+  $query = $query->condition('gm.instance_id', $instance_id);
+  $query->join('d2d_permissions', 'p', 'gm.group_id = p.group_id');
+  $query = $query->fields('p', array('method'));
+  $query = $query->distinct();
+  $result = $query->execute();
+  if ($look_up_table) {
+    $method_table = array();
+    foreach ($result as $record) {
+      $method_table[$record->method] = 1;
+    }
+    return $method_table;
+  }
+  else {
+    $methods = array();
+    foreach ($result as $record) {
+      $methods[] = $record->method;
+    }
+    return $methods;
+  }
 }

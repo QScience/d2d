@@ -163,7 +163,7 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
 
 function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   $public_key_id = $form_state['values']['public_key_id'];
-	$num_updated = d2d_api_public_key_del($public_key_id);
+	$num_updated = d2d_api_public_key_delete($public_key_id);
   if ($num_updated > 0) {
     drupal_set_message(t('Removed public key from the database'));
   }
@@ -309,7 +309,7 @@ function _d2d_edit_instance_build_header($instance) {
 
 function d2d_form_remove_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  d2d_api_instance_remove($id);
+  d2d_api_instance_delete($id);
   drupal_set_message(t('Successfully removed instance from database.'));
   drupal_goto('admin/d2d');
 }
@@ -409,7 +409,7 @@ function d2d_unselect_public_key($instance, $public_key_id) {
 function d2d_delete_public_key($instance, $public_key_id) {
   $num_updated = 0;
   if (!$instance['is_me'] && $instance['public_key_id'] != $public_key_id && d2d_check_convert_int($public_key_id)) {
-    $num_updated = d2d_api_public_key_del($public_key_id);
+    $num_updated = d2d_api_public_key_delete($public_key_id);
   }
   if ($num_updated > 0) {
     drupal_set_message(t('Removed candidate public key from the database'));

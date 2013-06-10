@@ -78,10 +78,10 @@ function d2d_patterns_insert_own_keys($form_id, $form_state) {
 
 function d2d_patterns_delete_own_keys($form_id, $form_state) {
 	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_del($form_state['values']['d2d_own_keys']['public']);
+		d2d_api_own_public_key_delete($form_state['values']['d2d_own_keys']['public']);
 	}
 	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
+		d2d_api_own_private_key_delete($form_state['values']['d2d_own_keys']['private']);
 	}
 }
 
