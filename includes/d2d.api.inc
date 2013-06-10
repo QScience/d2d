@@ -318,7 +318,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
   }
 
   $result = $query->execute();
-  return _d2d_process_result_set_instance($result, TRUE);
+  return _d2d_process_result_set_instance($result, $id_as_d2d_id);
 }
 
 function d2d_api_instance_get($d2d_id = NULL) {
