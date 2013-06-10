@@ -4,6 +4,8 @@
  * Hook functions for Patterns integration
  */
 
+module_load_include('inc', 'd2d_patterns', 'includes/util');
+
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
