@@ -169,10 +169,45 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
   return $friends;
 }
 
+/**
+ * Adds convenient fields to an instance array
+ * 
+ * Modifies the instance array
+ * 
+ * @param array $instance
+ */
 function _d2d_decorate_instance_array(&$instance) {
 	if (empty($instance)) return;
 	$instance['is_friend'] = $instance['friendship_state'] == 3;
 	$instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
+}
+
+/**
+ * Performs transformations on the list of instances as loaded from the database
+ * 
+ * @param array $result_set
+ * @param boolean $d2d_id If TRUE, sets the associative keys of each instance to their d2d_id. 
+ *   Defaults, FALSE (keys are set to their instance id)
+ * @return array The transformed result set
+ */
+function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
+  $instances = array();
+  foreach ($result_set as $record) {
+    $instances[$d2d_id ? $record->d2d_id : $record->id] = array(
+        'id' => $record->id,
+        'd2d_id' => $record->d2d_id,
+        'name' => $record->name,
+        'url' => $record->url,
+        'description' => $record->description,
+        'time_inserted' => $record->time_inserted,
+        'last_alive' => $record->last_alive,
+        'public_key' => $record->public_key,
+        'friendship_state' => $record->friendship_state,
+    );
+    _d2d_decorate_instance_array($instances[$d2d_id ? $record->d2d_id : $record->id]);
+  }
+
+  return $instances;
 }
 
 /**

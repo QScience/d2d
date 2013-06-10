@@ -14,32 +14,8 @@ function d2d_api_friendship_update($friend_id, $friendship_state) {
   module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state);       
 }
 
-// Remove instance and all associated entries from the database.
-function d2d_api_instance_remove($instance_id) {
-  $instance = d2d_api_instance_get_by_id($instance_id);
-  // remove group memberships
-  db_delete('d2d_group_memberships')
-    ->condition('instance_id', $instance_id)
-    ->execute();
-  // remove public keys associated with this instance
-  db_delete('d2d_public_keys')
-    ->condition('instance_id', $instance_id)
-    ->execute();
-  // remove incoming requests
-  db_delete('d2d_incoming_requests')
-    ->condition('sender_d2d_id', $instance['d2d_id'])
-    ->execute();
-  // remove outgoing requests
-  db_delete('d2d_outgoing_requests')
-    ->condition('receiver_id', $instance_id)
-    ->execute();
-  // remove instance
-  db_delete('d2d_instances')
-    ->condition('id', $instance_id)
-    ->execute();
-  // call hook  
-  module_invoke_all('d2d_instance_removed', $instance); 
-}
+
+// PUBLIC KEY
 
 // Selects public key of an instance.
 function d2d_api_public_key_select($instance_id, $public_key_id) {
@@ -65,29 +41,26 @@ function d2d_api_public_key_update($id, $update) {
 }
 
 // Removes public key from the database.
-function d2d_api_public_key_delete($id) {
+function d2d_api_public_key_del($id) {
   $num_deleted = db_delete('d2d_public_keys')
     ->condition('id', $id)
     ->execute();
   return $num_deleted;
 }
 
-// Updates fields of an instance.
-function d2d_api_instance_update($instance_id, $fields) {
-  $num_updated = db_update('d2d_instances')
-    ->fields($fields)
-    ->condition('id', $instance_id)
-    ->execute();
-  return $num_updated;
+function d2d_api_public_key_set($instance_id, $public_key) {
+  $id_pk = db_insert('d2d_public_keys')->fields(array(
+      'instance_id' => $instance_id,
+      'public_key' => $public_key,
+  ))->execute();
+  return $id_pk;
 }
 
 /**
  * Retrieves public key objects from the database
  * 
  * If the d2d_id parameter is specified, it returns only the keys
- * for the given instance.
- * 
- * If only one result if found, a stdClass object is returned.
+ * for the instance with the given d2d_id.
  * 
  * @param string $d2d_id Restricts the result set to keys 
  *   belonging to this instance
@@ -109,6 +82,35 @@ function d2d_api_public_key_get($d2d_id = NULL) {
   $keys = $query->execute()->FetchAll();
 
   return $keys;
+}
+
+// INSTANCE
+
+// Remove instance and all associated entries from the database.
+function d2d_api_instance_remove($instance_id) {
+  $instance = d2d_api_instance_get_by_id($instance_id);
+  // remove group memberships
+  db_delete('d2d_group_memberships')
+  ->condition('instance_id', $instance_id)
+  ->execute();
+  // remove public keys associated with this instance
+  db_delete('d2d_public_keys')
+  ->condition('instance_id', $instance_id)
+  ->execute();
+  // remove incoming requests
+  db_delete('d2d_incoming_requests')
+  ->condition('sender_d2d_id', $instance['d2d_id'])
+  ->execute();
+  // remove outgoing requests
+  db_delete('d2d_outgoing_requests')
+  ->condition('receiver_id', $instance_id)
+  ->execute();
+  // remove instance
+  db_delete('d2d_instances')
+  ->condition('id', $instance_id)
+  ->execute();
+  // call hook
+  module_invoke_all('d2d_instance_removed', $instance);
 }
 
 /**
@@ -145,6 +147,8 @@ function d2d_api_instance_exist($d2d_id) {
   $res = $query->execute()->FetchObject();  
   return empty($res);
 }
+
+// PUBLIC KEY
 
 /**
  * Retrieves the numeric id of a public key identified 
@@ -186,24 +190,17 @@ function d2d_api_public_key_get_by_id($id) {
   return $query->execute()->FetchObject();
 }
 
+// OWN PUBLIC KEY
+
 /**
  * Retrieves own public key (plain text)
  * 
- * Key is cached with drupal_static function
- * 
- * @param boolean $reset Forces to look up in the database. Defaults, FALSE.
  * @return string The public key
  */
-function d2d_api_own_public_key_get($reset = FALSE) {
-  
-  $key = &drupal_static(__FUNCTION__);
-
-  if ($reset || empty($key)) {
-    $my_d2d_id = d2d_api_own_d2d_id_get();
-    $key = d2d_api_public_key_get($my_d2d_id);
-    $key = empty($key) ? FALSE: $key[0]->public_key; 
-  }
-  return $key;
+function d2d_api_own_public_key_get() {
+  $my_d2d_id = d2d_api_own_d2d_id_get();
+  $key = d2d_api_public_key_get($my_d2d_id);
+  return empty($key) ? FALSE: $key[0]->public_key; 
 }
 
 /**
@@ -215,9 +212,8 @@ function d2d_api_own_public_key_get($reset = FALSE) {
  * @return integer The public key id
  */
 function d2d_api_own_public_key_set($public_key) {
-  $my_d2d_id = d2d_api_own_d2d_id_get();
   $id = d2d_api_own_instance_id_get();
-  $id_pk = d2d_api_public_key_set($my_d2d_id, $public_key);
+  $id_pk = d2d_api_public_key_set($id, $public_key);
   d2d_api_instance_update($id, array(
       'public_key_id' => $id_pk,
   )); 
@@ -229,6 +225,24 @@ function d2d_api_own_public_key_set($public_key) {
   
   return $id_pk;
 }
+
+/**
+ * Deletes own public key
+ * 
+ * Warning: deleting own public key might make communication impossible
+ * 
+ */
+function d2d_api_own_public_key_del() {
+
+  $num_deleted = db_delete('d2d_public_keys')
+  ->condition('id_instance', $id)
+  ->execute();
+   
+  variable_del('d2d_public_key');
+
+}
+
+// OWN PRIVATE KEY
 
 function d2d_api_own_private_key_get() {
   return variable_get('d2d_private_key', FALSE);
@@ -242,6 +256,8 @@ function d2d_api_own_private_key_del() {
   variable_del('d2d_private_key');
 }
 
+// OWN D2D_ID
+
 function d2d_api_own_d2d_id_get() {
   return variable_get('d2d_my_id');
 }
@@ -254,166 +270,70 @@ function d2d_api_own_d2d_id_del($d2d_id) {
   variable_del('d2d_my_id');
 }
 
-function d2d_api_own_instance_get() {
-  $id = d2d_api_own_instance_id_get();
-  return d2d_api_instance_get_by_id($id);
-}
+// OWN INSTANCE_ID
 
 function d2d_api_own_instance_id_get() {
   return variable_get('d2d_my_instance_id');
 }
 
-function d2d_api_own_instance_id_set($id) {  
+function d2d_api_own_instance_id_set($id) {
   variable_set('d2d_my_instance_id', $id);
 }
 
-function d2d_api_own_instance_id_del($id) {  
+function d2d_api_own_instance_id_del($id) {
   variable_del('d2d_my_instance_id');
 }
 
-function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
-  $instances = array();
-  foreach ($result_set as $record) {
-    $instances[$d2d_id ? $record->d2d_id : $record->id] = array(
-        'id' => $record->id,
-        'd2d_id' => $record->d2d_id,
-        'name' => $record->name,
-        'url' => $record->url,
-        'description' => $record->description,
-        'time_inserted' => $record->time_inserted,
-        'last_alive' => $record->last_alive,
-        'public_key' => $record->public_key,
-        'friendship_state' => $record->friendship_state,
-    );
-    _d2d_decorate_instance_array($instances[$d2d_id ? $record->d2d_id : $record->id]);
-  }
-  
-  return $instances;
+
+function d2d_api_own_instance_get() {
+  $id = d2d_api_own_instance_id_get();
+  return d2d_api_instance_get_by_id($id);
 }
 
+// INSTANCE
 
-// TODO: this is basically the same function as d2d_api_instance_get,
-//  merge them
-function d2d_api_instance_get_by_id($id = NULL, $reset = FALSE) {
-  
-  $instances = &drupal_static(__FUNCTION__);
-  
-  if ($reset || empty($instances) || empty($instances[$id])) {
-    $query = db_select('d2d_instances', 'i');
-    $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
-    $query
-      ->fields('k', array('public_key'))
-      ->fields('i')
-      ->orderBy('i.id', 'asc');
-      
-     // Return only one instance
-    if (!empty($id)) {
-      $query = $query->condition('i.id', $id);
-      $result = $query->execute();
-      $instance = $result->fetchAssoc();
-      if (empty($instance)) return FALSE;
-      
-      _d2d_decorate_instance_array($instance);
-      return $instance;
-    }
-    
-    $result = $query->execute();
-    $instances = _d2d_process_result_set_instance($result);
-  }
-  
-  return $instances;
-}
+function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
 
-// TODO: remove caching, it breaks things if $d2d_id is not NULL
-//       change ambiguous usage of empty(...), better use is_null
-function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
-  
-  $instances = &drupal_static(__FUNCTION__);
-    
-  if ($reset || empty($instances) || empty($instances[$d2d_id])) {
-    $query = db_select('d2d_instances', 'i');
-    $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
-    $query
-      ->fields('k', array('public_key'))
-      ->fields('i');
-    
-    // Return only one instance
-    if (!empty($d2d_id)) {
-      $query = $query->condition('i.d2d_id', $d2d_id);
-      $result = $query->execute();
-      $instance = $result->fetchAssoc();
-      
-      if (empty($instance)) return FALSE;
-      
-      _d2d_decorate_instance_array($instance);
-      return $instance;
-    }
-
-    $result = $query->execute();
-    $instances = _d2d_process_result_set_instance($result, TRUE);
-  }
-  
-  return $instances;
-}
-
-function d2d_api_instance_get($d2d_id = NULL, $reset = FALSE) {
-
-  $instances = d2d_api_instance_load_all($reset);
-  if (empty($instances)) return FALSE;
-  
-  if ($reset || empty($instances) || empty($instances[$d2d_id])) {
-    $query = db_select('d2d_instances', 'i');
-    $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
-    $query
+  $query = db_select('d2d_instances', 'i');
+  $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+  $query
     ->fields('k', array('public_key'))
     ->fields('i');
 
-    // Return only one instance
-    if (!empty($d2d_id)) {
-      $query = $query->condition('i.d2d_id', $d2d_id);
-      $result = $query->execute();
-      $instance = $result->fetchAssoc();
-
-      if (empty($instance)) return FALSE;
-
-      _d2d_decorate_instance_array($instance);
-      return $instance;
-    }
-
+  // Returns only one instance
+  if (!empty($id)) {
+    $query->condition($id_as_d2d_id ? 'i.d2d_id' : 'i.id', $id);
     $result = $query->execute();
-    $instances = _d2d_process_result_set_instance($result, TRUE);
+    $instance = $result->fetchAssoc();
+
+    if (empty($instance)) return FALSE;
+
+    _d2d_decorate_instance_array($instance);
+    return $instance;
   }
 
-  return $instances;
+  $result = $query->execute();
+  return _d2d_process_result_set_instance($result, TRUE);
 }
 
-function d2d_api_instance_load_all($reset = FALSE) {
-
-  $instances = &drupal_static(__FUNCTION__);
-
-  if ($reset || empty($instances)) {
-    $query = db_select('d2d_instances', 'i');
-    $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
-    $query
-      ->fields('k', array('public_key'))
-      ->fields('i');
-
-    $result = $query->execute();
-  }
-
-  return $instances;
+function d2d_api_instance_get($d2d_id = NULL) {
+  return _d2d_api_instance_get($d2d_id, TRUE);
 }
 
-
-function d2d_api_friend_get_by_url($url) {
-  $friends = d2d_api_friend_get();
-  foreach ($friends as $friend) {
-    if ($friend['url'] === $url) {
-      return $friend;
-    }
-  }
-  return FALSE;
+function d2d_api_instance_get_by_id($id = NULL) {
+  return _d2d_api_instance_get($id, TRUE);
 }
+
+// Updates fields of an instance.
+function d2d_api_instance_update($instance_id, $fields) {
+  $num_updated = db_update('d2d_instances')
+  ->fields($fields)
+  ->condition('id', $instance_id)
+  ->execute();
+  return $num_updated;
+}
+
+// FRIENDS
 
 function _d2d_api_friend_get($d2d_id) {
 
@@ -430,10 +350,6 @@ function _d2d_api_friend_get($d2d_id) {
   return $friends;
 }
 
-/**
- * 
- * @param unknown_type $reset
- */
 function d2d_api_friend_get() {
   return _d2d_api_friend_get(TRUE);
 }
@@ -441,6 +357,17 @@ function d2d_api_friend_get() {
 function d2d_api_friend_get_by_id() {
   return _d2d_api_friend_get(FALSE);
 }
+
+function d2d_api_friend_get_by_url($url) {
+  $friends = d2d_api_friend_get();
+  foreach ($friends as $friend) {
+    if ($friend['url'] === $url) {
+      return $friend;
+    }
+  }
+  return FALSE;
+}
+
 
 /////////////////////////////////////////////////////////////////
 
