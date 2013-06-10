@@ -326,7 +326,7 @@ function d2d_api_instance_get($d2d_id = NULL) {
 }
 
 function d2d_api_instance_get_by_id($id = NULL) {
-  return _d2d_api_instance_get($id, TRUE);
+  return _d2d_api_instance_get($id, FALSE);
 }
 
 // Updates fields of an instance.
