@@ -321,10 +321,32 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
   return _d2d_process_result_set_instance($result, $id_as_d2d_id);
 }
 
+/**
+ * Returns a list of d2d instances
+ *
+ * The d2d_id of the instance is used as associative key
+ *
+ * If an id is set, only the instance with d2d_id equal to id
+ * is returned 
+ *  
+ * @param integer $id Optional. The d2d_id of the instance
+ * @return array|boolean The list of instances
+ */
 function d2d_api_instance_get($d2d_id = NULL) {
   return _d2d_api_instance_get($d2d_id, TRUE);
 }
 
+/**
+ * Returns a list of d2d instances
+ * 
+ * The database id of the instance is used as associative key
+ * 
+ * If an id is set, only the instance with database id equal to id
+ * is returned 
+ *  
+ * @param integer $id Optional. The id of the instance
+ * @return array|boolean The list of instances
+ */
 function d2d_api_instance_get_by_id($id = NULL) {
   return _d2d_api_instance_get($id, FALSE);
 }
