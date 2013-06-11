@@ -4,8 +4,6 @@
  * Hook functions for Patterns integration
  */
 
-module_load_include('inc', 'd2d_patterns', 'includes/util');
-
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
@@ -88,10 +86,10 @@ function d2d_patterns_insert_own_keys($form_id, $form_state) {
 
 function d2d_patterns_delete_own_keys($form_id, $form_state) {
 	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_delete($form_state['values']['d2d_own_keys']['public']);
+		d2d_api_own_public_key_del($form_state['values']['d2d_own_keys']['public']);
 	}
 	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_delete($form_state['values']['d2d_own_keys']['private']);
+		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
 	}
 }
 
@@ -160,7 +158,7 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
   	$action_type = PATTERNS_CREATE;
 	}
 	
-  $keys = d2d_api_public_key_get_array();
+  $keys = d2d_api_public_key_get();
   
   foreach ($keys as $k) {
   	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
@@ -176,8 +174,7 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
 function d2d_patterns_insert_public_keys($form_id, $form_state) {
 	$d2d_id = $form_state['values']['d2d_id'];
 	$public_key = $form_state['values']['public_key'];
-	$instance_id = d2d_convert_d2d_id_to_id($d2d_id);
-	d2d_api_public_key_set($instance_id, $public_key);
+	d2d_api_public_key_set($d2d_id, $public_key);
 }
 
 function d2d_patterns_update_public_keys($form_id, $form_state) {
@@ -199,7 +196,7 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
 	else {
 		$id = $form_state['values']['id'];
 	}
-	d2d_api_public_key_del($id);
+	d2d_api_public_key_delete($id);
 }
 
 // Validate the values for an action before running the pattern
