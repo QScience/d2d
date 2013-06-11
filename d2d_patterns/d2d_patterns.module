@@ -281,7 +281,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	$public_key = @$data['public_key'];
   	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
-  	$keys = @d2d_api_public_key_get_array($d2d_id);
+  	$keys = @d2d_api_public_key_get($d2d_id);
   	
   	if ($action == PATTERNS_CREATE) {  
   		
