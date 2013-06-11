@@ -34,28 +34,27 @@ function d2d_patterns($data = NULL){
     PATTERNS_DELETE => array('d2d_edit_instance_details'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_instances',
+                          'Friends only' => 'd2d_patterns_export_all_friends'
                         ),
   );
   
   $tags['d2d_friendship'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
-    PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-    PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-    PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-    PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+    PATTERNS_INFO   => t('Establish or remove a friendship'),
+//     PATTERNS_CREATE => array('d2d_'),
+//     PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
+//     PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
     PATTERNS_EXPORT => array(
-                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
+                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_friendships',
                         ),
   );
   
   $tags['d2d_group'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
-    PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-    PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-    PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-    PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+    PATTERNS_INFO   => t('Create/Modify/Delete D2D groups'),
+    PATTERNS_CREATE => array('d2d_form_add_group'),
+    PATTERNS_MODIFY => array('d2d_patterns_edit_group'),
+    PATTERNS_DELETE => array('d2d_patterns_delete_group'),
     PATTERNS_EXPORT => array(
-                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
+                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_groups',
                         ),
   );
   
@@ -73,6 +72,16 @@ function d2d_patterns($data = NULL){
   
   return $tags;
   
+}
+
+function d2d_patterns_edit_group($form_id, $form_state) {
+  $group = $form_state['values']['d2d_group'];
+  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+}
+
+function d2d_patterns_delete_group($form_id, $form_state) {
+  $group = $form_state['values']['d2d_group'];
+  d2d_api_group_delete($group['id']);
 }
 
 function d2d_patterns_insert_own_keys($form_id, $form_state) {
@@ -109,29 +118,75 @@ function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
   return $keys;
 }
 
-function d2d_patterns_export_all_instances($args = NULL, &$result = NULL) {
-	
-	$action_type = PATTERNS_MODIFY;
-	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
-  	$action_type = PATTERNS_CREATE;
-	}
-	
+function d2d_patterns_export_all_friendships($args = NULL, &$result = NULL) {
+  $action_type = PATTERNS_CREATE; // either create or delete
+  
   $instances = d2d_api_instance_get();
   $actions = array();
   foreach ($instances as $i) {
-  	$action = array($action_type => array(
-  		'tag' => 'd2d_instance', 
-  		'd2d_id' => $i['d2d_id'],
-  		'address' => $i['address'],
-  		'name' => $i['name'],
-  		'description' => $i['description'],
-  	));
-  	if ($action_type == PATTERNS_MODIFY) {
-  		$action[$action_type]['id'] = $i['id'];
-  	}
-  	array_push($actions, $action);
+    $action = array($action_type => array(
+        'tag' => 'd2d_friendship',
+        'd2d_id' => $i['d2d_id'],
+    ));
+    if ($action_type == PATTERNS_MODIFY) {
+    		$action[$action_type]['id'] = $i['id'];
+    }
+    array_push($actions, $action);
   }
   return $actions;
+}
+
+function d2d_patterns_export_all_groups($args = NULL, &$result = NULL) {
+  $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
+
+  $instances = d2d_api_group_get();
+  $actions = array();
+  foreach ($instances as $i) {
+    $action = array($action_type => array(
+        'tag' => 'd2d_group',
+        'name' => $i['name'],
+        'description' => $i['description'],
+        'default' => $i['auto_member'],
+    ));
+    if ($action_type == PATTERNS_MODIFY) {
+    		$action[$action_type]['id'] = $i['id'];
+    }
+    array_push($actions, $action);
+  }
+  return $actions;
+}
+
+
+function _d2d_patterns_export_instances($args, &$result, $friends_only) {
+  $action_type = PATTERNS_MODIFY;
+  if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+    $action_type = PATTERNS_CREATE;
+  }
+  
+  $instances = $friends_only ? d2d_api_friend_get() : d2d_api_instance_get();
+  $actions = array();
+  foreach ($instances as $i) {
+    $action = array($action_type => array(
+        'tag' => 'd2d_instance',
+        'd2d_id' => $i['d2d_id'],
+        'url' => $i['url'],
+        'name' => $i['name'],
+        'description' => $i['description'],
+    ));
+    if ($action_type == PATTERNS_MODIFY) {
+    		$action[$action_type]['id'] = $i['id'];
+    }
+    array_push($actions, $action);
+  }
+  return $actions;
+}
+
+function d2d_patterns_export_all_instances($args = NULL, &$result = NULL) {
+  return _d2d_patterns_export_instances($args, $result, FALSE);
+}
+
+function d2d_patterns_export_all_friends($args = NULL, &$result = NULL) {
+  return _d2d_patterns_export_instances($args, $result, TRUE);
 }
 
 function d2d_patterns_export_own_public_key($args = NULL, &$result = NULL) {
@@ -161,6 +216,7 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
   $keys = d2d_api_public_key_get();
   
   foreach ($keys as $k) {
+    $k = get_object_vars($k);
   	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
   	if ($action_type == PATTERNS_MODIFY) {
   		$action[$action_type]['id'] = $k['id'];
@@ -210,18 +266,17 @@ function d2d_patterns_validate($action, $tag, &$data) {
   if ($tag == 'd2d_public_key') {
   	
   	if ($action == PATTERNS_CREATE) {
-  	  $kcheck = array(
-  	    'at_least_one' => array( array('public_key', 'd2d_id') ),
-  	  ); 
+  	  $kcheck = array();
+   	  $kcheck[] = array('mandatory' => array('public_key', 'd2d_id'), );
+  	  
 	    $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   	
   	else if ($action == PATTERNS_MODIFY) {
   	  
-  	  $kcheck = array(
-  	    'mandatory' => array('id'),
-  	    'at_least_one' => array( array('public_key', 'd2d_id') ),
-  	  );
+  	  $kcheck = array();
+  	  $kcheck[] = array('mandatory' => array('id'), );
+  	  $kcheck[] = array('at_least_one' => array('public_key', 'd2d_id'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
     
@@ -241,15 +296,15 @@ function d2d_patterns_validate($action, $tag, &$data) {
   else if ($tag = 'd2d_instance') {
   	if ($action == PATTERNS_CREATE) {
   	  
-  	  $kcheck = array( 'mandatory' => array('id', 'd2d_id', 'address'), );
+  	  $kcheck = array();
+  	  $kcheck[] = array('mandatory' => array('id', 'd2d_id', 'address'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	  
   	}
   	else if ($action == PATTERNS_MODIFY) {  
-  		 $kcheck = array(
-  	    'mandatory' => array('id'),
-  	    'at_least_one' => array( array('public_key', 'd2d_id') ),
-  	  );
+  		$kcheck = array();
+  	  $kcheck[] = array('mandatory' => array('id'), );
+  	  $kcheck[] = array('at_least_one' => array('public_key', 'd2d_id'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   	
@@ -278,7 +333,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	$public_key = @$data['public_key'];
   	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
-  	$keys = @d2d_api_public_key_get($d2d_id);
+  	// $keys = @d2d_api_public_key_get($d2d_id);
   	
   	if ($action == PATTERNS_CREATE) {  
   		
@@ -329,57 +384,64 @@ function d2d_patterns_validate($action, $tag, &$data) {
    
 }
 
-function patterns_util_check_keys($data, $keys = array(), &$msg, $BR = '<br/>') {
-	$kcheck = patterns_utils_key_exists($keys, $data);
+function patterns_utils_check_keys($data, $kchecks = array(), &$msg, $BR = '<br/>') {
 	
 	$msg_mandatory = NULL;
 	$msg_init_mandatory = t("The following mandatory keys are missing: ");
 	
 	$msg_exclusive = NULL;
 	$msg_init_exclusive = t("The following keys are mutually exclusive: ");
+	$count_exclusive = NULL;
 	
 	$msg_at_least_one = NULL;
 	$msg_init_at_least_one = t("At least one key of the following key must be present: ");
   $found_at_least_one = NULL;
-  $group_at_least_one = NULL;
   
   $msg_one_and_only_one = NULL;
   $msg_init_one_and_only_one = t("Exactly one item of each group must be present. Zero, or more than one found: ");
   $count_one_and_only_one = NULL;
-	
+  
 	$status = PATTERNS_SUCCESS;
 	
-	if (isset($keys['exclusive'])) {
-	  foreach ($keys['exclusive'] as $key) {    
-	    if (isset($data[$key])) {
-	      foreach ($keys['exclusive'][$key] as $ek) {	        
-	        if (isset($data[$ek])) {
-	          if (is_null($msg_exclusive)) {
-	            $msg_exclusive = $msg_init_exclusive . $key . ' - ' . $ek;
-	            $status = PATTERNS_ERR;
-	          }
-	          else {
-	            $msg_exclusive .= ', ' . $key . ' - ' . $ek;
-	          } 
-	        }
-	      }
+	foreach($kchecks as $check) {
+  	$type = key($check);
+  	$set = current($check);
+  	
+  	if ($type == 'exclusive') {
+	      
+	    $found_exclusive = 0;
+      foreach ($set as $k) { 	        
+        if (isset($data[$k])) {
+          $found_exclusive++;
+          if ($found_exclusive > 1) {
+            break;
+          }
+        }
+      }
+      if ($found_exclusive > 1) {
+        $group_exclusive = '(' . implode(', ', $set) . ')';
+        if (is_null($msg_exclusive)) {
+          $msg_exclusive = $msg_init_exclusive . $group_exclusive;
+          $status = PATTERNS_ERR;
+        } 
+        else {
+          $msg_exclusive .= ', ' . $group_exclusive;
+        } 
 	    }
 	  }
-	  
-	}
+
 	
-	if (isset($keys['at_least_one'])) {
-	  foreach ($keys['at_least_one'] as $key) {
+	  if ($type == 'at_least_one') {
 	    
 	    $found_at_least_one = FALSE;
-	    foreach ($keys['at_least_one'][$key] as $lk) {
-        if (isset($data[$lk])) {
+	    foreach ($set as $k) {
+        if (isset($data[$k])) {
           $found_at_least_one = TRUE;
           break;
         }
 	    }
       if (!$found_at_least_one) {
-        $group_at_least_one = '(' . implode(', ', $keys['at_least_one'][$key]) . ')';
+        $group_at_least_one = '(' . implode(', ', $set) . ')';
       
         if (is_null($msg_at_least_one)) {
           $msg_at_least_one = $msg_init_at_least_one . $group_at_least_one;
@@ -390,22 +452,22 @@ function patterns_util_check_keys($data, $keys = array(), &$msg, $BR = '<br/>') 
         }
 	    }
 	  }
-	}
 	
-	if (isset($keys['one_and_only_one'])) {
-	  foreach ($keys['one_and_only_one'] as $key) {
+	
+	  if ($type == 'one_and_only_one') {
 	    
-	    $count_one_and_only_one = FALSE;
-	    foreach ($keys['at_least_one'][$key] as $lk) {
-        if (isset($data[$lk])) {
-          if ($count_one_and_only_one > 0) {
+	    $count_one_and_only_one = 0;
+	    foreach ($set as $k) {
+        if (isset($data[$k])) {
+          $count_one_and_only_one++;
+          if ($count_one_and_only_one > 1) {
             break;
           }
-          $count_one_and_only_one++;
+         
         }
 	    }
       if ($count_one_and_only_one != 1) {
-        $group_one_and_only_one = '(' . implode(', ', $keys['one_and_only_one'][$key]) . ')';
+        $group_one_and_only_one = '(' . implode(', ', $set) . ')';
       
         if (is_null($msg_at_least_one)) {
           $msg_one_and_only_one = $msg_init_one_and_only_one . $group_one_and_only_one;
@@ -416,23 +478,31 @@ function patterns_util_check_keys($data, $keys = array(), &$msg, $BR = '<br/>') 
         }
 	    }
 	  }
-	}
+	
 		
-	if (isset($data['mandatory'])) {
-	  if (!isset($data[$key])) {
-	    if (is_null($msg_mandatory)) {
-	      $msg_mandatory = $msg_mandatory_init . $key;
-	      $status = PATTERNS_ERR;
-	    }
-	    else {
-	      $msg_mandatory .= ', ' . $key ;
-	    }
+    if ($type == 'mandatory') {
+      
+      foreach ($set as $k) {  
+    	  if (!isset($data[$k])) {
+    	    if (is_null($msg_mandatory)) {
+    	      $msg_mandatory = $msg_init_mandatory . $k;
+    	      $status = PATTERNS_ERR;
+    	    }
+    	    else {
+    	      $msg_mandatory .= ', ' . $k;
+    	    }
+    	  }
+      }
 	  }
-	}
+	  
+	} // end kcheck
 	
 	// update error msg
   if ($status == PATTERNS_ERR) {
-    $msg = $msg_mandatory . $BR . $msg_one_and_only_one . $BR . $msg_at_least_one . $BR . $msg_exclusive;
+    $msg = is_null($msg_mandatory) ? $msg : $msg_mandatory;
+    $msg = is_null($msg_one_and_only_one) ? $msg : $msg . (is_null($msg) ? $msg_one_and_only_one : $BR . $msg_one_and_only_one);
+    $msg = is_null($msg_at_least_one) ? $msg : $msg . (is_null($msg) ? $msg_at_least_one : $BR . $msg_at_least_one);
+    $msg = is_null($msg_exclusive) ? $msg : $msg . (is_null($msg) ? $msg_exclusive : $BR . $msg_exclusive);
   }
 	
 	return $status;
