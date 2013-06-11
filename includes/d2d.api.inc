@@ -75,6 +75,47 @@ function d2d_api_public_key_get($d2d_id = NULL) {
   return $keys;
 }
 
+
+/**
+ * Retrieves the numeric id of a public key identified
+ * by the pair d2d_id and public key plain text
+ *
+ * @param string $d2d_id The d2d id of an instance in the database
+ * @param string $public_key The plain text public key
+ * @return boolean|integer The public key id, or FALSE if an error occurs
+ *
+ * @see d2d_public_key_eql
+ */
+function d2d_api_public_key_return_id($d2d_id, $public_key) {
+  $keys = d2d_api_public_key_get($d2d_id);
+  if (empty($keys)) return FALSE; // TODO: is this condition needed?
+  foreach ($keys as $k) {
+    if (d2d_public_key_eql($k->public_key, $public_key)) {
+      return $k->id;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Retrieves the public key with the given id
+ *
+ * @param integer $id The id of the public key
+ * @return stdClass The public key object as fetched from the database
+ */
+function d2d_api_public_key_get_by_id($id) {
+
+  $query = db_select('d2d_public_keys', 'k');
+
+  $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
+  $query
+  ->fields('i', array('d2d_id'))
+  ->fields('k', array('id', 'public_key'))
+  ->condition('k.id', $id);
+
+  return $query->execute()->FetchObject();
+}
+
 //////////////
 // INSTANCE
 //////////////
@@ -139,50 +180,6 @@ function d2d_api_instance_exist($d2d_id) {
   
   $res = $query->execute()->FetchObject();  
   return empty($res);
-}
-
-//////////////
-// PUBLIC KEY
-//////////////
-
-/**
- * Retrieves the numeric id of a public key identified 
- * by the pair d2d_id and public key plain text
- * 
- * @param string $d2d_id The d2d id of an instance in the database
- * @param string $public_key The plain text public key
- * @return boolean|integer The public key id, or FALSE if an error occurs
- * 
- * @see d2d_public_key_eql
- */
-function d2d_api_public_key_return_id($d2d_id, $public_key) {
-  $keys = d2d_api_public_key_get($d2d_id);
-  if (empty($keys)) return FALSE; // TODO: is this condition needed?
-  foreach ($keys as $k) {
-    if (d2d_public_key_eql($k->public_key, $public_key)) {
-      return $k->id;
-    }
-  }
-  return FALSE;
-}
-
-/**
- * Retrieves the public key with the given id
- * 
- * @param integer $id The id of the public key
- * @return stdClass The public key object as fetched from the database
- */
-function d2d_api_public_key_get_by_id($id) {
- 
-  $query = db_select('d2d_public_keys', 'k');
-
-  $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
-  $query
-    ->fields('i', array('d2d_id'))
-    ->fields('k', array('id', 'public_key'))
-    ->condition('k.id', $id);
-            
-  return $query->execute()->FetchObject();
 }
 
 /////////////////
@@ -322,7 +319,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
 }
 
 /**
- * Returns a list of d2d instances
+ * Returns a list of d2d instances or a single instance
  *
  * The d2d_id of the instance is used as associative key
  *
@@ -337,7 +334,7 @@ function d2d_api_instance_get($d2d_id = NULL) {
 }
 
 /**
- * Returns a list of d2d instances
+ * Returns a list of d2d instances or a single instance
  * 
  * The database id of the instance is used as associative key
  * 

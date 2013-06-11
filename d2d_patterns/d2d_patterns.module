@@ -392,6 +392,7 @@ function patterns_util_check_keys($data, $keys = array(), &$msg, $BR = '<br/>') 
           $msg_at_least_one .= ', ' . $group_at_least_one;
         }
 	    }
+	  }
 	}
 	
 	if (isset($keys['one_and_only_one'])) {
