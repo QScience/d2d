@@ -4,10 +4,14 @@
  * Hook functions for Patterns integration
  */
 
+// TODO validation for FRIENDSHIP, GROUP
+// callbacks for FRIENDSHIP
+
+
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete the value pair public key - instance'),
+    PATTERNS_INFO   => t('Create, modify, and delete the value pair public key - instance'),
     PATTERNS_CREATE => array('d2d_patterns_insert_public_keys'),
     PATTERNS_MODIFY => array('d2d_patterns_update_public_keys'),
     PATTERNS_DELETE => array('d2d_patterns_delete_public_keys'),
@@ -17,7 +21,7 @@ function d2d_patterns($data = NULL){
   );
   
   $tags['d2d_own_keys'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete public and or private key for the own instance. Must be called after a D2D id is set.'),
+    PATTERNS_INFO   => t('Create, modify, and delete public and or private key for the own instance. Must be called after a D2D id is set.'),
     PATTERNS_CREATE => array('d2d_patterns_insert_own_keys'),
     PATTERNS_MODIFY => array('d2d_patterns_insert_own_keys'),
     PATTERNS_DELETE => array('d2d_patterns_delete_own_keys'),
@@ -28,7 +32,7 @@ function d2d_patterns($data = NULL){
   );
   
   $tags['d2d_instance'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete D2D instances.'),
+    PATTERNS_INFO   => t('Create, modify, and delete  D2D instances.'),
     PATTERNS_CREATE => array('d2d_form_add_instance'),
     PATTERNS_MODIFY => array('d2d_edit_instance_details'),
     PATTERNS_DELETE => array('d2d_edit_instance_details'),
@@ -49,7 +53,7 @@ function d2d_patterns($data = NULL){
   );
   
   $tags['d2d_group'] = array(
-    PATTERNS_INFO   => t('Create/Modify/Delete D2D groups'),
+    PATTERNS_INFO   => t('Create, modify, and delete D2D groups'),
     PATTERNS_CREATE => array('d2d_form_add_group'),
     PATTERNS_MODIFY => array('d2d_patterns_edit_group'),
     PATTERNS_DELETE => array('d2d_patterns_delete_group'),
@@ -57,21 +61,65 @@ function d2d_patterns($data = NULL){
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_groups',
                         ),
   );
-  
+
   $tags['d2d_permission'] = array(
-		PATTERNS_INFO   => t('Create/Modify/Delete Taxonomy Vocabularies'),
-	  PATTERNS_CREATE => array('taxonomy_form_vocabulary'),
-	  PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-	  PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
-	  PATTERNS_FILES  => array('modules/taxonomy/taxonomy.admin.inc'),
+		PATTERNS_INFO   => t('Create, modify, and delete D2D permissions'),
+	  PATTERNS_CREATE => array('d2d_patterns_add_permission'),
+	  PATTERNS_MODIFY => array('d2d_patterns_edit_permission'),
+	  PATTERNS_DELETE => array('d2d_patterns_delete_permission'),
 	  PATTERNS_EXPORT => array(
-	                          PATTERNS_EXPORT_ALL => 'taxonomy_patterns_export_all_vocs',
+	                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_permissions',
                         ),
   );
   
   
   return $tags;
   
+}
+
+function d2d_patterns_export_all_permissions($args = NULL, &$result = NULL) {
+  $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
+
+  $groups = d2d_api_group_get();
+  $permissions = d2d_api_permission_get();
+  $actions = array();
+  foreach ($permissions as $p) {
+    $action = array($action_type => array(
+        'tag' => 'd2d_permission',
+        'group' => $groups[$p['group_id']]['name'],
+        'method' => $p['method'],
+    ));
+    array_push($actions, $action);
+  }
+  return $actions;
+}
+
+// $permissions = array();
+// foreach ($form_state['values']['groups'] as $gid => $group) {
+//   $permissions_group = array();
+//   foreach ($form_state['values'][$gid] as $method => $flag) {
+//     if ($flag) {
+//       $permissions_group[] = $method;
+//       $methods[$method] = 1;
+//       $permissions[] = array('group_id' => $gid, 'method' => $method);
+//     }
+//   }
+// }
+
+
+function d2d_patterns_edit_permission($form_id, $form_state) {
+  $permissions = $form_state['values']['d2d_permission'];
+  d2d_api_permission_add($permissions);
+}
+
+function d2d_patterns_delete_permission($form_id, $form_state) {
+  $group = $form_state['values']['d2d_permission'];
+  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+}
+
+function d2d_patterns_add_permission($form_id, $form_state) {
+  $group = $form_state['values']['d2d_permission'];
+  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
 }
 
 function d2d_patterns_edit_group($form_id, $form_state) {
@@ -255,6 +303,18 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
 	d2d_api_public_key_delete($id);
 }
 
+
+// function d2d_patterns_prepare($action, $tag, &$data) {
+//   if ($tag == 'd2d_permission') {
+//     if (!isset($data['group_id']) && isset($data['group'])) {
+//       $group = d2d_api_group_get_by_name($data['group']);
+//       if (!is_null($group)) {
+//         $data['group_id'] = $group['id'];
+//       }
+//     }
+//   }
+// }
+
 // Validate the values for an action before running the pattern
 function d2d_patterns_validate($action, $tag, &$data) {
  	$result = array();
@@ -293,7 +353,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   }
   
-  else if ($tag = 'd2d_instance') {
+  else if ($tag == 'd2d_instance') {
   	if ($action == PATTERNS_CREATE) {
   	  
   	  $kcheck = array();
@@ -321,6 +381,12 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   }
   
+  else if ($tag == 'd2d_permission') {
+      	
+      $kcheck = array();
+      $kcheck[] = array('mandatory' => array('method', 'group'), );
+      $status = patterns_utils_check_keys($data, $kcheck, $msg);
+  }
   
   if ($status == PATTERNS_ERR) {
   	return patterns_results($status, $msg);	
@@ -331,6 +397,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   if ($tag == 'd2d_public_key') {
   	$d2d_id = @$data['d2d_id'];
   	$public_key = @$data['public_key'];
+  	
   	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
   	// $keys = @d2d_api_public_key_get($d2d_id);
@@ -378,6 +445,40 @@ function d2d_patterns_validate($action, $tag, &$data) {
   		}	
   	}
   	
+  }
+  
+  
+  else if ($tag == 'd2d_permission') {
+    $method_name = @$data['method'];
+    $group_name = @$data['group'];
+    
+    $group = d2d_api_group_get_by_name($group_name);
+    
+    if (is_null($group)) {
+      $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+          t('No group with name %name found.', array('%name' => $group_name,)));
+    }
+    else {
+      
+      $permissions = d2d_api_permission_get(TRUE);
+      $perm_exist = isset($permissions[$group]['id'][$method_name]);
+       
+      if ($action == PATTERNS_CREATE) {
+    
+      		if ($perm_exist) {
+      		  $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+      		      t('Group "%name" has already the permission "%p".', array('%name' => group_name, '%p' => $method_name,)));
+      		}
+      }
+       
+      else { // DELETE
+        if (!$perm_exist) {
+          $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+              t('Group "%name" has no permission "%p".', array('%name' => group_name, '%p' => $method_name,)));
+        }
+        
+      } 
+    }
   }
   	
   return patterns_results($status, $msg, $result);	
