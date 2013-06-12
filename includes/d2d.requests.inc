@@ -528,8 +528,10 @@ function d2d_secure_request($request64, $version) {
 function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
   // check if instance is online
   if (!d2d_is_online()) {
-    return;
+    return 0;
   }
+  // number of successfully sent requests
+  $n_sucessfully_sent = 0;
   // get current time and keys, url, d2d id of own instance
   $t = d2d_get_time();
   $my_instance = d2d_api_own_instance_get();
@@ -650,6 +652,7 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
     $error_string = NULL;
     $return = d2d_send_single_outgoing_request($request['type'], $arguments_send, $instances[$request['receiver_id']], $my_instance, $my_private_key, $return_checks, $error_string);
     if ($return !== FALSE) {
+      $n_sucessfully_sent++;
       db_delete('d2d_outgoing_requests')
         ->condition('id', $request_id)
         ->execute();
@@ -659,4 +662,5 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
     }
     call_user_func_array($hook['callback_return'], array($return, $arguments, $arguments_send, $request['time_insert'], $request['time_next_send'], $request['time_invalid'], $request['max_send_trials'], $error_string, &$instances[$request['receiver_id']], &$persistent_state[$request['type']][$request['receiver_id']]));
   }
+  return $n_sucessfully_sent;
 }

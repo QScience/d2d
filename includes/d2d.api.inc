@@ -127,8 +127,11 @@ function d2d_api_public_key_exist($d2d_id, $public_key) {
 //////////////
 
 // Remove instance and all associated entries from the database.
-function d2d_api_instance_delete($instance_id) {
+function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
   $instance = d2d_api_instance_get_by_id($instance_id);
+  // remove friendship
+  d2d_api_friendship_update($instance_id, 0);
+  $return = $notify ? d2d_api_friendship_send($instance_id, TRUE, 1, $verbose) : NULL;
   // remove group memberships
   db_delete('d2d_group_memberships')
   ->condition('instance_id', $instance_id)
@@ -151,6 +154,7 @@ function d2d_api_instance_delete($instance_id) {
   ->execute();
   // call hook
   module_invoke_all('d2d_instance_removed', $instance);
+  return $return;
 }
 
 /**
@@ -367,7 +371,6 @@ function d2d_api_instance_update($instance_id, $fields) {
 // FRIENDS
 ///////////
 
-
 function _d2d_api_friend_get($d2d_id) {
 
   $query = db_select('d2d_instances', 'i');
@@ -406,15 +409,24 @@ function d2d_api_friend_get_by_url($url) {
 //////////////
 
 // Update state of friendship.
-function d2d_api_friendship_update($friend_id, $friendship_state) {
+function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state=NULL, $sender_id=NULL) {
   db_update('d2d_instances')
-  ->fields(array('friendship_state' => $friendship_state))
-  ->condition('id', $friend_id)
-  ->execute();
+    ->fields(array('friendship_state' => $friendship_state))
+    ->condition('id', $friend_id)
+    ->execute();
   // call hook
-  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state);
+  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state, $old_friendship_state, $sender_id);
 }
 
+function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose=FALSE) {
+  $request_id = d2d_add_request($id, 'd2d_friendship', array(), $max_number_of_resends, TRUE);
+  if ($send_now) {
+    return d2d_send_outgoing_requests(array($request_id), $verbose);
+  }
+  else {
+    return NULL;
+  }
+}
 
 /////////
 // GROUP

@@ -96,12 +96,7 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
   );
   $new_friendship_state = $friendship_map[$arguments['state']][$old_friendship_state];
   if ($new_friendship_state != $old_friendship_state) {
-    db_update('d2d_instances')
-      ->fields(array(
-        'friendship_state' => $new_friendship_state,
-      ))
-      ->condition('id', $rpc_info['instance']['id'])
-      ->execute();
+    d2d_api_friendship_update($rpc_info['instance']['id'], $new_friendship_state, $old_friendship_state, $rpc_info['instance']['id']);
     _d2d_insert_friendship_notification($rpc_info['instance']['d2d_id'], $types[$arguments['state']][$old_friendship_state], array());
   }
   if ($live) {
