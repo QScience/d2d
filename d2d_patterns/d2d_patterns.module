@@ -4,7 +4,7 @@
  * Hook functions for Patterns integration
  */
 
-// TODO validation for FRIENDSHIP, GROUP
+// TODO validation for FRIENDSHIP
 // callbacks for FRIENDSHIP
 
 
@@ -381,11 +381,41 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   }
   
-  else if ($tag == 'd2d_permission') {
+  else if ($tag == 'd2d_group') {
+    if ($action == PATTERNS_CREATE) {
       	
       $kcheck = array();
-      $kcheck[] = array('mandatory' => array('method', 'group'), );
+      $kcheck[] = array('mandatory' => array('name', 'description'), );
       $status = patterns_utils_check_keys($data, $kcheck, $msg);
+      	
+    }
+    else if ($action == PATTERNS_MODIFY) {
+      
+  		$kcheck = array();
+  		$kcheck[] = array('mandatory' => array('id'), );
+  		$kcheck[] = array('at_least_one' => array('name', 'description', 'default'), );
+  		$status = patterns_utils_check_keys($data, $kcheck, $msg);
+    }
+     
+    else { // PATTERNS_DELETE
+      $kcheck = array();
+      $kcheck[] = array('mandatory' => array('id'), );
+      $status = patterns_utils_check_keys($data, $kcheck, $msg);
+    }
+  }
+  
+  else if ($tag == 'd2d_permission') {
+      	
+    $kcheck = array();
+    $kcheck[] = array('mandatory' => array('method', 'group'), );
+    $status = patterns_utils_check_keys($data, $kcheck, $msg);
+  }
+  
+  else if ($tag == 'd2d_friendship') {
+     
+    $kcheck = array();
+    $kcheck[] = array('mandatory' => array('d2d_id'), );
+    $status = patterns_utils_check_keys($data, $kcheck, $msg);
   }
   
   if ($status == PATTERNS_ERR) {
@@ -478,6 +508,35 @@ function d2d_patterns_validate($action, $tag, &$data) {
         }
         
       } 
+    }
+  }
+  
+  else if ($tag == 'd2d_friendship') {
+    $d2d_id = @$data['d2d_id'];
+  
+    $instance = d2d_api_instance_get($id);
+  
+    if ($instance == FALSE) {
+      $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+          t('No instance with name %id found.', array('%id' => $d2d_id,)));
+    }
+    else {
+  
+      if ($action == PATTERNS_MODIFY) {
+  
+        if ($instance['is_friend']) {
+          $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+              t('Instance "%d2d_id" is already marked as friend.', array('%d2d_id' => $d2d_id,)));
+        }
+      }
+       
+      else { // DELETE
+        if (!$instance['is_friend']) {
+          $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+              t('Instance "%d2d_id" is not marked as friend.', array('%d2d_id' => $d2d_id,)));
+        }
+  
+      }
     }
   }
   	
