@@ -562,7 +562,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
     else {
       
       $permissions = d2d_api_permission_get(TRUE);
-      $perm_exist = isset($permissions[$group_id]['id'][$method_name]);
+      $perm_exist = isset($permissions[$group_id][$method_name]);
        
       if ($action == PATTERNS_CREATE) {
     
