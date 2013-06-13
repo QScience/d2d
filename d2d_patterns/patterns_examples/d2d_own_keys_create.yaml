@@ -1,0 +1,29 @@
+info:
+  title: D2D own keys CREATE
+  category: D2D
+  description: Own keys example
+  version: 1.0
+  core: x.y
+  author: root
+  author_email: me@me.com
+  author_website: http://patterns.inn.ac
+
+modules:
+  - d2d
+
+d2d_own_keys:
+  create:
+    tag: d2d_own_keys
+    public: |
+      |
+            -----BEGIN PUBLIC KEY-----
+            MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCwOseFW7YFiUMMVIiRCZ2X+e+5
+            2G5L59J1MjvA5cNQDihU8GVeGP8kSuP6PUAL3q/yfPMghQuWwUkHjjK6N72MRK6Z
+            VJr0IWqFfipXIjwfWamuwQlBukahCz4YTmVTy+ndQlh5b9IXhBk0afJ5esDvobjH
+            HlyNqvNCt7Ey0lY8fQIDAQAB
+            -----END PUBLIC KEY-----
+    private: |
+      |
+            -----BEGIN PRIVATE KEY-----
+            This is the place of the private key!
+            -----END PRIVATE KEY-----
