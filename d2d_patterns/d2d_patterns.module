@@ -340,7 +340,7 @@ function d2d_patterns_prepare($action, $tag, &$data) {
   
   if ($tag == 'd2d_friendship') {
     if (!isset($data['instance_id']) && isset($data['d2d_id'])) {
-      $instance = d2d_api_instance_get_by_name($data['d2d_id']);
+      $instance = d2d_api_instance_get($data['d2d_id']);
       if ($instance != FALSE) {
         $data['instance_id'] = $instance['id'];
         $data['old_friendship_state'] = $instance['friendship_state'];
@@ -411,27 +411,21 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	if ($action == PATTERNS_CREATE) {
   	  
   	  $kcheck = array();
-  	  $kcheck[] = array('mandatory' => array('id', 'd2d_id', 'address'), );
+  	  $kcheck[] = array('mandatory' => array('d2d_id', 'url'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	  
   	}
   	else if ($action == PATTERNS_MODIFY) {  
   		$kcheck = array();
   	  $kcheck[] = array('mandatory' => array('id'), );
-  	  $kcheck[] = array('at_least_one' => array('public_key', 'd2d_id'), );
+  	  $kcheck[] = array('at_least_one' => array('name', 'description', 'url'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   	
   	else { // PATTERNS_DELETE
-  		$kcheck = patterns_utils_key_exists(array('public_key', 'd2d_id', 'id'), $data);
-  		
-  		// Either the id or the combination d2d_id public_key
-  		if (!$kcheck['id'] && !($kcheck['public_key'] && $kcheck['d2d_id'])) {
-
-  			$msg = t("Either the 'id' attribute or the combination 'public_key' and 'd2d_id' is required");
-  			$status = PATTERNS_ERR;
-  		}
-  		
+  		$kcheck = array();
+  	  $kcheck[] = array('mandatory' => array('id'), );
+  	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   }
   
@@ -592,7 +586,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
     }
     else {  
       
-      if ($action == PATTERNS_MODIFY) {
+      if ($action == PATTERNS_CREATE) {
   
         if ($data['is_friend']) {
           $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
@@ -641,7 +635,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
     }
     else { // modify, delete
   
-      $group = d2d_api_instance_get_by_id($data['id']);
+      $instance = d2d_api_instance_get_by_id($data['id']);
     
       if ($instance == FALSE) {
         $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
