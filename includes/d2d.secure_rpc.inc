@@ -260,6 +260,7 @@ function d2d_secure_rpc($request64, $version) {
   if (!d2d_check_array($exploded_arguments, $argument_checks)) {
     return xmlrpc_error(0, 'arguments failed check');
   }
+  
   $rpc_info = array(
     'id' => $friend['id'],
     'public_key' => $friend['public_key'],
