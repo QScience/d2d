@@ -4,8 +4,7 @@
  * Hook functions for Patterns integration
  */
 
-// TODO validation for FRIENDSHIP
-// callbacks for FRIENDSHIP
+// TODO validation semantic for GROUP and INSTANCE
 
 
 function d2d_patterns($data = NULL){
@@ -44,9 +43,9 @@ function d2d_patterns($data = NULL){
   
   $tags['d2d_friendship'] = array(
     PATTERNS_INFO   => t('Establish or remove a friendship'),
-//     PATTERNS_CREATE => array('d2d_'),
-//     PATTERNS_MODIFY => array('taxonomy_form_vocabulary'),
-//     PATTERNS_DELETE => array('taxonomy_vocabulary_confirm_delete'),
+    PATTERNS_CREATE => array('d2d_patterns_friendship_send'),
+    //PATTERNS_MODIFY => array('d2d_patterns_friendship_send'), invalid
+    PATTERNS_DELETE => array('d2d_patterns_friendship_send'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_friendships',
                         ),
@@ -77,6 +76,11 @@ function d2d_patterns($data = NULL){
   
 }
 
+
+//////////////
+// PERMISSIONS
+//////////////
+
 function d2d_patterns_export_all_permissions($args = NULL, &$result = NULL) {
   $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
 
@@ -94,19 +98,6 @@ function d2d_patterns_export_all_permissions($args = NULL, &$result = NULL) {
   return $actions;
 }
 
-// $permissions = array();
-// foreach ($form_state['values']['groups'] as $gid => $group) {
-//   $permissions_group = array();
-//   foreach ($form_state['values'][$gid] as $method => $flag) {
-//     if ($flag) {
-//       $permissions_group[] = $method;
-//       $methods[$method] = 1;
-//       $permissions[] = array('group_id' => $gid, 'method' => $method);
-//     }
-//   }
-// }
-
-
 function d2d_patterns_edit_permission($form_id, $form_state) {
   $permissions = $form_state['values']['d2d_permission'];
   d2d_api_permission_add($permissions);
@@ -122,67 +113,11 @@ function d2d_patterns_add_permission($form_id, $form_state) {
   d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
 }
 
-function d2d_patterns_edit_group($form_id, $form_state) {
-  $group = $form_state['values']['d2d_group'];
-  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
-}
 
-function d2d_patterns_delete_group($form_id, $form_state) {
-  $group = $form_state['values']['d2d_group'];
-  d2d_api_group_delete($group['id']);
-}
+//////////
+// GROUPS
+/////////
 
-function d2d_patterns_insert_own_keys($form_id, $form_state) {
-	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_set($form_state['values']['d2d_own_keys']['public']);
-	}
-	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_set($form_state['values']['d2d_own_keys']['private']);
-	}
-}
-
-function d2d_patterns_delete_own_keys($form_id, $form_state) {
-	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_del($form_state['values']['d2d_own_keys']['public']);
-	}
-	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
-	}
-}
-
-function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
-
-	$action_type = PATTERNS_MODIFY;
-	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
-  	$action_type = PATTERNS_CREATE;
-	}
-	
-	$keys = array($action_type => array(
-		'tag' => 'd2d_own_keys',
-		'public' => d2d_api_own_public_key_get(),
-		'private' => d2d_api_own_private_key_get(),
-	));
-  
-  return $keys;
-}
-
-function d2d_patterns_export_all_friendships($args = NULL, &$result = NULL) {
-  $action_type = PATTERNS_CREATE; // either create or delete
-  
-  $instances = d2d_api_instance_get();
-  $actions = array();
-  foreach ($instances as $i) {
-    $action = array($action_type => array(
-        'tag' => 'd2d_friendship',
-        'd2d_id' => $i['d2d_id'],
-    ));
-    if ($action_type == PATTERNS_MODIFY) {
-    		$action[$action_type]['id'] = $i['id'];
-    }
-    array_push($actions, $action);
-  }
-  return $actions;
-}
 
 function d2d_patterns_export_all_groups($args = NULL, &$result = NULL) {
   $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
@@ -204,6 +139,106 @@ function d2d_patterns_export_all_groups($args = NULL, &$result = NULL) {
   return $actions;
 }
 
+function d2d_patterns_edit_group($form_id, $form_state) {
+  $group = $form_state['values']['d2d_group'];
+  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+}
+
+function d2d_patterns_delete_group($form_id, $form_state) {
+  $group = $form_state['values']['d2d_group'];
+  d2d_api_group_delete($group['id']);
+}
+
+////////////
+// OWN KEYS
+////////////
+
+
+function d2d_patterns_export_own_public_key($args = NULL, &$result = NULL) {
+  $actions = array();
+  $action_type = PATTERNS_MODIFY; // pre-init
+
+  if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+    $action_type = PATTERNS_CREATE;
+  }
+
+  $keys = array($action_type => array(
+      'tag' => 'd2d_own_keys',
+      'public' => d2d_api_own_public_key_get(),
+  ));
+
+  return $keys;
+}
+
+function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
+
+  $action_type = PATTERNS_MODIFY;
+  if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
+    $action_type = PATTERNS_CREATE;
+  }
+
+  $keys = array($action_type => array(
+      'tag' => 'd2d_own_keys',
+      'public' => d2d_api_own_public_key_get(),
+      'private' => d2d_api_own_private_key_get(),
+  ));
+
+  return $keys;
+}
+
+function d2d_patterns_insert_own_keys($form_id, $form_state) {
+	if (isset($form_state['values']['d2d_own_keys']['public'])) {
+		d2d_api_own_public_key_set($form_state['values']['d2d_own_keys']['public']);
+	}
+	if (isset($form_state['values']['d2d_own_keys']['private'])) {
+		d2d_api_own_private_key_set($form_state['values']['d2d_own_keys']['private']);
+	}
+}
+
+function d2d_patterns_delete_own_keys($form_id, $form_state) {
+	if (isset($form_state['values']['d2d_own_keys']['public'])) {
+		d2d_api_own_public_key_del($form_state['values']['d2d_own_keys']['public']);
+	}
+	if (isset($form_state['values']['d2d_own_keys']['private'])) {
+		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
+	}
+}
+
+
+////////////////
+// FRIENDSHIPS
+///////////////
+
+function d2d_patterns_export_all_friendships($args = NULL, &$result = NULL) {
+  $action_type = PATTERNS_CREATE; // either create or delete
+  
+  $instances = d2d_api_instance_get();
+  $actions = array();
+  foreach ($instances as $i) {
+    $action = array($action_type => array(
+        'tag' => 'd2d_friendship',
+        'd2d_id' => $i['d2d_id'],
+    ));
+    if ($action_type == PATTERNS_MODIFY) {
+    		$action[$action_type]['id'] = $i['id'];
+    }
+    array_push($actions, $action);
+  }
+  return $actions;
+}
+
+function d2d_patterns_friendship_send($form_id, $form_state) {
+  $id = $form_state['values']['instance_id'];
+  $state = $form_state['values']['state'];
+  $old_friendship_state = $form_state['values']['old_friendship_state'];
+  d2d_api_friendship_update($id, $state, $old_friendship_state, d2d_api_own_instance_id_get());
+  d2d_api_friendship_send($id, TRUE, 1, FALSE);
+}
+
+
+/////////////
+// INSTANCES
+/////////////
 
 function _d2d_patterns_export_instances($args, &$result, $friends_only) {
   $action_type = PATTERNS_MODIFY;
@@ -237,21 +272,10 @@ function d2d_patterns_export_all_friends($args = NULL, &$result = NULL) {
   return _d2d_patterns_export_instances($args, $result, TRUE);
 }
 
-function d2d_patterns_export_own_public_key($args = NULL, &$result = NULL) {
-	$actions = array();
-	$action_type = PATTERNS_MODIFY; // pre-init
-	
-	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
-  	$action_type = PATTERNS_CREATE;
-	}
-	
-	$keys = array($action_type => array(
-		'tag' => 'd2d_own_keys',
-		'public' => d2d_api_own_public_key_get(),
-	));
-  
-  return $keys;
-}
+
+///////////////
+// PUBLIC KEYS
+///////////////
 
 function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
 	$actions = array();
@@ -304,16 +328,42 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
 }
 
 
-// function d2d_patterns_prepare($action, $tag, &$data) {
-//   if ($tag == 'd2d_permission') {
-//     if (!isset($data['group_id']) && isset($data['group'])) {
-//       $group = d2d_api_group_get_by_name($data['group']);
-//       if (!is_null($group)) {
-//         $data['group_id'] = $group['id'];
-//       }
-//     }
-//   }
-// }
+///////////////////
+// PATTERNS HOOKS
+///////////////////
+
+function d2d_patterns_prepare($action, $tag, &$data) {
+  if ($tag == 'd2d_permission') {
+    if (!isset($data['group_id']) && isset($data['group'])) {
+      $group = d2d_api_group_get_by_name($data['group']);
+      $data['group_id'] = is_null($group) ? NULL : $group['id'];
+    }
+  }
+  
+  if ($tag == 'd2d_friendship') {
+    if (!isset($data['instance_id']) && isset($data['d2d_id'])) {
+      $instance = d2d_api_instance_get_by_name($data['d2d_id']);
+      if ($instance != FALSE) {
+        $data['instance_id'] = $instance['id'];
+        $data['old_friendship_state'] = $instance['friendship_state'];
+        $data['is_friend'] = $instance['is_friend'];
+        
+        
+        if ($action == PATTERNS_CREATE) {
+          $data['state'] = 1;
+        }
+        else if ($action == PATTERNS_DELETE) {
+          $data['state'] = 0;
+        }
+        
+      }
+      else {
+        $data['instance_id'] = FALSE;
+      }
+    }
+  }
+  
+}
 
 // Validate the values for an action before running the pattern
 function d2d_patterns_validate($action, $tag, &$data) {
@@ -351,6 +401,12 @@ function d2d_patterns_validate($action, $tag, &$data) {
   		}
   		
   	}
+  }
+  
+  else if ($tag == 'd2d_own_keys') {
+    $kcheck = array();
+    $kcheck[] = array('at_least_one' => array('public', 'private'), );  
+    $status = patterns_utils_check_keys($data, $kcheck, $msg);
   }
   
   else if ($tag == 'd2d_instance') {
@@ -412,10 +468,16 @@ function d2d_patterns_validate($action, $tag, &$data) {
   }
   
   else if ($tag == 'd2d_friendship') {
-     
-    $kcheck = array();
-    $kcheck[] = array('mandatory' => array('d2d_id'), );
-    $status = patterns_utils_check_keys($data, $kcheck, $msg);
+
+    if ($action == PATTERNS_MODIFY) {
+      $status = PATTERNS_ERROR;
+      $msg = t('Tag d2d_friendship is invalid for action "modify"');
+    }
+    else {
+      $kcheck = array();
+      $kcheck[] = array('mandatory' => array('d2d_id'), );
+      $status = patterns_utils_check_keys($data, $kcheck, $msg);
+    }
   }
   
   if ($status == PATTERNS_ERR) {
@@ -432,7 +494,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   	// $keys = @d2d_api_public_key_get($d2d_id);
   	
-  	if ($action == PATTERNS_CREATE) {  
+  	if ($action == PATTERNS_CREATE) {
   		
   		$instance = d2d_api_instance_get($d2d_id);
 
@@ -477,21 +539,32 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   }
   
+  else if ($tag == 'd2d_own_keys') {
+    // nothing
+  }
+  
   
   else if ($tag == 'd2d_permission') {
     $method_name = @$data['method'];
     $group_name = @$data['group'];
     
-    $group = d2d_api_group_get_by_name($group_name);
+    if (isset($data['group_id'])) { // set in hook_prepare
+      $group_id = $data['group_id'];
+    }
+    else {
+      $group = d2d_api_group_get_by_name($group_name);
+      $group_id = is_null($group) ? NULL : $group['id'];  
+    }
     
-    if (is_null($group)) {
+    
+    if (is_null($group_id)) {
       $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
           t('No group with name %name found.', array('%name' => $group_name,)));
     }
     else {
       
       $permissions = d2d_api_permission_get(TRUE);
-      $perm_exist = isset($permissions[$group]['id'][$method_name]);
+      $perm_exist = isset($permissions[$group_id]['id'][$method_name]);
        
       if ($action == PATTERNS_CREATE) {
     
@@ -513,25 +586,24 @@ function d2d_patterns_validate($action, $tag, &$data) {
   
   else if ($tag == 'd2d_friendship') {
     $d2d_id = @$data['d2d_id'];
-  
-    $instance = d2d_api_instance_get($id);
-  
-    if ($instance == FALSE) {
+    $instance_id = FALSE; // init value
+      
+    if ($data['instance_id'] == FALSE) { // set in hook_prepare
       $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
           t('No instance with name %id found.', array('%id' => $d2d_id,)));
     }
-    else {
-  
+    else {  
+      
       if ($action == PATTERNS_MODIFY) {
   
-        if ($instance['is_friend']) {
+        if ($data['is_friend']) {
           $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
               t('Instance "%d2d_id" is already marked as friend.', array('%d2d_id' => $d2d_id,)));
         }
       }
        
       else { // DELETE
-        if (!$instance['is_friend']) {
+        if (!$data['is_friend']) {
           $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
               t('Instance "%d2d_id" is not marked as friend.', array('%d2d_id' => $d2d_id,)));
         }
