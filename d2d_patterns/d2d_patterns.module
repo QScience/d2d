@@ -4,6 +4,8 @@
  * Hook functions for Patterns integration
  */
 
+// TODO public key select && MODIFY without the ID
+
 function d2d_patterns($data = NULL){
 	
 	$tags['d2d_public_key'] = array(
