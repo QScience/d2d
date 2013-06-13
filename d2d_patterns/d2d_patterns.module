@@ -4,8 +4,6 @@
  * Hook functions for Patterns integration
  */
 
-// TODO validation semantic for GROUP and INSTANCE
-
 
 function d2d_patterns($data = NULL){
 	
@@ -608,6 +606,46 @@ function d2d_patterns_validate($action, $tag, &$data) {
               t('Instance "%d2d_id" is not marked as friend.', array('%d2d_id' => $d2d_id,)));
         }
   
+      }
+    }
+  }
+  
+  else if ($tag == 'd2d_group') {
+      
+    if ($action == PATTERNS_CREATE) {
+      $group = d2d_api_group_get_by_name($data['name']);
+      if (!is_null($group)) {
+        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+            t('Group "%g" already existing.', array('%g' => $data['name'],)));
+      }      
+    }
+    else { // modify, delete 
+      
+      $group = d2d_api_group_get_by_id($data['id']);
+      
+      if (is_null($group)) {
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+          t('Group with id "%id" not found.', array('%id' => $data['id'],)));
+      }
+    }
+  }
+  
+  else if ($tag == 'd2d_instance') {
+  
+    if ($action == PATTERNS_CREATE) {
+      $instance = d2d_api_instance_get($data['d2d_id']);
+      if ($instance != FALSE) {
+        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+            t('Instance with d2d_id "%d2d_id" already existing.', array('%d2d_id' => $data['d2d_id'],)));
+      }
+    }
+    else { // modify, delete
+  
+      $group = d2d_api_instance_get_by_id($data['id']);
+    
+      if ($instance == FALSE) {
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+             t('Instance with id "%id" not found.', array('%id' => $data['id'],)));
       }
     }
   }
