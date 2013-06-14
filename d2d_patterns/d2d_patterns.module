@@ -4,7 +4,7 @@
  * Hook functions for Patterns integration
  */
 
-// TODO public key select && MODIFY without the ID
+// TODO check public key select && MODIFY without the ID
 
 function d2d_patterns($data = NULL){
 	
