@@ -62,9 +62,9 @@ function d2d_patterns($data = NULL){
   );
 
   $tags['d2d_permission'] = array(
-		PATTERNS_INFO   => t('Create, modify, and delete D2D permissions'),
+		PATTERNS_INFO   => t('Assign and revoke D2D permissions'),
 	  PATTERNS_CREATE => array('d2d_patterns_add_permission'),
-	  PATTERNS_MODIFY => array('d2d_patterns_edit_permission'),
+	  //PATTERNS_MODIFY => array('d2d_patterns_edit_permission'),
 	  PATTERNS_DELETE => array('d2d_patterns_delete_permission'),
 	  PATTERNS_EXPORT => array(
 	                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_permissions',
@@ -98,19 +98,15 @@ function d2d_patterns_export_all_permissions($args = NULL, &$result = NULL) {
   return $actions;
 }
 
-function d2d_patterns_edit_permission($form_id, $form_state) {
-  $permissions = $form_state['values']['d2d_permission'];
-  d2d_api_permission_add($permissions);
-}
-
 function d2d_patterns_delete_permission($form_id, $form_state) {
-  $group = $form_state['values']['d2d_permission'];
-  d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
+  d2d_api_permission_delete($form_state['values']['group_id']);
+  return patterns_results();
 }
 
 function d2d_patterns_add_permission($form_id, $form_state) {
-  $group = $form_state['values']['d2d_permission'];
-  d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
+  $permissions = $form_state['values'];
+  d2d_api_permission_add($permissions);
+  return patterns_results();
 }
 
 
@@ -142,11 +138,13 @@ function d2d_patterns_export_all_groups($args = NULL, &$result = NULL) {
 function d2d_patterns_edit_group($form_id, $form_state) {
   $group = $form_state['values'];
   d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
+  return patterns_results();
 }
 
 function d2d_patterns_delete_group($form_id, $form_state) {
-  $group = $form_state['values']['d2d_group'];
+  $group = $form_state['values']['d2d_group']; // TODO wrong
   d2d_api_group_delete($group['id']);
+  return patterns_results();
 }
 
 ////////////
@@ -193,6 +191,7 @@ function d2d_patterns_insert_own_keys($form_id, $form_state) {
 	if (isset($form_state['values']['d2d_own_keys']['private'])) {
 		d2d_api_own_private_key_set($form_state['values']['d2d_own_keys']['private']);
 	}
+	return patterns_results();
 }
 
 function d2d_patterns_delete_own_keys($form_id, $form_state) {
@@ -202,6 +201,7 @@ function d2d_patterns_delete_own_keys($form_id, $form_state) {
 	if (isset($form_state['values']['d2d_own_keys']['private'])) {
 		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
 	}
+	return patterns_results();
 }
 
 
@@ -233,6 +233,7 @@ function d2d_patterns_friendship_send($form_id, $form_state) {
   $old_friendship_state = $form_state['values']['old_friendship_state'];
   d2d_api_friendship_update($id, $state, $old_friendship_state, d2d_api_own_instance_id_get());
   d2d_api_friendship_send($id, TRUE, 1, FALSE);
+  return patterns_results();
 }
 
 
@@ -333,6 +334,7 @@ function d2d_patterns_insert_public_keys($form_id, $form_state) {
 	if (isset($form_state['values']['selected'])) {
 	  d2d_api_public_key_select($id_pk, $form_state['values']['instance_id']);
 	}
+	return patterns_results();
 }
 
 function d2d_patterns_update_public_keys($form_id, $form_state) {
@@ -367,8 +369,8 @@ function d2d_patterns_update_public_keys($form_id, $form_state) {
   	else {
   	  d2d_api_public_key_select($id_pk, $instance_id);
   	}
-  	
 	}
+	return patterns_results();
 }
 
 function d2d_patterns_delete_public_keys($form_id, $form_state) {
@@ -379,6 +381,7 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
 		$id = $form_state['values']['id'];
 	}
 	d2d_api_public_key_delete($id);
+	return patterns_results();
 }
 
 
@@ -665,14 +668,14 @@ function d2d_patterns_validate($action, $tag, &$data) {
     
       		if ($perm_exist) {
       		  $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
-      		      t('Group "%name" has already the permission "%p".', array('%name' => group_name, '%p' => $method_name,)));
+      		      t('Group "%name" has already the permission "%p".', array('%name' => $group_name, '%p' => $method_name,)));
       		}
       }
        
       else { // DELETE
         if (!$perm_exist) {
           $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
-              t('Group "%name" has no permission "%p".', array('%name' => group_name, '%p' => $method_name,)));
+              t('Group "%name" has no permission "%p".', array('%name' => $group_name, '%p' => $method_name,)));
         }
         
       } 
