@@ -44,7 +44,6 @@ function d2d_patterns($data = NULL){
   $tags['d2d_friendship'] = array(
     PATTERNS_INFO   => t('Establish or remove a friendship'),
     PATTERNS_CREATE => array('d2d_patterns_friendship_send'),
-    //PATTERNS_MODIFY => array('d2d_patterns_friendship_send'), invalid
     PATTERNS_DELETE => array('d2d_patterns_friendship_send'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_friendships',
@@ -64,7 +63,6 @@ function d2d_patterns($data = NULL){
   $tags['d2d_permission'] = array(
 		PATTERNS_INFO   => t('Assign and revoke D2D permissions'),
 	  PATTERNS_CREATE => array('d2d_patterns_add_permission'),
-	  //PATTERNS_MODIFY => array('d2d_patterns_edit_permission'),
 	  PATTERNS_DELETE => array('d2d_patterns_delete_permission'),
 	  PATTERNS_EXPORT => array(
 	                          PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_permissions',
@@ -185,21 +183,21 @@ function d2d_patterns_export_own_keys($args = NULL, &$result = NULL) {
 }
 
 function d2d_patterns_insert_own_keys($form_id, $form_state) {
-	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_set($form_state['values']['d2d_own_keys']['public']);
+	if (isset($form_state['values']['public'])) {
+		d2d_api_own_public_key_set($form_state['values']['public']);
 	}
-	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_set($form_state['values']['d2d_own_keys']['private']);
+	if (isset($form_state['values']['private'])) {
+		d2d_api_own_private_key_set($form_state['values']['private']);
 	}
 	return patterns_results();
 }
 
 function d2d_patterns_delete_own_keys($form_id, $form_state) {
-	if (isset($form_state['values']['d2d_own_keys']['public'])) {
-		d2d_api_own_public_key_del($form_state['values']['d2d_own_keys']['public']);
+	if (isset($form_state['values']['public'])) {
+		d2d_api_own_public_key_del($form_state['values']['public']);
 	}
 	if (isset($form_state['values']['d2d_own_keys']['private'])) {
-		d2d_api_own_private_key_del($form_state['values']['d2d_own_keys']['private']);
+		d2d_api_own_private_key_del($form_state['values']['private']);
 	}
 	return patterns_results();
 }
@@ -272,7 +270,6 @@ function d2d_patterns_export_all_instances($args = NULL, &$result = NULL) {
 function d2d_patterns_export_all_friends($args = NULL, &$result = NULL) {
   return _d2d_patterns_export_instances($args, $result, TRUE);
 }
-
 
 ///////////////
 // PUBLIC KEYS
