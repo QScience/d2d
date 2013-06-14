@@ -13,11 +13,12 @@ modules:
 
 d2d_group:
   - 
-    create:
+    modify:
       tag: d2d_group
       name: friends
-      description: N/A
+      description: These are my real friends
       default: 1
+      id: 1
   - 
     create:
       tag: d2d_group
