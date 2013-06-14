@@ -77,7 +77,7 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
 
 function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
   $form = array();
-  $form['address'] = array(
+  $form['url'] = array(
     '#type' => 'textfield',
     '#title' => t('Address'),
     '#description' => t('Address of the instance, e.g. http:/www.example.com/xmlrpc.php'),
@@ -119,15 +119,15 @@ function d2d_form_edit_instance_validate($form, &$form_state) {
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters', array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH)));
   }
-  if (!d2d_check_url($form_state['values']['address'])) {
-    form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
+  if (!d2d_check_url($form_state['values']['url'])) {
+    form_set_error('url', t('Address must start with \'http://\' or \'https://\'.'));
   }
 }
 
 function d2d_form_edit_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $name = $form_state['values']['name'];
-  $url = $form_state['values']['address'];
+  $url = $form_state['values']['url'];
   $description = $form_state['values']['description'];
   $update = array(
     'name' => $name,

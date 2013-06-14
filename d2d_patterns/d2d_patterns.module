@@ -105,12 +105,12 @@ function d2d_patterns_edit_permission($form_id, $form_state) {
 
 function d2d_patterns_delete_permission($form_id, $form_state) {
   $group = $form_state['values']['d2d_permission'];
-  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+  d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
 }
 
 function d2d_patterns_add_permission($form_id, $form_state) {
   $group = $form_state['values']['d2d_permission'];
-  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+  d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
 }
 
 
@@ -140,8 +140,8 @@ function d2d_patterns_export_all_groups($args = NULL, &$result = NULL) {
 }
 
 function d2d_patterns_edit_group($form_id, $form_state) {
-  $group = $form_state['values']['d2d_group'];
-  d2d_api_group_edit($group['id'], $group['name'], $group['description'], $group['default']);
+  $group = $form_state['values'];
+  d2d_api_group_update($group['id'], $group['name'], $group['description'], $group['default']);
 }
 
 function d2d_patterns_delete_group($form_id, $form_state) {
@@ -718,7 +718,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
     }
     else { // modify, delete 
       
-      $group = d2d_api_group_get_by_id($data['id']);
+      $group = d2d_api_group_get($data['id']);
       
       if (is_null($group)) {
         $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>

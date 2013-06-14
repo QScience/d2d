@@ -17,7 +17,7 @@ function d2d_form_add_instance() {
     unset($_SESSION['d2d_add_instance']);
   }
   // receiver of the request
-  $form['address'] = array(
+  $form['url'] = array(
     '#type' => 'textfield',
     '#title' => t('Address'),
     '#description' => t('Address of the instance, e.g. http://www.example.com/xmlrpc.php'),
@@ -95,7 +95,7 @@ function d2d_form_add_instance_submit_validate($form, &$form_state) {
 }
 function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
   if (d2d_form_add_instance_validate($form, $form_state)) {
-    $url = $form_state['values']['address'];
+    $url = $form_state['values']['url'];
     $res = xmlrpc($url, array('d2d.getInstanceInformation' => array()));
     if ($res === FALSE) {
       form_set_error('', t('Error retrieving information from other instance.'));
@@ -120,8 +120,8 @@ function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
 }
 function d2d_form_add_instance_validate($form, &$form_state) {
   $okay = TRUE;
-  if (!d2d_check_url($form_state['values']['address'])) {
-    form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
+  if (!d2d_check_url($form_state['values']['url'])) {
+    form_set_error('url', t('Address must start with \'http://\' or \'https://\'.'));
     $okay = FALSE;
   }
   return $okay;
@@ -130,7 +130,7 @@ function d2d_form_add_instance_submit_submit($form, &$form_state) {
   $id = db_insert('d2d_instances')->fields(array(
       'd2d_id' => $form_state['values']['d2d_id'],
       'name' => $form_state['values']['name'],
-      'url' => $form_state['values']['address'],
+      'url' => $form_state['values']['url'],
       'description' => $form_state['values']['description'],
       'time_inserted' => d2d_get_time(),
       'public_key_id' => NULL,
