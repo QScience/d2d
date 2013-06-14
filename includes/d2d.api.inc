@@ -47,6 +47,35 @@ function d2d_api_public_key_set($instance_id, $public_key) {
   return $id_pk;
 }
 
+
+
+/**
+ * Returns a query object that joins that d2d_public_keys 
+ * and d2d_instances tables
+ * 
+ * This function should not be called directly
+ */
+function _d2d_api_public_key_get_join_query() {
+  $query = db_select('d2d_public_keys', 'k');
+  
+  $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
+  $query
+  ->fields('i', array('d2d_id',))
+  ->fields('k', array('id', 'instance_id', 'public_key'));
+  
+  return $query;
+}
+
+/**
+ * Retrieves currently selected public key objects from the database
+ *
+ * @return array|stdClass The result set
+ */
+function d2d_api_public_key_get_selected() {
+  $query = _d2d_api_public_key_get_join_query();
+  return $query->execute()->FetchAll();
+}
+
 /**
  * Retrieves public key objects from the database
  * 
@@ -58,21 +87,14 @@ function d2d_api_public_key_set($instance_id, $public_key) {
  * @return array|stdClass The result set
  */
 function d2d_api_public_key_get($d2d_id = NULL) {
- 
-  $query = db_select('d2d_public_keys', 'k');
 
-  $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
-  $query
-    ->fields('i', array('d2d_id'))
-    ->fields('k', array('id', 'public_key'));
-          
+  $query = _d2d_api_public_key_get_join_query();
+  
   if (!is_null($d2d_id)) {
-    $query = $query->condition('i.d2d_id', $d2d_id);
+    $query->condition('i.d2d_id', $d2d_id);
   }
 
-  $keys = $query->execute()->FetchAll();
-
-  return $keys;
+  return $query->execute()->FetchAll();
 }
 
 
@@ -84,13 +106,9 @@ function d2d_api_public_key_get($d2d_id = NULL) {
  */
 function d2d_api_public_key_get_by_id($id) {
 
-  $query = db_select('d2d_public_keys', 'k');
-
-  $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
-  $query
-  ->fields('i', array('d2d_id'))
-  ->fields('k', array('id', 'public_key'))
-  ->condition('k.id', $id);
+  $query = db_select('d2d_public_keys', 'k')
+              ->fields('k')
+              ->condition('k.id', $id);
 
   return $query->execute()->FetchObject();
 }
