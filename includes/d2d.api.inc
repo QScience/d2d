@@ -285,9 +285,11 @@ function d2d_api_own_private_key_delete() {
 //////////////
 
 function d2d_api_own_d2d_id_get() {
-  return variable_get('d2d_my_id');
+  return variable_get('d2d_my_id', NULL);
 }
 
+// When this is used, the own_instance_id should 
+// probably be updated too.
 function d2d_api_own_d2d_id_set($d2d_id) {  
   variable_set('d2d_my_id', $d2d_id);
 }
@@ -301,21 +303,41 @@ function d2d_api_own_d2d_id_delete($d2d_id) {
 ///////////////////
 
 function d2d_api_own_instance_id_get() {
-  return variable_get('d2d_my_instance_id');
+  return variable_get('d2d_my_instance_id', NULL);
 }
 
+// When this is used, the own_instance_d2d_id should
+// probably be updated too.
 function d2d_api_own_instance_id_set($id) {
   variable_set('d2d_my_instance_id', $id);
 }
 
-function d2d_api_own_instance_id_delete($id) {
+function d2d_api_own_instance_id_delete() {
   variable_del('d2d_my_instance_id');
 }
 
 
-function d2d_api_own_instance_get() {
+/////////////////
+// OWN INSTANCE
+///////////////
+
+function d2d_api_own_instance_delete() {
+  $myid = d2d_api_own_instance_id_get();  
+  if (empty($myid)) return FALSE;
+  if (!d2d_api_instance_delete($myid, FALSE, FALSE)) return FALSE;
+  d2d_api_own_private_key_delete();
+  d2d_api_own_instance_id_delete();
+  d2d_api_own_d2d_id_get();
+  return TRUE;
+}
+
+function d2d_api_own_instance_get($private_key = FALSE) {
   $id = d2d_api_own_instance_id_get();
-  return d2d_api_instance_get_by_id($id);
+  $own = d2d_api_instance_get_by_id($id);
+  if ($private_key) {
+    $own['private_key'] = d2d_api_own_private_key_get();
+  }
+  return $own;
 }
 
 //////////////
