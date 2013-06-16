@@ -105,21 +105,18 @@ function d2d_patterns_export_settings($args = NULL, &$result = NULL) {
 function d2d_patterns_import_settings($form_id, $form_state) {
   
   $s = $form_state['values']; // settings
-
-  if (isset($s['utc_offset'])) {
-    variable_set('d2d_utc_offset', d2d_check_convert_int($s['utc_offset']));
-  }
+  
   if (isset($s['timeout'])) {
-    variable_set('d2d_timeout', d2d_check_convert_int($s['timeout']));
+    variable_set('d2d_timeout', $s['timeout']);
   }
   if (isset($s['utc_offset'])) {
-    variable_set('d2d_utc_offset', d2d_check_convert_int($s['utc_offset']));
+    variable_set('d2d_utc_offset', $s['utc_offset']);
   }
   if (isset($s['delta_0'])) {
-    variable_set('d2d_delta_0', d2d_check_convert_int($s['delta_0']));
+    variable_set('d2d_delta_0', $s['delta_0']);
   }
   if (isset($s['delta_1'])) {
-    variable_set('d2d_delta_1', d2d_check_convert_int($s['delta_1']));
+    variable_set('d2d_delta_1', $s['delta_1']);
   }
   if (isset($s['online'])) {
     variable_set('d2d_online', $s['online']);
@@ -213,7 +210,7 @@ function d2d_patterns_export_private_key($args = NULL, &$result = NULL) {
 }
 
 function d2d_patterns_insert_private_key($form_id, $form_state) {
-  d2d_api_own_private_key_set($form_state['values']['key']);
+  _d2d_patterns_insert_private_key($form_state['values']['key']);
   return patterns_results();
 }
 
@@ -280,18 +277,18 @@ function _d2d_patterns_import_own_instance($action, $form_state) {
     d2d_api_instance_update($id, $import);
   }
   
-  d2d_own_instance_id_set($id);
-  d2d_own_instance_id_set($import['d2d_id']);
+  d2d_api_own_instance_id_set($id);
+  d2d_api_own_d2d_id_set($import['d2d_id']);
   
   // If a public key is found, set and select it
   if (isset($form_state['values']['public_key'])) {
-    $id_pk = d2d_api_public_key_set($id, $form_state['values']['public_key']);
+    $id_pk = _d2d_patterns_insert_public_key($id, $form_state['values']['public_key']);
     d2d_api_public_key_select($id, $id_pk);
   }
   
   // If a private key is found, set it
   if (isset($form_state['values']['private_key'])) {
-    d2d_api_own_private_key_set($form_state['values']['private_key']);
+    _d2d_patterns_insert_private_key($form_state['values']['private_key']);
   }
 
   return patterns_results();
@@ -394,7 +391,7 @@ function d2d_patterns_add_instance($form_id, &$form_state) {
   ));
   
   if (isset($i['public_key'])) {
-    $id_pk = d2d_api_public_key_set($id, $i['public_key']);
+    $id_pk = _d2d_patterns_insert_public_key($id, $i['public_key']);
     d2d_api_public_key_select($id, $id_pk);
   }
   
@@ -416,7 +413,7 @@ function d2d_patterns_edit_instance($form_id, &$form_state) {
   $id = d2d_api_instance_update($i['id'], $update);
 
   if (isset($i['public_key'])) {
-    $id_pk = d2d_api_public_key_set($id, $i['public_key']);
+    $id_pk = _d2d_patterns_insert_public_key($id, $i['public_key']);
     d2d_api_public_key_select($id, $id_pk);
   }
   return patterns_results();  
@@ -439,6 +436,14 @@ function d2d_patterns_delete_instance($form_id, &$form_state) {
 // This methods looks for |\n at and removes it 
 function _d2d_patterns_fix_exported_key($key) {
   return trim(preg_replace("/ +/", " ", str_replace(array("|\n"), '', $key)));
+}
+
+function _d2d_patterns_insert_public_key($instance_id, $key) {
+  return d2d_api_public_key_set($instance_id, _d2d_patterns_fix_exported_key($key));
+}
+
+function _d2d_patterns_insert_private_key($key) {
+  d2d_api_own_private_key_set(_d2d_patterns_fix_exported_key($key));
 }
 
 function _d2d_patterns_export_public_keys($action_type, $selected_only = FALSE) {
@@ -477,7 +482,7 @@ function d2d_patterns_export_all_selected_keys($args = NULL, &$result = NULL) {
 function d2d_patterns_insert_public_keys($form_id, $form_state) {
 	$instance_id = $form_state['values']['instance_id'];
 	$public_key = $form_state['values']['public_key'];
-	$id_pk = d2d_api_public_key_set($instance_id, _d2d_patterns_fix_exported_key($public_key));
+	$id_pk = _d2d_patterns_insert_public_key($instance_id, $public_key);
 	if (isset($form_state['values']['selected'])) {
 	  $ok = d2d_api_public_key_select($instance_id, $id_pk);
 	  if (!$ok) {
@@ -954,53 +959,55 @@ function d2d_patterns_validate($action, $tag, &$data) {
   
   else if ($tag == 'd2d_settings') {
   
+    if ($action != PATTERNS_MODIFY) {
+      $status = PATTERNS_ERR;
+      $msg = t('Action %action is invalid for tag d2d_settings', array('%action' => $action));
+    }
+    else {
     
-    if (isset($data['utc_offset'])) {
-      $utc_offset = $data['utc_offset'];
-      if (!d2d_check_convert_int($utc_offset)) {
-        $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Offset must be an integer.'));
+      if (isset($data['utc_offset'])) {
+        if (!d2d_check_convert_int($data['utc_offset'])) {
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Offset must be an integer.'));
+        }
+        elseif ($data['utc_offset'] < D2D_UTC_OFFSET_MIN || $data['utc_offset'] > D2D_UTC_OFFSET_MAX) {
+          $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT => 
+                t('Offset must be between @min and @max.', array('@min' => D2D_UTC_OFFSET_MIN, '@max' => D2D_UTC_OFFSET_MAX)));
+        }  
       }
-      elseif ($utc_offset < D2D_UTC_OFFSET_MIN || $utc_offset > D2D_UTC_OFFSET_MAX) {
-        $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT => 
-              t('Offset must be between @min and @max.', array('@min' => D2D_UTC_OFFSET_MIN, '@max' => D2D_UTC_OFFSET_MAX)));
-      }  
-    }
-    if (isset($data['timeout'])) {
-      $timeout = $data['timeout'];
-      if (!d2d_check_convert_int($timeout)) {
-        $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Time until timeout must be an integer.'));
+      if (isset($data['timeout'])) {
+        if (!d2d_check_convert_int($data['timeout'])) {
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Time until timeout must be an integer.'));
+        }
+        elseif ($data['timeout'] < D2D_TIMEOUT_MIN || $data['timeout'] > D2D_TIMEOUT_MAX) {
+          $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT => 
+               t('Time until timeout must be between @min and @max.', array('@min' => D2D_TIMEOUT_MIN, '@max' => D2D_TIMEOUT_MAX)));
+        }
       }
-      elseif ($timeout < D2D_TIMEOUT_MIN || $timeout > D2D_TIMEOUT_MAX) {
-        $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT => 
-             t('Time until timeout must be between @min and @max.', array('@min' => D2D_TIMEOUT_MIN, '@max' => D2D_TIMEOUT_MAX)));
+      
+      if (isset($data['delta0'])) {
+        if (!d2d_check_convert_int($data['delta0'])) {
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests lower bound must be an integer.'));
+        }
+        elseif ($data['delta0'] < D2D_DELTA_0_MIN|| $data['delta0'] > D2D_DELTA_0_MAX) {
+          $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT =>
+              t('Incoming requests lower bound must be between @min and @max.', array('@min' => D2D_DELTA_0_MIN, '@max' => D2D_DELTA_0_MAX)));
+        }
       }
-    }
-    
-    if (isset($data['delta0'])) {
-      $delta0 = $data['delta0'];
-      if (!d2d_check_convert_int($delta0)) {
-        $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests lower bound must be an integer.'));
+     
+      if (isset($data['delta1'])) {
+        if (!d2d_check_convert_int($data['delta1'])) {
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests lower bound must be an integer.'));
+        }
+        elseif ($data['delta1'] < D2D_DELTA_1_MIN|| $data['delta1'] > D2D_DELTA_1_MAX) {
+          $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT =>
+              t('Incoming requests upper bound must be between @min and @max.', array('@min' => D2D_DELTA_1_MIN, '@max' => D2D_DELTA_1_MAX)));
+         }
       }
-      elseif ($delta0 < D2D_DELTA_0_MIN|| $delta0 > D2D_DELTA_0_MAX) {
-        $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT =>
-            t('Incoming requests lower bound must be between @min and @max.', array('@min' => D2D_DELTA_0_MIN, '@max' => D2D_DELTA_0_MAX)));
-      }
-    }
-   
-    if (isset($data['delta1'])) {
-      $delta1 = $data['delta1'];
-      if (!d2d_check_convert_int($delta1)) {
-        $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests lower bound must be an integer.'));
-      }
-      elseif ($delta1 < D2D_DELTA_1_MIN|| $delta1 > D2D_DELTA_1_MAX) {
-        $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT =>
-            t('Incoming requests upper bound must be between @min and @max.', array('@min' => D2D_DELTA_1_MIN, '@max' => D2D_DELTA_1_MAX)));
-       }
-    }
-    
-    if (isset($data['online'])) {
-      if (!is_bool($data['online'])) {
-        $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Online must be boolean.'));
+      
+      if (isset($data['online'])) {
+        if (!is_bool($data['online'])) {
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Online must be boolean.'));
+        }
       }
     }
     
