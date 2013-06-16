@@ -410,7 +410,7 @@ function d2d_patterns_edit_instance($form_id, &$form_state) {
   if (isset($i['url'])) $update['url'] = $i['url'];
   
   if (empty($i['id'])) { // falsy
-    return patterns_results(PATTERNS_ERROR, t('A an error occurred, could not update intance'));
+    return patterns_results(PATTERNS_ERR, t('A an error occurred, could not update intance'));
   }
   
   $id = d2d_api_instance_update($i['id'], $update);
@@ -424,7 +424,7 @@ function d2d_patterns_edit_instance($form_id, &$form_state) {
 
 function d2d_patterns_delete_instance($form_id, &$form_state) {
   if (empty($form_state['values']['id'])) { // falsy
-    return patterns_results(PATTERNS_ERROR, t('A an error occurred, could not delete intance'));
+    return patterns_results(PATTERNS_ERR, t('A an error occurred, could not delete intance'));
   }
   d2d_api_instance_delete($form_state['values']['id']);
   
@@ -435,46 +435,26 @@ function d2d_patterns_delete_instance($form_id, &$form_state) {
 // PUBLIC KEYS
 ///////////////
 
-function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
-	$actions = array();
-	$action_type = PATTERNS_MODIFY; // pre-init 
-	
-	if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
-  	$action_type = PATTERNS_CREATE;
-	}
-	
-  $keys = d2d_api_public_key_get();
-  
-  foreach ($keys as $k) {
-    $k = get_object_vars($k);
-  	$action = array($action_type => array('tag' => 'd2d_public_key', 'd2d_id' => $k['d2d_id'], 'public_key' => $k['public_key']));
-  	if ($action_type == PATTERNS_MODIFY) {
-  		$action[$action_type]['id'] = $k['id'];
-  	}
-  	array_push($actions, $action);
-  }
-  return $actions;
+// Somehow Spyc duplicates the | character at the beginning of the string
+// This methods looks for |\n at and removes it 
+function _d2d_patterns_fix_exported_key($key) {
+  return trim(preg_replace("/ +/", " ", str_replace(array("|\n"), '', $key)));
 }
 
-// TODO merge with d2d_patterns_export_all_public_keys
-function d2d_patterns_export_all_selected_keys($args = NULL, &$result = NULL) {
+function _d2d_patterns_export_public_keys($action_type, $selected_only = FALSE) {
   $actions = array();
-  $action_type = PATTERNS_MODIFY; // pre-init
-
-  if (isset($args['type']) && $args['type'] == PATTERNS_CREATE) {
-    $action_type = PATTERNS_CREATE;
-  }
-
-  $keys = d2d_api_public_key_get_selected();
   
+  $keys = $selected_only ? d2d_api_public_key_get_selected :  d2d_api_public_key_get();
   foreach ($keys as $k) {
     $k = get_object_vars($k);
     $action = array($action_type => array(
-        'tag' => 'd2d_public_key', 
-        'd2d_id' => $k['d2d_id'], 
-        'public_key' => $k['public_key'],
-        'selected' => TRUE,
+      'tag' => 'd2d_public_key',
+      'd2d_id' => $k['d2d_id'],
+      'public_key' => $k['public_key'],
     ));
+    if ($selected_only) {
+      $action[$action_type]['selected'] = TRUE;
+      }
     if ($action_type == PATTERNS_MODIFY) {
       $action[$action_type]['id'] = $k['id'];
     }
@@ -483,13 +463,26 @@ function d2d_patterns_export_all_selected_keys($args = NULL, &$result = NULL) {
   return $actions;
 }
 
+function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
+  $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
+	return _d2d_patterns_export_public_keys($action_type);
+}
+
+function d2d_patterns_export_all_selected_keys($args = NULL, &$result = NULL) {
+  $$action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
+	return _d2d_patterns_export_public_keys($action_type, TRUE);
+}
+
 
 function d2d_patterns_insert_public_keys($form_id, $form_state) {
-	$d2d_id = $form_state['values']['d2d_id'];
+	$instance_id = $form_state['values']['instance_id'];
 	$public_key = $form_state['values']['public_key'];
-	$id_pk = d2d_api_public_key_set($d2d_id, $public_key);
+	$id_pk = d2d_api_public_key_set($instance_id, _d2d_patterns_fix_exported_key($public_key));
 	if (isset($form_state['values']['selected'])) {
-	  d2d_api_public_key_select($id_pk, $form_state['values']['instance_id']);
+	  $ok = d2d_api_public_key_select($instance_id, $id_pk);
+	  if (!$ok) {
+	    return patterns_results(PATTERNS_WARN, t('Could not select public key.'));
+	  }
 	}
 	return patterns_results();
 }
@@ -497,34 +490,31 @@ function d2d_patterns_insert_public_keys($form_id, $form_state) {
 function d2d_patterns_update_public_keys($form_id, $form_state) {
 	$update = array();
 	$pk_id = $form_state['values']['id'];
+	// instance_id set in prepare
+	$instance_id = $form_state['values']['instance_id'];
 	
-	if (isset($form_state['values']['d2d_id'])) {
-	  if (isset($form_state['values']['instance_id'])) {
-	    $update['instance_id'] = $form_state['values']['instance_id'];
-	  }
-	  else {
-  		$keys = d2d_api_public_key_get($form_state['values']['d2d_id']);
-  		$update['instance_id'] = $keys[0]->id;
-	  }
-	}
+	
+  if (isset($form_state['values']['d2d_id'])) {
+    $update['instance_id'] = $instance_id;
+  }
 	
 	if (isset($form_state['values']['public_key'])) {
-		$update['public_key'] = $form_state['values']['public_key'];
+		$update['public_key'] = _d2d_patterns_fix_exported_key($form_state['values']['public_key']);
 	} 
 	
 	d2d_api_public_key_update($pk_id, $update);
 	
-	
 	if (isset($form_state['values']['selected'])) {
-	  
-    // if we had a select key, then we have the instance_id field
-    $instance_id = $form_state['values']['instance_id'];
-	  
+	      
+    if (empty($instance_id)) { // falsy
+      return patterns_result(PATTERNS_ERR, t('Could not select/unselect public key.'));
+    }
+    
 	  if (empty($form_state['values']['selected'])) {
 	    d2d_api_public_key_unselect($instance_id);
 	  }
   	else {
-  	  d2d_api_public_key_select($id_pk, $instance_id);
+  	  d2d_api_public_key_select($instance_id, $id_pk);
   	}
 	}
 	return patterns_results();
@@ -552,11 +542,10 @@ function d2d_patterns_prepare($action, $tag, &$data) {
   $msg = '';
   
   if ($tag == 'd2d_public_key') {
-    if (!isset($data['instance_id']) && isset($data['selected'])) {
+    if (!isset($data['instance_id'])) {
       // If isset d2d_id we need to get the id of the new instance
       if (isset($data['d2d_id'])) {
         $instance = d2d_api_instance_get($data['d2d_id']);
-        //$data['instance_id'] = $instance['id'];
   
         if ($instance != FALSE) {
           $data['instance_id'] = $instance['id'];
@@ -725,7 +714,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   else if ($tag == 'd2d_permission') {
       	
     if ($action == PATTERNS_MODIFY) {
-      $status = PATTERNS_ERROR;
+      $status = PATTERNS_ERR;
       $msg = t('Tag d2d_permission is invalid for action "modify"');
     }
     else {
@@ -738,7 +727,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
   else if ($tag == 'd2d_friendship') {
 
     if ($action == PATTERNS_MODIFY) {
-      $status = PATTERNS_ERROR;
+      $status = PATTERNS_ERR;
       $msg = t('Tag d2d_friendship is invalid for action "modify"');
     }
     else {
