@@ -297,11 +297,11 @@ function _d2d_patterns_import_own_instance($action, $form_state) {
   return patterns_results();
 }
 
-function d2d_patterns_create_own_instance($form_id, $form_state) {
+function d2d_patterns_create_own_instance($form_id, &$form_state) {
   return _d2d_patterns_import_own_instance(PATTERNS_CREATE, $form_state);
 }
 
-function d2d_patterns_modify_own_instance($form_id, $form_state) {
+function d2d_patterns_modify_own_instance($form_id, &$form_state) {
   return _d2d_patterns_import_own_instance(PATTERNS_MODIFY, $form_state);
 }
 
@@ -327,12 +327,12 @@ function d2d_patterns_export_all_friendships($args = NULL, &$result = NULL) {
   return $actions;
 }
 
-function d2d_patterns_friendship_send($form_id, $form_state) {
+function d2d_patterns_friendship_send($form_id, &$form_state) {
   $id = $form_state['values']['instance_id'];
   $state = $form_state['values']['state'];
   $old_friendship_state = $form_state['values']['old_friendship_state'];
   d2d_api_friendship_update($id, $state, $old_friendship_state, d2d_api_own_instance_id_get());
-  d2d_api_friendship_send($id, TRUE, 1, FALSE);
+  d2d_api_friendship_send($id, TRUE, 1, TRUE);
   return patterns_results();
 }
 
@@ -715,7 +715,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
       	
     if ($action == PATTERNS_MODIFY) {
       $status = PATTERNS_ERR;
-      $msg = t('Tag d2d_permission is invalid for action "modify"');
+      $msg = t('Action "modify" is invalid for tag d2d_permission');
     }
     else {
       $kcheck = array();
@@ -728,7 +728,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
 
     if ($action == PATTERNS_MODIFY) {
       $status = PATTERNS_ERR;
-      $msg = t('Tag d2d_friendship is invalid for action "modify"');
+      $msg = t('Action "modify" is invalid for tag d2d_friendship');
     }
     else {
       $kcheck = array();
