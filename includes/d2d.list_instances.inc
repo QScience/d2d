@@ -42,10 +42,7 @@ function d2d_form_add_instance() {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
-    '#description' =>
-      t(
-        'A short name describing the instance.'
-      ),
+    '#description' => t('A short name describing the instance.'),
     '#default_value' => '',
     '#size' => D2D_INSTANCE_NAME_MAX_LENGTH,
     '#maxlength' => D2D_INSTANCE_NAME_MAX_LENGTH,

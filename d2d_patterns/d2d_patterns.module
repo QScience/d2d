@@ -41,7 +41,7 @@ function d2d_patterns($data = NULL){
   
   $tags['d2d_instance'] = array(
     PATTERNS_INFO   => t('Create, modify, and delete  D2D instances.'),
-    PATTERNS_CREATE => array('d2d_form_add_instance'),
+    PATTERNS_CREATE => array('d2d_patterns_add_instance'),
     PATTERNS_MODIFY => array('d2d_edit_instance_details'),
     PATTERNS_DELETE => array('d2d_edit_instance_details'),
     PATTERNS_EXPORT => array(
@@ -381,6 +381,24 @@ function d2d_patterns_export_all_instances_with_pkey($args = NULL, &$result = NU
 
 function d2d_patterns_export_all_friends_with_pkey($args = NULL, &$result = NULL) {
   return _d2d_patterns_export_instances($args, $result, TRUE, TRUE);
+}
+
+function d2d_patterns_add_instance($form_id, &$form_state) {
+  $i= $form_state['values'];
+  $id = d2d_api_instance_add(array(
+    'd2d_id' => $i['d2d_id'],
+    'name' => $i['name'],
+    'address' => $i['url'], // api wants address here
+    'description' => $i['description'],
+    'name' => $i['name'],
+  ));
+  
+  if (isset($i['public_key'])) {
+    $id_pk = d2d_api_public_key_set($id, $i['public_key']);
+    d2d_api_public_key_select($id, $id_pk);
+  }
+  
+  return patterns_results();
 }
 
 ///////////////
