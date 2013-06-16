@@ -504,20 +504,13 @@ function d2d_patterns_prepare($action, $tag, &$data) {
   $status = PATTERNS_SUCCESS;
   $msg = '';
   
-  if ($tag == 'd2d_permission') {
-    if (!isset($data['group_id']) && isset($data['group'])) {
-      $group = d2d_api_group_get_by_name($data['group']);
-      $data['group_id'] = is_null($group) ? NULL : $group['id'];
-    }
-  }
-  
   if ($tag == 'd2d_public_key') {
     if (!isset($data['instance_id']) && isset($data['selected'])) {
       // If isset d2d_id we need to get the id of the new instance
       if (isset($data['d2d_id'])) {
         $instance = d2d_api_instance_get($data['d2d_id']);
         //$data['instance_id'] = $instance['id'];
-        
+  
         if ($instance != FALSE) {
           $data['instance_id'] = $instance['id'];
         }
@@ -525,7 +518,30 @@ function d2d_patterns_prepare($action, $tag, &$data) {
     }
   }
   
-  if ($tag == 'd2d_friendship') {
+  else if ($tag == 'd2d_instance') {
+    if ($action != PATTERNS_CREATE && !isset($data['id']) && isset($data['d2d_id'])) {
+      $instance = d2d_api_instance_get($data['d2d_id']);
+      $data['id'] = $instance == FALSE ? NULL : $instance['id'];
+    }
+  }
+  
+  else if ($tag == 'd2d_group') {
+    if ($action != PATTERNS_CREATE && !isset($data['id']) && isset($data['name'])) {
+      $group = d2d_api_group_get_by_name($data['name']);
+      $data['id'] = is_null($group) ? NULL : $group['id'];
+    }
+  }
+  
+  else if ($tag == 'd2d_permission') {
+    if (!isset($data['group_id']) && isset($data['group'])) {
+      $group = d2d_api_group_get_by_name($data['group']);
+      $data['group_id'] = is_null($group) ? NULL : $group['id'];
+    }
+  }
+  
+  
+  
+  else if ($tag == 'd2d_friendship') {
     if (!isset($data['instance_id']) && isset($data['d2d_id'])) {
       $instance = d2d_api_instance_get($data['d2d_id']);
       if ($instance != FALSE) {
@@ -607,14 +623,14 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	}
   	else if ($action == PATTERNS_MODIFY) {  
   		$kcheck = array();
-  	  $kcheck[] = array('mandatory' => array('id'), );
+  	  $kcheck[] = array('at_least_one' => array('id', 'd2d_id'), );
   	  $kcheck[] = array('at_least_one' => array('name', 'description', 'url'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   	
   	else { // PATTERNS_DELETE
   		$kcheck = array();
-  	  $kcheck[] = array('mandatory' => array('id'), );
+  	  $kcheck[] = array('at_least_one' => array('id', 'd2d_id'), );
   	  $status = patterns_utils_check_keys($data, $kcheck, $msg);
   	}
   }
@@ -647,7 +663,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
     else if ($action == PATTERNS_MODIFY) {
       
   		$kcheck = array();
-  		$kcheck[] = array('mandatory' => array('id'), );
+  		$kcheck[] = array('at_least_one' => array('id', 'name'), );
   		$kcheck[] = array('at_least_one' => array('name', 'description', 'default'), );
   		$status = patterns_utils_check_keys($data, $kcheck, $msg);
     }
@@ -744,6 +760,43 @@ function d2d_patterns_validate($action, $tag, &$data) {
   	
   }
   
+  else if ($tag == 'd2d_private_key') {
+  
+    $private_key_exist = d2d_api_own_private_key_get() != FALSE;
+  
+    if ($action == PATTERNS_CREATE) {
+      if ($private_key_exist) {
+        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => t('Own private key already set'));
+      }
+    }
+     
+    else { // modify / delete
+      if (!$private_key_exist) {
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Own private key not found'));
+      }
+    }
+  }
+  
+  else if ($tag == 'd2d_instance') {
+  
+    if ($action == PATTERNS_CREATE) {
+      $instance = d2d_api_instance_get($data['d2d_id']);
+      if ($instance != FALSE) {
+        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+            t('Instance with d2d_id "%d2d_id" already existing.', array('%d2d_id' => $data['d2d_id'],)));
+      }
+    }
+    else { // modify, delete
+  
+      $instance = d2d_api_instance_get_by_id($data['id']);
+  
+      if ($instance == FALSE) {
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+            t('Instance with id "%id" not found.', array('%id' => $data['id'],)));
+      }
+    }
+  }
+  
   else if ($tag == 'd2d_own_instance') {
   
     if ($action == PATTERNS_CREATE) {
@@ -769,27 +822,29 @@ function d2d_patterns_validate($action, $tag, &$data) {
     }
   }
   
-  else if ($tag == 'd2d_private_key') {
-    
-    $private_key_exist = d2d_api_own_private_key_get() != FALSE; 
+  else if ($tag == 'd2d_group') {
     
     if ($action == PATTERNS_CREATE) {
-      if ($private_key_exist) {
-        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => t('Own private key already set'));
-      }  
+      $group = d2d_api_group_get_by_name($data['name']);
+      if (!is_null($group)) {
+        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+            t('Group "%g" already existing.', array('%g' => $data['name'],)));
+      }
     }
-     
-    else { // modify / delete
-      if (!$private_key_exist) {
-        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Own private key not found'));
+    else { // modify, delete
+  
+      $group = d2d_api_group_get($data['id']);
+    
+      if (is_null($group)) {
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+            t('Group with id "%id" not found.', array('%id' => $data['id'],)));
       }
     }
   }
   
-  
   else if ($tag == 'd2d_permission') {
-    $method_name = @$data['method'];
-    $group_name = @$data['group'];
+    $method_name = $data['method'];
+    $group_name = $data['group'];
     
     if (isset($data['group_id'])) { // set in hook_prepare
       $group_id = $data['group_id'];
@@ -851,46 +906,6 @@ function d2d_patterns_validate($action, $tag, &$data) {
               t('Instance "%d2d_id" is not marked as friend.', array('%d2d_id' => $d2d_id,)));
         }
   
-      }
-    }
-  }
-  
-  else if ($tag == 'd2d_group') {
-      
-    if ($action == PATTERNS_CREATE) {
-      $group = d2d_api_group_get_by_name($data['name']);
-      if (!is_null($group)) {
-        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
-            t('Group "%g" already existing.', array('%g' => $data['name'],)));
-      }      
-    }
-    else { // modify, delete 
-      
-      $group = d2d_api_group_get($data['id']);
-      
-      if (is_null($group)) {
-        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
-          t('Group with id "%id" not found.', array('%id' => $data['id'],)));
-      }
-    }
-  }
-  
-  else if ($tag == 'd2d_instance') {
-  
-    if ($action == PATTERNS_CREATE) {
-      $instance = d2d_api_instance_get($data['d2d_id']);
-      if ($instance != FALSE) {
-        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
-            t('Instance with d2d_id "%d2d_id" already existing.', array('%d2d_id' => $data['d2d_id'],)));
-      }
-    }
-    else { // modify, delete
-  
-      $instance = d2d_api_instance_get_by_id($data['id']);
-    
-      if ($instance == FALSE) {
-        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
-             t('Instance with id "%id" not found.', array('%id' => $data['id'],)));
       }
     }
   }
