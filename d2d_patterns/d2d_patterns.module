@@ -155,8 +155,8 @@ function d2d_patterns_delete_permission($form_id, $form_state) {
 }
 
 function d2d_patterns_add_permission($form_id, $form_state) {
-  $permissions = $form_state['values'];
-  d2d_api_permission_add($permissions);
+  $p = $form_state['values'];
+  d2d_api_permission_add(array( array($p['group_id'], $p['method'])));
   return patterns_results();
 }
 
@@ -677,9 +677,15 @@ function d2d_patterns_validate($action, $tag, &$data) {
   
   else if ($tag == 'd2d_permission') {
       	
-    $kcheck = array();
-    $kcheck[] = array('mandatory' => array('method', 'group'), );
-    $status = patterns_utils_check_keys($data, $kcheck, $msg);
+    if ($action == PATTERNS_MODIFY) {
+      $status = PATTERNS_ERROR;
+      $msg = t('Tag d2d_permission is invalid for action "modify"');
+    }
+    else {
+      $kcheck = array();
+      $kcheck[] = array('mandatory' => array('method', 'group'), );
+      $status = patterns_utils_check_keys($data, $kcheck, $msg);
+    }
   }
   
   else if ($tag == 'd2d_friendship') {
