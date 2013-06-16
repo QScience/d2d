@@ -193,8 +193,7 @@ function d2d_patterns_edit_group($form_id, $form_state) {
 }
 
 function d2d_patterns_delete_group($form_id, $form_state) {
-  $group = $form_state['values']['d2d_group']; // TODO wrong
-  d2d_api_group_delete($group['id']);
+  d2d_api_group_delete($form_state['values']['id']);
   return patterns_results();
 }
 
@@ -521,21 +520,21 @@ function d2d_patterns_prepare($action, $tag, &$data) {
   else if ($tag == 'd2d_instance') {
     if ($action != PATTERNS_CREATE && !isset($data['id']) && isset($data['d2d_id'])) {
       $instance = d2d_api_instance_get($data['d2d_id']);
-      $data['id'] = $instance == FALSE ? NULL : $instance['id'];
+      $data['id'] = $instance == FALSE ? -1 : $instance['id'];
     }
   }
   
   else if ($tag == 'd2d_group') {
     if ($action != PATTERNS_CREATE && !isset($data['id']) && isset($data['name'])) {
       $group = d2d_api_group_get_by_name($data['name']);
-      $data['id'] = is_null($group) ? NULL : $group['id'];
+      $data['id'] = is_null($group) ? -1 : $group['id'];
     }
   }
   
   else if ($tag == 'd2d_permission') {
     if (!isset($data['group_id']) && isset($data['group'])) {
       $group = d2d_api_group_get_by_name($data['group']);
-      $data['group_id'] = is_null($group) ? NULL : $group['id'];
+      $data['group_id'] = is_null($group) ? -1 : $group['id'];
     }
   }
   
@@ -842,8 +841,8 @@ function d2d_patterns_validate($action, $tag, &$data) {
       $group = d2d_api_group_get($data['id']);
     
       if (is_null($group)) {
-        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
-            t('Group with id "%id" not found.', array('%id' => $data['id'],)));
+        $id = isset($data['name']) ? $data['name'] : $data['id'];
+        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Group "%id" not found.', array('%id' => $id,)));
       }
     }
   }
