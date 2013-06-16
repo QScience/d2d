@@ -26,30 +26,30 @@ function d2d_patterns($data = NULL){
     PATTERNS_DELETE => array('d2d_api_own_public_key_delete'),
     PATTERNS_EXPORT => array('Private key' => 'd2d_patterns_export_private_key',),
 	);
-	  
-  $tags['d2d_own_instance'] = array(
-    PATTERNS_INFO   => t('Set, unset an instance as own instance.'),
-    PATTERNS_CREATE => array('d2d_patterns_create_own_instance'),
-    PATTERNS_MODIFY => array('d2d_patterns_modify_own_instance'),
-    PATTERNS_DELETE => array('d2d_api_own_instance_delete'),
-    PATTERNS_EXPORT => array(
-                          'Own instance with private and public key' => 'd2d_patterns_export_own_instance_full',
-                          'Own instance with public key' => 'd2d_patterns_export_own_instance_with_pkey',
-                          'Own instance without keys' => 'd2d_patterns_export_own_instance_simple',
-                        ),
-  );
-  
+	    
   $tags['d2d_instance'] = array(
     PATTERNS_INFO   => t('Create, modify, and delete  D2D instances.'),
     PATTERNS_CREATE => array('d2d_patterns_add_instance'),
-    PATTERNS_MODIFY => array('d2d_edit_instance_details'),
-    PATTERNS_DELETE => array('d2d_edit_instance_details'),
+    PATTERNS_MODIFY => array('d2d_patterns_edit_instance'),
+    PATTERNS_DELETE => array('d2d_patterns_delete_instance'),
     PATTERNS_EXPORT => array(
                           PATTERNS_EXPORT_ALL => 'd2d_patterns_export_all_instances_with_pkey',
                           PATTERNS_EXPORT_ALL . ' (without public keys)' => 'd2d_patterns_export_all_instances',
                           'Friends only' => 'd2d_patterns_export_all_friends_with_pkey',
                           'Friends only (without public keys)' => 'd2d_patterns_export_all_friends'
                         ),
+  );
+  
+  $tags['d2d_own_instance'] = array(
+      PATTERNS_INFO   => t('Set, unset an instance as own instance.'),
+      PATTERNS_CREATE => array('d2d_patterns_create_own_instance'),
+      PATTERNS_MODIFY => array('d2d_patterns_modify_own_instance'),
+      PATTERNS_DELETE => array('d2d_api_own_instance_delete'),
+      PATTERNS_EXPORT => array(
+          'Own instance with private and public key' => 'd2d_patterns_export_own_instance_full',
+          'Own instance with public key' => 'd2d_patterns_export_own_instance_with_pkey',
+          'Own instance without keys' => 'd2d_patterns_export_own_instance_simple',
+      ),
   );
   
   $tags['d2d_friendship'] = array(
@@ -397,6 +397,36 @@ function d2d_patterns_add_instance($form_id, &$form_state) {
     $id_pk = d2d_api_public_key_set($id, $i['public_key']);
     d2d_api_public_key_select($id, $id_pk);
   }
+  
+  return patterns_results();
+}
+
+function d2d_patterns_edit_instance($form_id, &$form_state) {
+  $i= $form_state['values'];
+  $update = array();
+  if (isset($i['d2d_id'])) $update['d2d_id'] = $i['d2d_id'];
+  if (isset($i['name'])) $update['name'] = $i['name'];
+  if (isset($i['description'])) $update['description'] = $i['description'];
+  if (isset($i['url'])) $update['url'] = $i['url'];
+  
+  if (empty($i['id'])) { // falsy
+    return patterns_results(PATTERNS_ERROR, t('A an error occurred, could not update intance'));
+  }
+  
+  $id = d2d_api_instance_update($i['id'], $update);
+
+  if (isset($i['public_key'])) {
+    $id_pk = d2d_api_public_key_set($id, $i['public_key']);
+    d2d_api_public_key_select($id, $id_pk);
+  }
+  return patterns_results();  
+}
+
+function d2d_patterns_delete_instance($form_id, &$form_state) {
+  if (empty($form_state['values']['id'])) { // falsy
+    return patterns_results(PATTERNS_ERROR, t('A an error occurred, could not delete intance'));
+  }
+  d2d_api_instance_delete($form_state['values']['id']);
   
   return patterns_results();
 }
