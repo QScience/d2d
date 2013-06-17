@@ -127,7 +127,7 @@ function d2d_form_settings_advanced() {
   $public_key = d2d_api_own_public_key_get();
   $private_key = d2d_api_own_private_key_get();
   if (!d2d_check_key_pair($public_key, $private_key)) {
-    //$form['#disabled'] = TRUE;
+    $form['#disabled'] = TRUE;
     drupal_set_message(t('Click !link to associate a private / public key pair first before switching to online mode.', array('!link' => l(t('here'), 'admin/d2d/settings/keys'))), 'warning');
   }
   return $form;
@@ -164,7 +164,7 @@ function d2d_form_settings_keys() {
     '#description' => t('The private key of this instance'),
     '#rows' => 4,
     '#cols' => 60,
-    '#default_value' => d2d_api_own_public_key_get(),
+    '#default_value' => d2d_api_own_private_key_get(),
   );
   $form['submit'] = array(
     '#type' => 'submit', 

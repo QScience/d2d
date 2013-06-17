@@ -435,24 +435,31 @@ function d2d_patterns_delete_instance($form_id, &$form_state) {
 // Somehow Spyc duplicates the | character at the beginning of the string
 // This methods looks for |\n at and removes it. White spaces at every ne line
 // must be eliminated too, but need a new line at the end 
-function _d2d_patterns_fix_exported_key($key) {
+function _d2d_patterns_fix_imported_key($key) {
+  
   // normalize newlines
   $key = preg_replace('/(\r\n|\r|\n)+/', "\n", $key);
   $key = str_replace(array("|\n"), '', $key);
+  
+  $pos = strrpos($key, '-----BEGIN PUBLIC KEY-----');
+  $type = $pos !== FALSE ? 'PUBLIC' : 'PRIVATE'; // note: three equal signs
+  $begin = '-----BEGIN ' . $type . ' KEY-----';
+  $end = '-----END ' . $type . ' KEY-----';
   $key = d2d_strip_comments_from_key($key);
+  
   //$key = preg_replace('/\s*$^\s*/m', "\n", $key);
   //key = preg_replace('/[ \t]+/', '', $key);
   // replace whitespace characters with a single space
   $key = preg_replace('/\s+/', '', $key);
-  return trim('-----BEGIN PUBLIC KEY-----' . "\n" . chunk_split($key, 64) . '-----END PUBLIC KEY-----' ."\n"); 
+  return trim($begin . "\n\r" . chunk_split($key, 64) . $end . "\n") ."\n\r"; 
 }
 
 function _d2d_patterns_insert_public_key($instance_id, $key) {
-  return d2d_api_public_key_set($instance_id, _d2d_patterns_fix_exported_key($key));
+  return d2d_api_public_key_set($instance_id, _d2d_patterns_fix_imported_key($key));
 }
 
 function _d2d_patterns_insert_private_key($key) {
-  d2d_api_own_private_key_set(_d2d_patterns_fix_exported_key($key));
+  d2d_api_own_private_key_set(_d2d_patterns_fix_imported_key($key));
 }
 
 function _d2d_patterns_export_public_keys($action_type, $selected_only = FALSE) {
@@ -513,7 +520,7 @@ function d2d_patterns_update_public_keys($form_id, $form_state) {
   }
 	
 	if (isset($form_state['values']['public_key'])) {
-		$update['public_key'] = _d2d_patterns_fix_exported_key($form_state['values']['public_key']);
+		$update['public_key'] = _d2d_patterns_fix_imported_key($form_state['values']['public_key']);
 	} 
 	
 	d2d_api_public_key_update($pk_id, $update);
@@ -863,9 +870,9 @@ function d2d_patterns_validate($action, $tag, &$data) {
     else if ($action != PATTERNS_DELETE) { // create, modify
       if (isset($data['public_key']) || isset($data['public_key'])) {
         $public_key = isset($data['public_key']) ? $data['public_key'] : d2d_api_own_public_key_get();
-        $public_key = isset($data['private_key']) ? $data['private_key'] : d2d_api_own_private_key_get();
+        $private_key = isset($data['private_key']) ? $data['private_key'] : d2d_api_own_private_key_get();
         
-        if (!d2d_check_key_pair(_d2d_patterns_fix_exported_key($public_key), _d2d_patterns_fix_exported_key($private_key))) {
+        if (!d2d_check_key_pair(_d2d_patterns_fix_imported_key($public_key), _d2d_patterns_fix_imported_key($private_key))) {
           $result[] = array(PATTERNS_WARNING_GENERIC_VALIDATION_ERROR => t('Public / private key is invalid.'));
         }
       }
@@ -1032,39 +1039,3 @@ function d2d_patterns_validate($action, $tag, &$data) {
   return patterns_results($status, $msg, $result);	
    
 }
-
-
-
-
-
-// $public_key = <<<PKEY
-//         |
-//                 -----BEGIN PUBLIC KEY-----
-//                 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcOASNg8wZwjgRyOEKDGdthC0g
-//                 vO3uyhZJt4tALu2DDD9hclq6IKGo4MP3M2N9rkUqhI/OIvIPF20F8LL4JNX6IyHy
-//                 sCoDC116mBvjB5+LdqqQdR9jz1pMHUbSZ4952LSGVFmbkpcrqz57edXmV84iVKEk
-//                 /3eXk5yKByjSY85dzwIDAQAB
-//                 -----END PUBLIC KEY-----
-// PKEY;
-
-// $private_key = <<<PKEY
-//         |
-//                 -----BEGIN PRIVATE KEY-----
-//                 MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBANw4BI2DzBnCOBHI
-//                 4QoMZ22ELSC87e7KFkm3i0Au7YMMP2FyWrogoajgw/czY32uRSqEj84i8g8XbQXw
-//                 svgk1fojIfKwKgMLXXqYG+MHn4t2qpB1H2PPWkwdRtJnj3nYtIZUWZuSlyurPnt5
-//                 1eZXziJUoST/d5eTnIoHKNJjzl3PAgMBAAECgYB2vlXmIK0LLqihHloJ2wpiCSV0
-//                 Q6tgWOOPuEKDx0oWoaIDX3AAcNv6fcftIW6CNFfjRztrgXhYHt+QlmtKVkJx8Cb1
-//                 RbxWjj6xb1ax6PiDaTk4R+fSUj5OjczudxpED6L3PkSzeBRNV49tXv1Oxawz+8i1
-//                 TWm0ULhEg+qWYVjNUQJBAPJbmdk6ZFvG0wr6BFcqxyzg0P0WzhSDNhV0gHBd2i3F
-//                 hh0qAYrxSi/EoMatXKIWyX6nhaY0TfefI9ix41fvFQMCQQDonWRLiyOSU6z/sXGB
-//                 VgEr5LcDi0VYqRfiYvkT1SYQrhIhDDUym8WbbrD4MR3vpjWdMGVsE4jvqFeAz2KF
-//                 ezxFAkEAldgc3zpDIptjkL3UQTCpxQ2bKWAYOoaFwe4uG0trwjEGIrH+EjHtdGtW
-//                 HIDDbVQ5cJ2S/JgKPLegKjKSJaQkkQJASw0lI/6Tjo2y3pjIz3sJS7kyl1EjIbUF
-//                 AMUAKjb2XiFbtg/zRg3eVwUC0kE+sGjHGZ1Yy+MNpo2BFg1Tc0/MpQJAAsedVD8m
-//                 /yaHxpLXZG3I8HY0cCLbi5Kod1V27wwMoru9kOHyZ6YmRQj4RVPCXcAT9FJr2cBb
-//                 eo99eLuZrs7zyA==
-//                 -----END PRIVATE KEY-----
-
-// PKEY;
-
