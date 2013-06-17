@@ -225,6 +225,30 @@ function d2d_substr_public_key($key, $N = -10) {
 	
 }
 
+// function d2d_strip_comments_from_key($key, $public = TRUE) {
+//   $begin = $public ? '-----BEGIN PUBLIC KEY-----' : '-----BEGIN PRIVATE KEY-----';
+//   $end = $public ? '-----END PUBLIC KEY-----' : '-----END PRIVATE KEY-----';
+//   $limit = 0;
+//   $comment_begin = strpos($key, $begin);
+//   if ($comment_begin !== FALSE) {
+//     $limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
+//     $key = substr($key, $limit);
+//   }
+  
+//   $comment_end = strpos($key, $end);
+//   if ($comment_end !== FALSE) {
+//     $limit = $keep_comment ? $comment_end + 25 : $comment_end; //
+//     $key = substr($key, 0, $limit);
+//   }
+//   return $key;
+// }
+
+function d2d_strip_comments_from_key($key) {
+  return preg_replace('!\-\-\-\-\-[^\-]+\-\-\-\-\-!s', '', $key);
+//   return preg_replace('!/-/-/-/-/-[^/-]+/-/-/-/-/-/!s', '', $key);
+  //return preg_replace('!/\*.*?\*/!s', '', $text);
+}
+
 /**
  * Cleans the public key string.
  * 
@@ -236,19 +260,9 @@ function d2d_substr_public_key($key, $N = -10) {
  * @return string The cleaned key
  */
 function d2d_clean_public_key($key, $keep_comment = FALSE) {
-	$limit = 0;
-	$comment_begin = strpos($key, '-----BEGIN PUBLIC KEY-----');
-	if ($comment_begin !== FALSE) {
-		$limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
-		$key = substr($key, $limit);
+	if (!$keep_comment) {
+	  $key = d2d_strip_comments_from_key($key, TRUE);
 	}
-	
-	$comment_end = strpos($key, '-----END PUBLIC KEY-----');
-	if ($comment_end !== FALSE) {
-		$limit = $keep_comment ? $comment_end + 25 : $comment_end; //
-		$key = substr($key, 0, $limit);
-	}
-	
 	return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
 }
 
