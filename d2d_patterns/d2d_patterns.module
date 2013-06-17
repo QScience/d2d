@@ -23,7 +23,7 @@ function d2d_patterns($data = NULL){
     PATTERNS_INFO   => t('Create, modify, and delete the private key for the own instance'),
     PATTERNS_CREATE => array('d2d_patterns_insert_private_key'),
     PATTERNS_MODIFY => array('d2d_patterns_insert_private_key'),
-    PATTERNS_DELETE => array('d2d_api_own_public_key_delete'),
+    PATTERNS_DELETE => array('d2d_api_own_private_key_delete'),
     PATTERNS_EXPORT => array('Private key' => 'd2d_patterns_export_private_key',),
 	);
 	    
@@ -443,17 +443,32 @@ function _d2d_patterns_fix_imported_key($key) {
   $key = preg_replace('/(\r\n|\r|\n)+/', "\n", $key);
   $key = str_replace(array("|\n"), '', $key);
   
+  $type = NULL;
   $pos = strrpos($key, '-----BEGIN PUBLIC KEY-----');
-  $type = $pos !== FALSE ? 'PUBLIC' : 'PRIVATE'; // note: three equal signs
-  $begin = '-----BEGIN ' . $type . ' KEY-----';
-  $end = '-----END ' . $type . ' KEY-----';
-  $key = d2d_strip_comments_from_key($key);
+  if ($pos !== FALSE) {
+    $type = 'PUBLIC';
+  }
+  else {
+    $pos = strrpos($key, '-----BEGIN PRIVATE KEY-----');
+    if ($pos !== FALSE) {
+      $type = 'PRIVATE';
+    }
+  }
   
-  //$key = preg_replace('/\s*$^\s*/m', "\n", $key);
-  //key = preg_replace('/[ \t]+/', '', $key);
+  $key = d2d_strip_comments_from_key($key);
   // replace whitespace characters with a single space
   $key = preg_replace('/\s+/', '', $key);
-  return trim($begin . "\n\r" . chunk_split($key, 64) . $end . "\n") ."\n\r"; 
+  
+  if (!is_null($type)) {
+    $begin = '-----BEGIN ' . $type . ' KEY-----';
+    $end = '-----END ' . $type . ' KEY-----';
+    $key = $begin . "\n" . chunk_split($key, 64) . $end . "\n";
+  }
+  else {
+    $key = chunk_split($key, 64) . "\n";
+  }
+  
+  return trim($key); 
 }
 
 function _d2d_patterns_insert_public_key($instance_id, $key) {
@@ -572,6 +587,8 @@ function d2d_patterns_prepare($action, $tag, &$data) {
   
         if ($instance != FALSE) {
           $data['instance_id'] = $instance['id'];
+          $data['my_key'] = $instance['is_me'];
+          
         }
       }
     }
@@ -769,40 +786,51 @@ function d2d_patterns_validate($action, $tag, &$data) {
   if ($tag == 'd2d_public_key') {
   	$d2d_id = @$data['d2d_id'];
   	$public_key = @$data['public_key'];
-  	
   	$public_key_short =  '...' . @d2d_substr_public_key($public_key);
   	
-  	if ($action == PATTERNS_CREATE) {
-  		
-  		$instance = d2d_api_instance_get($d2d_id);
-
-  		if ($instance === FALSE) {
-  			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
-        	t('No instance associated with key %k found.', array('%k' => $data['d2d_id'],)));
-  		}
-  		else if (d2d_api_public_key_exist($d2d_id, $public_key)) {
-				$result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => 
-        	t('Instance %i has already public key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
-  		}
+  	if ($action != PATTERNS_DELETE ) {
+  	
+    	if ($action == PATTERNS_CREATE) {
+    	
+    	  $instance = d2d_api_instance_get($d2d_id);
+    	
+    	  if ($instance === FALSE) {
+    	    $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+    	        t('No instance associated with key %k found.', array('%k' => $data['d2d_id'],)));
+    	  }
+    	  else if (d2d_api_public_key_exist($d2d_id, $public_key)) {
+    	    $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT =>
+    	        t('Instance %i has already public key %k.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
+    	  }
+    	}
+    	 
+    	else if ($action == PATTERNS_MODIFY) {
+    	  $id = $data['id'];
+    	  // modify by id
+    	  $key = d2d_api_public_key_get_by_id($id);
+    	   
+    	  if (empty($key)) {
+    	    $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED =>
+    	        t('No public key to modify with \'id\' :id', array(':id' => $id,)));
+    	  }
+    	
+    	
+    	  if (isset($data['selected']) && !isset($data['instance_id'])) {
+    	    $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Instance not found, key cannot be selected'));
+    	  }
+    	}
+    	
+    	if (isset($data['my_key']) && $data['my_key'] == TRUE) {
+    	  $public_key = $data['public_key'];
+    	  $private_key = d2d_api_own_private_key_get();
+    	   
+    	  if (!d2d_check_key_pair(_d2d_patterns_fix_imported_key($public_key), $private_key)) {
+    	    $result[] = array(PATTERNS_WARNING_GENERIC_VALIDATION_ERROR => t('Public / private key pair for own instance is invalid.'));
+    	  }
+    	   
+    	}
+  	  
   	}
-  	
-  	else if ($action == PATTERNS_MODIFY) {  
-  		$id = $data['id'];
-  		// modify by id	
-  		$key = d2d_api_public_key_get_by_id($id);
-  		
-  			
-  		if (empty($key)) {
-  			$result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => 
-        	t('No public key to modify with \'id\' :id', array(':id' => $id,)));
-  		}	
-  		
-
-  		if (isset($data['selected']) && !isset($data['instance_id'])) {
-  		  $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Instance not found, key cannot be selected'));
-  		}
-  	}	
-  	
   	else { // PATTERS_DELETE
   		// delete by id	
   		if (isset($data['id'])) {
@@ -820,24 +848,33 @@ function d2d_patterns_validate($action, $tag, &$data) {
         		t('The pair instance-public key (%i-%k) was not found.', array('%i' => $d2d_id, '%k' => $public_key_short,)));
   		}	
   	}
-  	
   }
   
   else if ($tag == 'd2d_private_key') {
   
     $private_key_exist = d2d_api_own_private_key_get() != FALSE;
   
-    if ($action == PATTERNS_CREATE) {
-      if ($private_key_exist) {
-        $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => t('Own private key already set'));
+    if ($action != PATTERNS_DELETE ) {
+      if ($action == PATTERNS_CREATE) {
+        if ($private_key_exist) {
+          $result[] = array(PATTERNS_WARNING_ALREADY_DEFINED_ELEMENT => t('Own private key already set'));
+        }
+      }
+       
+      else { // modify / delete
+        if (!$private_key_exist) {
+          $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Own private key not found'));
+        }
+      }
+      
+      $private_key = $data['key'];
+      $public_key = d2d_api_own_public_key_get();
+       
+      if (!d2d_check_key_pair($public_key, _d2d_patterns_fix_imported_key($private_key))) {
+        $result[] = array(PATTERNS_WARNING_GENERIC_VALIDATION_ERROR => t('Public / private key pair for own instance is invalid.'));
       }
     }
-     
-    else { // modify / delete
-      if (!$private_key_exist) {
-        $result[] = array(PATTERNS_WARNING_ELEMENT_UNDEFINED => t('Own private key not found'));
-      }
-    }
+    
   }
   
   else if ($tag == 'd2d_instance') {
@@ -876,7 +913,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
         $private_key = isset($data['private_key']) ? $data['private_key'] : d2d_api_own_private_key_get();
         
         if (!d2d_check_key_pair(_d2d_patterns_fix_imported_key($public_key), _d2d_patterns_fix_imported_key($private_key))) {
-          $result[] = array(PATTERNS_WARNING_GENERIC_VALIDATION_ERROR => t('Public / private key is invalid.'));
+          $result[] = array(PATTERNS_WARNING_GENERIC_VALIDATION_ERROR => t('Public / private key pair is invalid.'));
         }
       }
     }
