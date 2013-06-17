@@ -185,7 +185,7 @@ function d2d_api_instance_add($instance) {
   $id = db_insert('d2d_instances')->fields(array(
     'd2d_id' => $instance['d2d_id'],
     'name' => $instance['name'],
-    'url' => $instance['address'],
+    'url' => $instance['url'],
     'description' => $instance['description'],
     'time_inserted' => d2d_get_time(),
     'public_key_id' => NULL,
@@ -294,7 +294,7 @@ function d2d_api_own_d2d_id_set($d2d_id) {
   variable_set('d2d_my_id', $d2d_id);
 }
 
-function d2d_api_own_d2d_id_delete($d2d_id) {  
+function d2d_api_own_d2d_id_delete() {  
   variable_del('d2d_my_id');
 }
 
@@ -327,7 +327,8 @@ function d2d_api_own_instance_delete() {
   if (!d2d_api_instance_delete($myid, FALSE, FALSE)) return FALSE;
   d2d_api_own_private_key_delete();
   d2d_api_own_instance_id_delete();
-  d2d_api_own_d2d_id_get();
+  d2d_api_own_d2d_id_delete();
+  menu_rebuild(); // clear cache
   return TRUE;
 }
 

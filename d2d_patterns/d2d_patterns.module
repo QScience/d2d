@@ -290,12 +290,14 @@ function _d2d_patterns_import_own_instance($action, $form_state) {
   if (isset($form_state['values']['private_key'])) {
     _d2d_patterns_insert_private_key($form_state['values']['private_key']);
   }
-
+  
   return patterns_results();
 }
 
 function d2d_patterns_create_own_instance($form_id, &$form_state) {
-  return _d2d_patterns_import_own_instance(PATTERNS_CREATE, $form_state);
+  $res = _d2d_patterns_import_own_instance(PATTERNS_CREATE, $form_state);
+  menu_rebuild(); // clear cache
+  return $res;
 }
 
 function d2d_patterns_modify_own_instance($form_id, &$form_state) {
@@ -385,7 +387,7 @@ function d2d_patterns_add_instance($form_id, &$form_state) {
   $id = d2d_api_instance_add(array(
     'd2d_id' => $i['d2d_id'],
     'name' => $i['name'],
-    'address' => $i['url'], // api wants address here
+    'url' => $i['url'],
     'description' => $i['description'],
     'name' => $i['name'],
   ));
@@ -867,7 +869,8 @@ function d2d_patterns_validate($action, $tag, &$data) {
             t('Instance with d2d_id "%d2d_id" already existing.', array('%d2d_id' => $data['d2d_id'],)));
       }
     }
-    else if ($action != PATTERNS_DELETE) { // create, modify
+    
+    if ($action != PATTERNS_DELETE) { // create, modify
       if (isset($data['public_key']) || isset($data['public_key'])) {
         $public_key = isset($data['public_key']) ? $data['public_key'] : d2d_api_own_public_key_get();
         $private_key = isset($data['private_key']) ? $data['private_key'] : d2d_api_own_private_key_get();
@@ -877,7 +880,8 @@ function d2d_patterns_validate($action, $tag, &$data) {
         }
       }
     }
-    else if ($action != PATTERNS_CREATE) { // modify, delete
+    
+    if ($action != PATTERNS_CREATE) { // modify, delete
       $instance = d2d_api_own_instance_get();
       
       if ($instance == FALSE) {
