@@ -214,15 +214,15 @@ function d2d_check_array(&$array, $checks) {
  * @see d2d_clean_public_key
  */
 function d2d_substr_public_key($key, $N = -10) {
-	$key = d2d_clean_public_key($key);
+  $key = d2d_clean_public_key($key);
 
-	if ($N < 0) {
-		return mb_substr($key, mb_strlen($key) + $N);
-	}
-	else {
-		return mb_substr($key, 0, $N);
-	}
-	
+  if ($N < 0) {
+    return mb_substr($key, mb_strlen($key) + $N);
+  }
+  else {
+    return mb_substr($key, 0, $N);
+  }
+  
 }
 
 // function d2d_strip_comments_from_key($key, $public = TRUE) {
@@ -256,14 +256,14 @@ function d2d_strip_comments_from_key($key) {
  * 
  * @param string $key The public key to clean
  * @param boolean $keep_comment Optional. Keeps comment about begin/end 
- * 	public key. Defaults, FALSE
+ *  public key. Defaults, FALSE
  * @return string The cleaned key
  */
 function d2d_clean_public_key($key, $keep_comment = FALSE) {
-	if (!$keep_comment) {
-	  $key = d2d_strip_comments_from_key($key, TRUE);
-	}
-	return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
+  if (!$keep_comment) {
+    $key = d2d_strip_comments_from_key($key, TRUE);
+  }
+  return trim(str_replace(array(" ", "  ", "\n", "\t", "\r"), '', $key));
 }
 
 /**
@@ -278,9 +278,9 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
  * @see d2d_clean_public_key
  */
 function d2d_public_key_eql($key1, $key2) {
-	$key1 = d2d_clean_public_key($key1);
-	$key2 = d2d_clean_public_key($key2);
-	return $key1 === $key2;
+  $key1 = d2d_clean_public_key($key1);
+  $key2 = d2d_clean_public_key($key2);
+  return $key1 === $key2;
 }
 
 //////////////////////////////////////////////////////////

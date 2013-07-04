@@ -193,33 +193,11 @@ function d2d_form_settings_keys_validate($form, &$form_state) {
     form_set_error('', t('Public / private key pair erroneous.'));
   }
 }
-/* OLD
-function d2d_form_settings_keys_submit($form, &$form_state) {
-  $public_key = $form_state['values']['public_key'];
-  $private_key = $form_state['values']['private_key'];
-  variable_set('d2d_public_key', $public_key);
-  $id = variable_get('d2d_my_id');
-  $id_pk = db_insert('d2d_public_keys')->fields(array(
-      'instance_id' => $id,
-      'public_key' => $public_key,
-    ))->execute();
-  $num_updated = db_update('d2d_instances')
-    ->fields(array(
-      'public_key_id' => $id_pk,
-    ))
-    ->condition('id', $id)
-    ->execute();
-  db_delete('d2d_public_keys')
-    ->condition('id', $id_pk, '<>')->execute();
-  variable_set('d2d_private_key', $private_key);
-  drupal_set_message(t('Settings have been saved.'));
-}
-*/
 
 function d2d_form_settings_keys_submit($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
   $private_key = $form_state['values']['private_key'];  
-	d2d_api_own_public_key_set($public_key);
+  d2d_api_own_public_key_set($public_key);
   d2d_api_own_private_key_set($private_key);
   drupal_set_message(t('Settings have been saved.'));
 }

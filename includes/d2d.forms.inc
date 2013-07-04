@@ -14,19 +14,19 @@
  * @param mixed $value Optional. The key of the D2D friend object that will be 
  *  used the 'value' attribute of each option element. Defaults, 'd2d_id'. 
  * @param mixed $display Optional. The key of the D2D friend object that will be
- * 	used as the content of each option element. Defaults, 'url'.
+ *  used as the content of each option element. Defaults, 'url'.
  */
 function d2d_forms_select_friends(&$form = array(), $value = 'd2d_id', $display = 'url') {
-	$friends = d2d_api_friend_get();
-	
-	$options = array();
-	foreach($friends as $f) {
-		$options[$f[$value]] = $f[$display];
-	}
-	
-	$form += array(
-		'#type' => 'select',
-		'#options' => $options, 
-	);
-	
+  $friends = d2d_api_friend_get();
+  
+  $options = array();
+  foreach($friends as $f) {
+    $options[$f[$value]] = $f[$display];
+  }
+  
+  $form += array(
+    '#type' => 'select',
+    '#options' => $options, 
+  );
+  
 }

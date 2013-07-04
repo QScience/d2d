@@ -126,6 +126,11 @@ function d2d_form_init_submit($form, &$form_state) {
       
     variable_set('d2d_online', TRUE);
   }
+  $content = d2d_implode(array(
+    'subject' => t('Welcome to D2D!'),
+    'text' => t('As a first step you might want to add other Drupal installations running D2D to your list of instances and send them a friendship request. Have fun!'),
+  ));
+  d2d_api_notification_insert('d2d_message', $my_d2d_id, $content);
   menu_rebuild();
   drupal_set_message(t('Settings have been saved.'));
 }

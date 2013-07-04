@@ -126,7 +126,6 @@ function d2d_api_public_key_get_by_id($id) {
  */
 function d2d_api_public_key_return_id($d2d_id, $public_key) {
   $keys = d2d_api_public_key_get($d2d_id);
-  if (empty($keys)) return FALSE; // TODO: is this condition needed?
   foreach ($keys as $k) {
     if (d2d_public_key_eql($k->public_key, $public_key)) {
       return $k->id;
@@ -195,21 +194,6 @@ function d2d_api_instance_add($instance) {
   return $id;
 }
 
-/**
- * Checks whether a instance exists with the given d2d id
- * 
- * @param string $d2d_id
- * @return boolean TRUE, if the instance is found in the database
- */
-function d2d_api_instance_exist($d2d_id) {
-
-  $query = db_select('d2d_instances', 'i')
-    ->condition('i.d2d_id', $d2d_id);
-  
-  $res = $query->execute()->FetchObject();  
-  return empty($res);
-}
-
 /////////////////
 // OWN PUBLIC KEY
 /////////////////
@@ -245,22 +229,6 @@ function d2d_api_own_public_key_set($public_key) {
     ->execute();
   
   return $id_pk;
-}
-
-/**
- * Deletes own public key
- * 
- * Warning: deleting own public key might make communication impossible
- * 
- */
-function d2d_api_own_public_key_delete() {
-
-  $num_deleted = db_delete('d2d_public_keys')
-  ->condition('id_instance', $id)
-  ->execute();
-   
-  variable_del('d2d_public_key');
-
 }
 
 ///////////////////
@@ -321,10 +289,14 @@ function d2d_api_own_instance_id_delete() {
 // OWN INSTANCE
 ///////////////
 
+// this should only be called if instance is offline or switch to
+//  offline mode
 function d2d_api_own_instance_delete() {
   $myid = d2d_api_own_instance_id_get();  
-  if (empty($myid)) return FALSE;
-  if (!d2d_api_instance_delete($myid, FALSE, FALSE)) return FALSE;
+  if (empty($myid)) {
+    return FALSE;
+  }
+  d2d_api_instance_delete($myid, FALSE, FALSE);
   d2d_api_own_private_key_delete();
   d2d_api_own_instance_id_delete();
   d2d_api_own_d2d_id_delete();

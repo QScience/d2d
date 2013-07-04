@@ -262,11 +262,7 @@ function d2d_secure_rpc($request64, $version) {
   }
   
   $rpc_info = array(
-    'id' => $friend['id'],
-    'public_key' => $friend['public_key'],
-    'd2d_id' => $friend['d2d_id'],
-    'name' => $friend['name'],
-    'url' => $friend['url'],
+    'instance' => $friend,
     'ip' => $_SERVER['REMOTE_ADDR'],
   );
   try {

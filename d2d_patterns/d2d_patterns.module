@@ -311,16 +311,13 @@ function d2d_patterns_modify_own_instance($form_id, &$form_state) {
 function d2d_patterns_export_all_friendships($args = NULL, &$result = NULL) {
   $action_type = PATTERNS_CREATE; // either create or delete
   
-  $instances = d2d_api_instance_get();
+  $instances = d2d_api_friend_get();
   $actions = array();
   foreach ($instances as $i) {
     $action = array($action_type => array(
         'tag' => 'd2d_friendship',
         'd2d_id' => $i['d2d_id'],
     ));
-    if ($action_type == PATTERNS_MODIFY) {
-    		$action[$action_type]['id'] = $i['id'];
-    }
     array_push($actions, $action);
   }
   return $actions;

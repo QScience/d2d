@@ -26,7 +26,7 @@ function d2d_create_keys(&$public_key, &$private_key) {
 function d2d_check_key_pair($public_key, $private_key) {
   $data = 'just a simple encryption / decryption test.';
   if (!@openssl_public_encrypt($data, $crypted, $public_key)) {
-  	return FALSE;
+    return FALSE;
   }
   if (!@openssl_private_decrypt($crypted, $decrypted, $private_key)) {
     return FALSE;

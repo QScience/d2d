@@ -60,7 +60,7 @@ function d2d_d2d_handle_notification() {
     'arguments' => array('subject' => 'is_string', 'text' => 'is_string'),
     'callback_simple' => 'd2d_get_message_simple',
     'callback_detailed' => 'd2d_get_message_detailed',
-    'name' => t('mail'),
+    'name' => t('system'),
   );
   $types['d2d_friendship'] = array(
     'arguments' => array('type' => 'is_string', 'description' => 'is_string'),
@@ -86,7 +86,7 @@ function d2d_get_message_detailed($arguments, $attributes) {
   $build['notifications'] = array(
     '#title' => t('Notification') . ' #' . $attributes['id'],
     '#type' => 'fieldset',
-    '#description' => $arguments['subject'] . ' - ' . $arguments['text'],
+    '#description' => $arguments['subject'] . '<p>' . $arguments['text'] . '</p>',
   );
   return $build;
 }
@@ -105,20 +105,6 @@ function d2d_built_notification_table($types) {
   );
   $hooks = module_invoke_all('d2d_handle_notification');
   $rows = array();
-//  $notifications = d2d_api_notification_get($
-/*
-  if (is_array($types)) {
-    if (empty($types)) {
-      $result = array();
-    }
-    else {
-      $result = db_query('SELECT id, type, d2d_id, content, timestamp, seen FROM {d2d_notifications} WHERE type IN (:types) ORDER BY id DESC', array(':types' => $types));
-    }
-  }
-  else {
-    $result = db_query('SELECT id, type, d2d_id, content, timestamp, seen FROM {d2d_notifications} ORDER BY id DESC');
-  }
-*/
   $notifications = d2d_api_notification_get_by_type($types);
   foreach ($notifications as $notification) {
     if (!array_key_exists($notification['type'], $hooks)) {

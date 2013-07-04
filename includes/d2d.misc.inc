@@ -22,6 +22,43 @@ function d2d_xmlrpc_options() {
 }
 
 /**
+ * Changes the online state of this D2D-instance.
+ *
+ * @param bool $online the desired new online state.
+ * @return bool the new online state.
+ */
+function d2d_change_online_state($online) {
+  return $online ? d2d_go_online() : d2d_go_offline();
+}
+
+/**
+ * Changes the state of this D2D-instance to offline.
+ *
+ * @return bool the new online state.
+ */
+function d2d_go_offline() {
+  variable_set('d2d_online', FALSE);
+  return FALSE;
+}
+
+/**
+ * Changes the state of this D2D-instance to online.
+ *
+ * @return bool the new online state.
+ */
+function d2d_go_online() {
+  $public_key = d2d_api_own_public_key_get();
+  $private_key = d2d_api_own_private_key_get();
+  if (!d2d_check_key_pair($public_key, $private_key)) {
+    variable_set('d2d_online', FALSE);
+    return FALSE;
+  }
+  else {
+    variable_set('d2d_online', TRUE);
+    return TRUE;
+  }
+}
+/**
  * Returns whether this D2D-instance is online.
  */
 function d2d_is_online() {
@@ -142,33 +179,6 @@ function d2d_get_request_type($i) {
   }
 }
 
-
-
-
-function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
-	
-	$friends = &drupal_static(__FUNCTION__);
-
-  if ($reset || empty($friends)) {
-	  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.friendship_state=3');
-	  $friends = array();
-	  foreach ($result as $record) {
-	    $friends[$d2d_id_as_key ? $record->d2d_id : $record->id] = array(
-	      'id' => $record->id,
-	      'd2d_id' => $record->d2d_id,
-	      'name' => $record->name,
-	      'url' => $record->url,
-	      'description' => $record->description,
-	      'time_inserted' => $record->time_inserted,
-	      'last_alive' => $record->last_alive,
-	      'public_key' => $record->public_key,
-	    );
-	  }
-  }
-
-  return $friends;
-}
-
 /**
  * Adds convenient fields to an instance array
  * 
@@ -177,9 +187,9 @@ function d2d_get_friends($d2d_id_as_key = TRUE, $reset = FALSE) {
  * @param array $instance
  */
 function _d2d_decorate_instance_array(&$instance) {
-	if (empty($instance)) return;
-	$instance['is_friend'] = $instance['friendship_state'] == 3;
-	$instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
+  if (empty($instance)) return;
+  $instance['is_friend'] = $instance['friendship_state'] == 3;
+  $instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
 }
 
 /**
@@ -243,13 +253,13 @@ function d2d_verify_nonce($timestamp, $nonce) {
 }
 
 function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
-	if (empty($d2d_id)) return FALSE;
-	$instance = d2d_api_instance_get($d2d_id);
-	return $instance !== FALSE ? $instance['id'] : FALSE;
+  if (empty($d2d_id)) return FALSE;
+  $instance = d2d_api_instance_get($d2d_id);
+  return $instance !== FALSE ? $instance['id'] : FALSE;
 }
 
 function d2d_convert_id_to_d2d_id($id = NULL) {
-	if (empty($id)) return FALSE;
-	$instance = d2d_api_instance_get_by_id($id);
-	return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
+  if (empty($id)) return FALSE;
+  $instance = d2d_api_instance_get_by_id($id);
+  return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
 }
