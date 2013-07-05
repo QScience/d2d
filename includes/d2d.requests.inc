@@ -341,8 +341,8 @@ function d2d_secure_request($request64, $version) {
     return xmlrpc_error(0, 'request is not of desired strucutre');
   }
   $signer = $message['signer'];
-  d2d_get_self_instance($my_id, $my_d2d_id, $my_url, $my_public_key);
-  if ($signer === $my_d2d_id) {
+  $my_instance = d2d_api_own_instance_get(TRUE);
+  if ($signer === $my_instance['d2d_id']) {
     return xmlrpc_error(0, 'cannot process requests sent by myself');
   }
   $encrypted_data = $message['data'];
@@ -367,8 +367,7 @@ function d2d_secure_request($request64, $version) {
     return xmlrpc_error(0, 'encrypted data not of desired structure');
   }
   // finally decrypt
-  $my_private_key = variable_get('d2d_private_key');
-  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_private_key)) {
+  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     return xmlrpc_error(0, 'failed decrypytion');
   }
   // explode $data
@@ -399,7 +398,7 @@ function d2d_secure_request($request64, $version) {
   }
   $request_type = $exploded_data['request_type'];
   $arguments = $exploded_data['arguments'];
-  if ($exploded_data['receiver'] !== $my_d2d_id) {
+  if ($exploded_data['receiver'] !== $my_instance['d2d_id']) {
     return xmlrpc_error(0, 'receiver in exploded data mismatch');
   }
   if ($exploded_data['sender'] !== $signer) {
@@ -492,7 +491,7 @@ function d2d_secure_request($request64, $version) {
     if ($imploded_return === FALSE) {
       return xmlrpc_error(0, 'error imploding return');
     }
-    $signed_return = d2d_sign2($imploded_return, $my_private_key, $my_d2d_id);
+    $signed_return = d2d_sign2($imploded_return, $my_instance['private_key'], $my_instance['d2d_id']);
     if ($signed_return === FALSE) {
       return xmlrpc_error(0, 'failed signing');
     }
@@ -518,7 +517,7 @@ function d2d_secure_request($request64, $version) {
       return xmlrpc_error(0, 'failed encryption!');
     }
     // sign encrypted return 
-    $signed_return = d2d_sign($encrypted_return, $my_private_key, $my_d2d_id);
+    $signed_return = d2d_sign($encrypted_return, $my_instance['private_key'], $my_instance['d2d_id']);
     if ($signed_return === FALSE) {
       return xmlrpc_error(0, 'failed signing');
     }

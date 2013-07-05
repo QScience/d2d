@@ -79,19 +79,6 @@ function d2d_format_unit($v, $unit, $skip=FALSE) {
   }
 }
 
-function d2d_get_self_instance(&$id, &$d2d_id, &$url, &$public_key) {
-  $id = d2d_api_own_instance_id_get();
-  $result = db_query('SELECT p.public_key as public_key, i.d2d_id as d2d_id, i.url as url FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
-  if ($row = $result->fetchAssoc()) {
-    $url = $row['url'];
-    $public_key = $row['public_key'];
-    $d2d_id = $row['d2d_id'];
-  }
-  else {
-    return FALSE;
-  }
-}
-
 // TODO: localization
 function d2d_get_absolute_time($t) {
   return date('F j, Y, g:i a', $t);
