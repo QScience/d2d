@@ -326,7 +326,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
     ->fields('i');
 
   // Returns only one instance
-  if (!empty($id)) {
+  if (!empty($id)) { // TODO: empty? is_null?
     $query->condition($id_as_d2d_id ? 'i.d2d_id' : 'i.id', $id);
     $result = $query->execute();
     $instance = $result->fetchAssoc();
@@ -362,7 +362,7 @@ function d2d_api_instance_get($d2d_id = NULL) {
  * The database id of the instance is used as associative key
  * 
  * If an id is set, only the instance with database id equal to id
- * is returned 
+ * is returned [TODO: documentation is really ambiguous]
  *  
  * @param integer $id Optional. The id of the instance
  * @return array|boolean The list of instances

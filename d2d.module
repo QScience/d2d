@@ -2,9 +2,7 @@
 
 /**
  * @file
- * A module to establish friendship between Drupal instances via Peer-to-Peer.
- *
- * A longer description will follow here.
+ * A module to built a network of Drupal instances.
  */
 
 require_once 'includes/d2d.constants.inc';
@@ -35,25 +33,7 @@ function d2d_id_load($id) {
   if (!d2d_check_convert_int($id)) {
     return FALSE;
   }
-  // obtain information (including public key, if available) about the instance from the database
-  $result = db_query('SELECT i.id as id, i.d2d_id as d2d_id, i.name as name, i.url as url, i.description as description, i.time_inserted as time_inserted, i.last_alive as last_alive, i.friendship_state as friendship_state, p.public_key as public_key, i.public_key_id as public_key_id FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.id=:id', array(':id' => $id));
-  if ($result->rowCount() == 0) {
-    return FALSE;
-  }
-  $record = $result->fetchObject();
-  $instance = array();
-  $instance['id'] = $id;
-  $instance['d2d_id'] = $record->d2d_id;
-  $instance['name'] = $record->name;
-  $instance['url'] = $record->url;
-  $instance['public_key'] = $record->public_key;
-  $instance['public_key_id'] = $record->public_key_id;
-  $instance['description'] = $record->description;
-  $instance['time_inserted'] = $record->time_inserted;
-  d2d_get_self_instance($my_id, $my_d2d_id, $my_url, $my_public_key);
-  $instance['is_me'] = ($id == $my_id);
-  $instance['friendship_state'] = $record->friendship_state;
-  $instance['is_friend'] = ($record->friendship_state == 3);
+  $instance = d2d_api_instance_get_by_id($id);
   return $instance;
 }
 
@@ -301,7 +281,7 @@ function d2d_theme() {
  * Implements hook_cron().
  */
 function d2d_cron() {
+  watchdog('D2D', 'cron');
   d2d_remove_outdated_outgoing_requests();
   d2d_send_outgoing_requests(NULL, FALSE);
-  watchdog('D2D', 'cron');
 }
