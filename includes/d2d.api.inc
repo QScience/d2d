@@ -293,7 +293,7 @@ function d2d_api_own_instance_id_delete() {
 //  offline mode
 function d2d_api_own_instance_delete() {
   $myid = d2d_api_own_instance_id_get();  
-  if (empty($myid)) {
+  if (is_null($myid)) {
     return FALSE;
   }
   d2d_api_instance_delete($myid, FALSE, FALSE);
@@ -324,19 +324,17 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
   $query
     ->fields('k', array('public_key'))
     ->fields('i');
-
   // Returns only one instance
-  if (!empty($id)) { // TODO: empty? is_null?
+  if (!is_null($id)) {
     $query->condition($id_as_d2d_id ? 'i.d2d_id' : 'i.id', $id);
     $result = $query->execute();
     $instance = $result->fetchAssoc();
-
-    if (empty($instance)) return FALSE;
-
+    if (empty($instance)) {
+      return FALSE;
+    } 
     _d2d_decorate_instance_array($instance);
     return $instance;
   }
-
   $result = $query->execute();
   return _d2d_process_result_set_instance($result, $id_as_d2d_id);
 }
@@ -569,7 +567,6 @@ function d2d_api_group_membership_delete($group_ids) {
   }
 }
 
-
 function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
   db_delete('d2d_group_memberships')
   ->condition('instance_id', $instance_id)->execute();
@@ -694,6 +691,7 @@ function d2d_api_notification_insert($type, $d2d_id, $content) {
     ->values(array('type' => $type, 'd2d_id' => $d2d_id, 'content' => $content, 'timestamp' => d2d_get_time()))
     ->execute();
 }
+
 /**
  * Marks a notification as read or unread.
  */
