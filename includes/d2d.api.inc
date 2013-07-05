@@ -781,3 +781,17 @@ function d2d_api_method_get($instance_id, $look_up_table=FALSE) {
 function d2d_api_initialization_is_completed() {
   return !is_null(d2d_api_own_d2d_id_get());
 }
+
+function d2d_api_outgoing_request_get($types) {
+  if (is_array($types) && empty($types)) {
+    return array();
+  }
+  $query = db_select('d2d_outgoing_requests', 'o');
+  $query = $query->fields('o');
+  if (!is_null($types)) {
+    $query = $query->condition('o.type', $types);
+  }
+  $query = $query->orderBy('o.id', 'DESC');
+  $result = $query->execute();
+  return $result;
+}
