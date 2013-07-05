@@ -122,12 +122,12 @@ function d2d_api_public_key_get_by_id($id) {
  * @param string $public_key The plain text public key
  * @return boolean|integer The public key id, or FALSE if an error occurs
  *
- * @see d2d_public_key_eql
+ * @see d2d_public_key_equal
  */
 function d2d_api_public_key_return_id($d2d_id, $public_key) {
   $keys = d2d_api_public_key_get($d2d_id);
   foreach ($keys as $k) {
-    if (d2d_public_key_eql($k->public_key, $public_key)) {
+    if (d2d_public_key_equal($k->public_key, $public_key)) {
       return $k->id;
     }
   }
@@ -205,7 +205,7 @@ function d2d_api_instance_add($instance) {
 function d2d_api_own_public_key_get() {
   $my_d2d_id = d2d_api_own_d2d_id_get();
   $key = d2d_api_public_key_get($my_d2d_id);
-  return empty($key) ? FALSE: $key[0]->public_key; 
+  return empty($key) ? NULL : $key[0]->public_key;  // TODO: this is correct if at most one candidate key for own instance exists, would be buggy if you mess around and this invariant does not hold
 }
 
 /**
@@ -237,7 +237,7 @@ function d2d_api_own_public_key_set($public_key) {
 
 
 function d2d_api_own_private_key_get() {
-  return variable_get('d2d_private_key', FALSE);
+  return variable_get('d2d_private_key', NULL);
 }
 
 function d2d_api_own_private_key_set($private_key) {

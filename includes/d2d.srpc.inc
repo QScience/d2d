@@ -20,7 +20,7 @@ function d2d_d2d_secure_rpc() {
   return $methods;
 }
 function d2d_srpc_get_public_key($arguments, $rpc_info) {
-  $d2d_id = $arguments['instance']['d2d_id'];
+  $d2d_id = $arguments['d2d_id'];
   $result = db_query('SELECT p.public_key AS public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id WHERE i.d2d_id=:d2d_id', array(':d2d_id' => $d2d_id));
   if ($record = $result->fetchAssoc()) {
     return $record['public_key'] ? $record['public_key'] : '';

@@ -64,9 +64,9 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
   else {
     drupal_set_message(t('Public key has been received.'));
     // TODO: check length / format of received string
-    $result = db_query('SELECT id as id FROM {d2d_public_keys} WHERE instance_id=:id AND public_key=:public_key', array(':id' => $id, ':public_key' => $res));
-    if ($record = $result->fetchObject()) {
-      drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $record->id)), 'error');
+    $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $res);
+    if ($public_key_id !== FALSE) {
+      drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $public_key_id)), 'error');
     }
     else {
       d2d_api_public_key_set($id, $res);
@@ -249,11 +249,6 @@ function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
 function d2d_form_check_public_keys_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $d2d_id= $form_state['values']['d2d_id'];
-  $public_keys = array();
-  $result = db_query('SELECT id as public_key_id, public_key FROM {d2d_public_keys} WHERE instance_id=:instance_id', array(':instance_id' => $id));
-  foreach ($result as $record) {
-    $public_keys[$record->public_key] = $record->public_key_id;
-  }
   $friends = d2d_api_friend_get();
   $n_checked = 0;
   foreach ($friends as $friend) {
@@ -269,8 +264,8 @@ function d2d_form_check_public_keys_submit($form, &$form_state) {
       if (!$res) {
         drupal_set_message(t('Friend with D2D id @d2d_id (@name, @url) has no public key for this instance in the database.', array('@d2d_id' => $friend['d2d_id'], '@name' => $friend['name'], '@url' => $friend['url'])), 'error');
       }
-      elseif (array_key_exists($res, $public_keys)) {
-        drupal_set_message(t('Friend with D2D id @d2d_id (@name, @url) uses public key with id @id for this instance.', array('@d2d_id' => $friend['d2d_id'], '@name' => $friend['name'], '@url' => $friend['url'], '@id' => $public_keys[$res])));
+      elseif (($public_key_id = d2d_api_public_key_return_id($d2d_id, $res)) !== FALSE) {
+        drupal_set_message(t('Friend with D2D id @d2d_id (@name, @url) uses public key with id @id for this instance.', array('@d2d_id' => $friend['d2d_id'], '@name' => $friend['name'], '@url' => $friend['url'], '@id' => $public_key_id)));
       }
       else {
         drupal_set_message(t('Friend with D2D id @d2d_id (@name, @url) has a public key in the database that is not listed here.', array('@d2d_id' => $friend['d2d_id'], '@name' => $friend['name'], '@url' => $friend['url'])));
@@ -378,18 +373,11 @@ function d2d_edit_instance_details($instance) {
   return $build;
 }
 
-function d2d_public_key_exists($public_key_id, $instance_id) {
-  $result = db_query('SELECT EXISTS(SELECT 1 FROM {d2d_public_keys} WHERE id=:public_key_id AND instance_id=:instance_id) ex', array(':public_key_id' => $public_key_id, ':instance_id' => $instance_id));
-  if ($row = $result->fetchAssoc()) {
-    return $row['ex'] != 0;
-  }
-  return FALSE;
-}
-
 function d2d_select_public_key($instance, $public_key_id) {
   $num_updated = 0;
   $instance_id = $instance['id'];
-  if (d2d_public_key_exists($public_key_id, $instance_id) && $instance['public_key_id'] != $public_key_id) {
+  $public_key_obj = d2d_api_public_key_get_by_id($public_key_id);
+  if ($public_key_obj && $public_key_obj->instance_id == $instance['id'] && $instance['public_key_id'] != $public_key_id) {
     $num_updated = d2d_api_public_key_select($instance_id, $public_key_id);
     $instance = d2d_api_instance_get_by_id($instance_id);
     d2d_incoming_requests_reevaluate_signatures($instance); // TODO: recover on failure?
@@ -447,21 +435,20 @@ function d2d_edit_instance_public_key($instance) {
     $form_state = array();
     $form_state['build_info']['args'] = array($instance['id']);
     $build['pk_manage'][] = drupal_build_form("d2d_form_receive_public_key", $form_state);
-
-    $result = db_query('SELECT id as public_key_id, public_key FROM {d2d_public_keys} WHERE instance_id=:instance_id', array(':instance_id' => $instance['id']));
+    $result = d2d_api_public_key_get($instance['d2d_id']);
     $n_public_keys = 0;
     $rows = array();
     foreach ($result as $record) {
-      if ($record->public_key_id == $instance['public_key_id']) {
-        $select_link = l(t('unselect'), 'admin/d2d/instances/' . $instance['id'] . '/unselect_public_key/' . $record->public_key_id);
+      if ($record->id == $instance['public_key_id']) {
+        $select_link = l(t('unselect'), 'admin/d2d/instances/' . $instance['id'] . '/unselect_public_key/' . $record->id);
         $remove_link = '-';
       }
       else {
-        $select_link = l(t('select'), 'admin/d2d/instances/' . $instance['id'] . '/select_public_key/' . $record->public_key_id);
-        $remove_link = l(t('remove'), 'admin/d2d/instances/' . $instance['id'] . '/delete_public_key/' . $record->public_key_id);
+        $select_link = l(t('select'), 'admin/d2d/instances/' . $instance['id'] . '/select_public_key/' . $record->id);
+        $remove_link = l(t('remove'), 'admin/d2d/instances/' . $instance['id'] . '/delete_public_key/' . $record->id);
       }
       $row = array(
-        $record->public_key_id,
+        $record->id,
         $record->public_key,
         $select_link,
         $remove_link,

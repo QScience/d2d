@@ -277,7 +277,7 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
  * 
  * @see d2d_clean_public_key
  */
-function d2d_public_key_eql($key1, $key2) {
+function d2d_public_key_equal($key1, $key2) {
   $key1 = d2d_clean_public_key($key1);
   $key2 = d2d_clean_public_key($key2);
   return $key1 === $key2;
