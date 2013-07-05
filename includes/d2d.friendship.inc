@@ -132,12 +132,7 @@ function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $t
       $new_friendship_state = 3;
       $instance['friendship_state'] = $new_friendship_state;
       $instance['is_friend'] = TRUE;
-      db_update('d2d_instances')
-        ->fields(array(
-          'friendship_state' => $new_friendship_state,
-        ))
-        ->condition('id', $instance['id'])
-        ->execute();
+      d2d_api_friendship_update($instance['id'], $new_friendship_state, $old_friendship_state, $instance['id']);
       _d2d_insert_friendship_notification($instance['d2d_id'], 'accept', array());
     }
   }
