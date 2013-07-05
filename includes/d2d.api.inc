@@ -180,7 +180,7 @@ function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
  * @param unknown_type $instance
  * @return integer The id in the database (not the d2d_id)
  */
-function d2d_api_instance_add($instance) {
+function d2d_api_instance_add($instance, $set_default_group_membership = TRUE) {
   $id = db_insert('d2d_instances')->fields(array(
     'd2d_id' => $instance['d2d_id'],
     'name' => $instance['name'],
@@ -189,8 +189,9 @@ function d2d_api_instance_add($instance) {
     'time_inserted' => d2d_get_time(),
     'public_key_id' => NULL,
   ))->execute();
-    
-  d2d_set_default_group_memberships($id);
+  if ($set_default_group_membership) {
+    d2d_set_default_group_memberships($id);
+  }
   return $id;
 }
 

@@ -91,39 +91,28 @@ function d2d_form_init_validate($form, &$form_state) {
   }
 }
 function d2d_form_init_submit($form, &$form_state) {
+  // we create the key pair first to return on error without mofifying
+  // the database
   if ($form_state['values']['auto_keys_and_online']) {
     if (!d2d_create_keys($my_public_key, $my_private_key)) {
       drupal_set_message(t('Failed creating public / private key pair.'), 'error');
       return;
     }
-    d2d_api_own_private_key_set($my_private_key);
   }
   $my_d2d_id = $form_state['values']['id'];
   // add own instance to database
-  $my_id = db_insert('d2d_instances')->fields(array(
+  $instance = array(
     'name' => $form_state['values']['name'],
     'url' => $GLOBALS['base_url'] . '/xmlrpc.php',
     'd2d_id' => $my_d2d_id,
     'description' => 'this instance.',
-    'time_inserted' => d2d_get_time(),
-    'public_key_id' => NULL,
-  ))->execute();
-  
+  );
+  $my_id = d2d_api_instance_add($instance, FALSE);
   d2d_api_own_instance_id_set($my_id);
   d2d_api_own_d2d_id_set($my_d2d_id);
-  
   if ($form_state['values']['auto_keys_and_online']) {
-    $my_public_key_id = db_insert('d2d_public_keys')->fields(array(
-      'instance_id' => $my_id,
-      'public_key' => $my_public_key,
-    ))->execute();
-    $num_updated = db_update('d2d_instances')
-      ->fields(array(
-        'public_key_id' => $my_public_key_id,
-      ))
-      ->condition('id', $my_id)
-      ->execute();
-      
+    $my_public_key_id = d2d_api_own_public_key_set($my_public_key);
+    d2d_api_own_private_key_set($my_private_key);
     variable_set('d2d_online', TRUE);
   }
   $content = d2d_implode(array(
