@@ -14,7 +14,6 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     return FALSE;
   }
   $my_instance = d2d_api_own_instance_get(TRUE);
-  $my_private_key = variable_get('d2d_private_key');
   $imploded_arguments = d2d_implode($arguments);
   //$entity_a = $friend['url'];
   //$public_key_a = $friend['public_key'];
@@ -158,7 +157,7 @@ function d2d_secure_rpc($request64, $version) {
   if ($version !== d2d_get_version()) {
     return xmlrpc_error(0, 'wrong version');
   }
-  // convert $request64 if in MIME base64
+  // convert $request64 from MIME base64
   // note that if $request64 is binary, an xml-rpc-error is returned
   $request = base64_decode($request64, TRUE);
   if ($request === FALSE) {
@@ -174,14 +173,15 @@ function d2d_secure_rpc($request64, $version) {
     return xmlrpc_error(0, 'request is not of desired strucutre');
   }
   $signer = $message['signer'];
-  d2d_get_self_instance($my_id, $my_d2d_id, $my_url, $my_public_key);
-  if ($signer === $my_d2d_id) {
+  $my_instance = d2d_api_own_instance_get(TRUE);
+  if ($signer === $my_instance['d2d_id']) {
     return xmlrpc_error(0, 'cannot process requests sent by myself');
   }
   $encrypted_data = $message['data'];
   $signature = $message['signature'];
   $friend = d2d_api_instance_get($signer);
-  if ($friend === FALSE || !$friend['is_friend'] || is_null($friend['public_key']) || openssl_verify($encrypted_data, $signature, $friend['public_key']) !== 1) {
+  // TODO: double check this condition
+  if (!$friend || !$friend['is_friend'] || is_null($friend['public_key']) || openssl_verify($encrypted_data, $signature, $friend['public_key']) !== 1) {
     return xmlrpc_error(0, 'no friendship found or wrong signature');
   }
   // explode $encrypted_data
@@ -194,8 +194,7 @@ function d2d_secure_rpc($request64, $version) {
     return xmlrpc_error(0, 'encrypted data not of desired structure');
   }
   // finally decrypt
-  $my_private_key = variable_get('d2d_private_key');
-  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_private_key)) {
+  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     return xmlrpc_error(0, 'failed decrypytion');
   }
   // explode $data
@@ -225,7 +224,7 @@ function d2d_secure_rpc($request64, $version) {
   }
   $method_name = $exploded_data['method_name'];
   $arguments = $exploded_data['arguments'];
-  if ($exploded_data['callee'] !== $my_d2d_id) {
+  if ($exploded_data['callee'] !== $my_instance['d2d_id']) {
     return xmlrpc_error(0, 'callee in exploded data mismatch');
   }
   if ($exploded_data['caller'] !== $friend['d2d_id']) {
@@ -258,7 +257,6 @@ function d2d_secure_rpc($request64, $version) {
   if (!d2d_check_array($exploded_arguments, $argument_checks)) {
     return xmlrpc_error(0, 'arguments failed check');
   }
-  
   $rpc_info = array(
     'instance' => $friend,
     'ip' => $_SERVER['REMOTE_ADDR'],
@@ -292,7 +290,7 @@ function d2d_secure_rpc($request64, $version) {
     'version' => d2d_get_version(),
     'method_name' => $method_name,
     'return' => $ret,
-    'callee' => $my_d2d_id,
+    'callee' => $my_instance['d2d_id'],
     'caller' => $friend['d2d_id'],
     'timestamp' => d2d_get_time(),
     'nonce' => $exploded_data['nonce'],
@@ -306,7 +304,7 @@ function d2d_secure_rpc($request64, $version) {
     return xmlrpc_error(0, 'failed encryption!');
   }
   // sign encrypted return 
-  $signed_return = d2d_sign($encrypted_return, $my_private_key, $my_d2d_id);
+  $signed_return = d2d_sign($encrypted_return, $my_instance['private_key'], $my_instance['private_key']);
   if ($signed_return === FALSE) {
     return xmlrpc_error(0, 'failed signing');
   }
