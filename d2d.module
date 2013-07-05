@@ -42,7 +42,7 @@ function d2d_id_load($id) {
  */
 function d2d_menu() {
   $items = array();
-  if (variable_get('d2d_my_id', NULL) === NULL) {
+  if (!d2d_api_initialization_is_completed()) {
     $items['admin/d2d'] = array(
       'title' => 'D2D',
       'description' => 'Establish friendship with other Drupal instances.',

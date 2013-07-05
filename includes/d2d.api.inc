@@ -777,3 +777,9 @@ function d2d_api_method_get($instance_id, $look_up_table=FALSE) {
     return $methods;
   }
 }
+
+/**
+ */
+function d2d_api_initialization_is_completed() {
+  return !is_null(d2d_api_own_d2d_id_get());
+}
