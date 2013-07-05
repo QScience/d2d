@@ -175,8 +175,8 @@ function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
 }
 
 /**
- * Creates a new instance in the database
- * 
+ * Creates a new instance in the database.
+ *
  * @param unknown_type $instance
  * @return integer The id in the database (not the d2d_id)
  */

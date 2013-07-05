@@ -124,15 +124,13 @@ function d2d_form_add_instance_validate($form, &$form_state) {
   return $okay;
 }
 function d2d_form_add_instance_submit_submit($form, &$form_state) {
-  $id = db_insert('d2d_instances')->fields(array(
-      'd2d_id' => $form_state['values']['d2d_id'],
-      'name' => $form_state['values']['name'],
-      'url' => $form_state['values']['url'],
-      'description' => $form_state['values']['description'],
-      'time_inserted' => d2d_get_time(),
-      'public_key_id' => NULL,
-    ))->execute();
-  d2d_set_default_group_memberships($id);
+  $instance = array(
+    'd2d_id' => $form_state['values']['d2d_id'],
+    'name' => $form_state['values']['name'],
+    'url' => $form_state['values']['url'],
+    'description' => $form_state['values']['description'],
+  );
+  $id = d2d_api_instance_add($instance);
   drupal_set_message(
     t(
       'Instance inserted in database. Click !link to configure it, associate a !public_key_link with it and send a friendship request.',
