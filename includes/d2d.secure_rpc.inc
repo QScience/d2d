@@ -13,7 +13,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('no public key associated with friend');
     return FALSE;
   }
-  d2d_get_self_instance($my_id, $my_d2d_id, $my_url, $my_public_key);
+  $my_instance = d2d_api_own_instance_get(TRUE);
   $my_private_key = variable_get('d2d_private_key');
   $imploded_arguments = d2d_implode($arguments);
   //$entity_a = $friend['url'];
@@ -26,7 +26,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     'method_name' => $method_name,
     'arguments' => $imploded_arguments,
     'callee' => $friend['d2d_id'],
-    'caller' => $my_d2d_id,
+    'caller' => $my_instance['d2d_id'],
     'timestamp' => d2d_get_time(),
     'nonce' => $nonce,
   );
@@ -41,7 +41,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     return FALSE;
   }
   // sign encrypted request
-  $signed_request = d2d_sign($encrypted_request, $my_private_key, $my_d2d_id);
+  $signed_request = d2d_sign($encrypted_request, $my_instance['private_key'], $my_instance['d2d_id']);
   if ($signed_request === FALSE) {
     $error_string = t('failed signing');
     return FALSE;
@@ -90,7 +90,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     return FALSE;
   }
   // finally decrypt
-  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_private_key)) {
+  if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     $error_string = t('failed decrypytion');
     return FALSE;
   }
@@ -127,9 +127,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('method_name mismatch');
     return FALSE;
   }
-  //$entity_a2 = $exploded_data['a'];
-  //$entity_b2 = $exploded_data['b'];
-  if ($exploded_data['caller'] !== $my_d2d_id) {
+  if ($exploded_data['caller'] !== $my_instance['d2d_id']) {
     $error_string = t('caller in exploded data mismatch');
     return FALSE;
   }

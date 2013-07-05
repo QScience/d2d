@@ -237,7 +237,7 @@ function d2d_set_default_group_memberships($id) {
   }
 }
 function d2d_verify_timestamp($current_time, $timestamp) {
-  return ($timestamp >= $current_time - variable_get('d2d_delta_0', D2D_DELTA_0_DEFAULT) && $timestamp <= $current_time + variable_get('d2d_delta_1', D2D_DELTA_1_DEFAULT));
+  return $timestamp >= $current_time - variable_get('d2d_delta_0', D2D_DELTA_0_DEFAULT) && $timestamp <= $current_time + variable_get('d2d_delta_1', D2D_DELTA_1_DEFAULT);
 }
 function d2d_verify_nonce($timestamp, $nonce) {
   try {
