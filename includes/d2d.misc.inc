@@ -211,14 +211,13 @@ function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
  * Include the instance with the provided ID in all groups that are marked as default.
  */
 function d2d_set_default_group_memberships($id) {
-  $result = db_query('SELECT id FROM {d2d_groups} WHERE auto_member=1');
-  $records = $result->fetchAll();
-  if (!empty($records)) {
-    db_delete('d2d_group_memberships')
-      ->condition('instance_id', $id)->execute();
+  db_delete('d2d_group_memberships')
+    ->condition('instance_id', $id)->execute();
+  $groups = d2d_api_group_get(NULL, TRUE);
+  if (!empty($groups)) {
     $query = db_insert('d2d_group_memberships')->fields(array('group_id', 'instance_id'));
-    foreach ($records as $gid) {
-      $query->values(array('group_id' => $gid->id, 'instance_id' => $id));
+    foreach ($groups as $group) {
+      $query->values(array('group_id' => $group['id'], 'instance_id' => $id));
     }
     $query->execute();
   }

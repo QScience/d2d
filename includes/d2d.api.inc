@@ -466,8 +466,11 @@ function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQU
 /**
  * Returns a group by its id resp. all groups.
  */
-function d2d_api_group_get($group_id = NULL) {
+function d2d_api_group_get($group_id = NULL, $auto_member_only = FALSE) {
   $query = db_select('d2d_groups', 'g')->fields('g');
+  if ($auto_member_only) {
+    $query = $query->condition('g.auto_member', 1);
+  }
   if (is_null($group_id)) {
     $result = $query->execute();
     $groups = array();
