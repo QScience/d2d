@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Advanced information / tables etc.
+ * Functions and forms for displaying outgoing requests.
  */
 
 /**
@@ -97,9 +97,7 @@ function d2d_show_system_tab() {
  */
 function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
-    db_delete('d2d_outgoing_requests')
-      ->condition('id', $id)
-      ->execute();
+    d2d_api_outgoing_request_delete($id);
   }
   drupal_goto('admin/d2d/system');
 }

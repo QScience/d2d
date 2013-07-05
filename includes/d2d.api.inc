@@ -782,6 +782,12 @@ function d2d_api_initialization_is_completed() {
   return !is_null(d2d_api_own_d2d_id_get());
 }
 
+/**
+ * Returns outgoing requests.
+ *
+ * If $types is an array only requests included in $types are returned.
+ * If $types is NULL all requests are returned.
+ */
 function d2d_api_outgoing_request_get($types) {
   if (is_array($types) && empty($types)) {
     return array();
@@ -794,4 +800,13 @@ function d2d_api_outgoing_request_get($types) {
   $query = $query->orderBy('o.id', 'DESC');
   $result = $query->execute();
   return $result;
+}
+
+/**
+ * Delete an outgoing request.
+ */
+function d2d_api_outgoing_request_delete($id) {
+  return db_delete('d2d_outgoing_requests')
+    ->condition('id', $id)
+    ->execute();
 }
