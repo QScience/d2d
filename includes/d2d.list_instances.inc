@@ -79,12 +79,12 @@ function d2d_form_add_instance_submit_validate($form, &$form_state) {
     form_set_error('d2d_id', t('D2D identifier not valid.'));
   }
   else {
-    if ($record = db_query('SELECT id FROM {d2d_instances} WHERE d2d_id=:d2d_id', array(':d2d_id' => $form_state['values']['d2d_id']))->fetchAssoc()) {
+    if ($instance = d2d_api_instance_get($form_state['values']['d2d_id'])) {
       form_set_error(
         'd2d_id',
         t(
           'Instance with provided D2D identifier already exists in database, click !link to edit that instance.',
-          array('!link' => l(t('here'), 'admin/d2d/instances/' . $record['id'] . '/details'))
+          array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/details'))
         )
       );
     }
