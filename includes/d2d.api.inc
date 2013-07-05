@@ -378,6 +378,25 @@ function d2d_api_instance_update($instance_id, $fields) {
   return $num_updated;
 }
 
+/**
+ * Returns TRUE iff there is an instance without a public key.
+ */
+function d2d_api_instance_without_public_key_exists() {
+  $query = db_select('d2d_instances', 'i');
+  $query->leftJoin('d2d_public_keys', 'k', 'i.public_key_id = k.id');
+  $query->isNull('public_key');
+  $query->fields('i');
+  $result = $query->execute()->fetchObject();
+  return !empty($result);
+  /*
+  $result = db_query('SELECT EXISTS(SELECT 1 FROM (SELECT p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id) t WHERE t.public_key IS NULL) ex');
+  if ($row = $result->fetchAssoc()) {
+    return $row['ex'] != 0;
+  }
+  return FALSE;
+  */
+}
+
 ///////////
 // FRIENDS
 ///////////

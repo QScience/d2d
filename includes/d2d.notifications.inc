@@ -10,13 +10,12 @@
  * Notify about instance being offline etc.
  */
 function d2d_notify($exclude=array()) {
-  d2d_instance_without_public_key();
   if (!in_array('offline', $exclude) && !d2d_is_online()) {
     drupal_set_message(t('D2D is currently in offline mode. In offline mode, no signed / encrypted queries will be sent and no queries are being answered. Click !link to change the settings.', array('!link' => l(t('here'), 'admin/d2d/settings/advanced'))), 'warning', FALSE);
   }
   if (!in_array('public_key', $exclude)) {
     $message = t('At least one instance in the database has no public key. Click !link to show an overview of all instances.', array('!link' => l(t('here'), 'admin/d2d')));
-    if (d2d_instance_without_public_key()) {
+    if (d2d_api_instance_without_public_key_exists()) {
       drupal_set_message($message, 'warning', FALSE);
     }
     elseif (isset($_SESSION['messages']['warning']) && (FALSE !== ($key = array_search($message, $_SESSION['messages']['warning'])))) {
@@ -39,18 +38,6 @@ function d2d_notify($exclude=array()) {
   }
 }
 
-/**
- * Returns TRUE iff there is an instance without a public key.
- *
- * TODO: improve the query
- */
-function d2d_instance_without_public_key() {
-  $result = db_query('SELECT EXISTS(SELECT 1 FROM (SELECT p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id) t WHERE t.public_key IS NULL) ex');
-  if ($row = $result->fetchAssoc()) {
-    return $row['ex'] != 0;
-  }
-  return FALSE;
-}
 /**
  * Implements hook_d2d_handle_notification().
  */
