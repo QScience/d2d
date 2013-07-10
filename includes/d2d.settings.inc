@@ -82,7 +82,7 @@ function d2d_form_settings_general_validate($form, &$form_state) {
   }
   $delta1 = $form_state['values']['delta1'];
   if (!d2d_check_convert_int($delta1)) {
-    form_set_error('delta1', t('Incoming requests lower bound must be an integer.'));
+    form_set_error('delta1', t('Incoming requests upper bound must be an integer.'));
   }
   elseif ($delta1 < D2D_DELTA_1_MIN|| $delta1 > D2D_DELTA_1_MAX) {
     form_set_error('delta1', t('Incoming requests upper bound must be between @min and @max.', array('@min' => D2D_DELTA_1_MIN, '@max' => D2D_DELTA_1_MAX)));

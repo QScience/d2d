@@ -1057,7 +1057,7 @@ function d2d_patterns_validate($action, $tag, &$data) {
      
       if (isset($data['delta1'])) {
         if (!d2d_check_convert_int($data['delta1'])) {
-          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests lower bound must be an integer.'));
+          $result[] = array(PATTERNS_WARNING_TYPE_ERROR => t('Incoming requests upper bound must be an integer.'));
         }
         elseif ($data['delta1'] < D2D_DELTA_1_MIN|| $data['delta1'] > D2D_DELTA_1_MAX) {
           $result[] = array(PATTERNS_WARNING_OUT_OF_RANGE_ELEMENT =>
