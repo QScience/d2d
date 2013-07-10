@@ -166,7 +166,6 @@ class D2DStaticTestCase extends DrupalWebTestCase {
       }
 
       // d2d_encrypt
-      $this->assertFalse(d2d_encrypt('', $encrypted_data, $public_key));
       $this->assertTrue(d2d_encrypt($data, $encrypted_data, $public_key));
       // d2d_decrypt
       $this->assertTrue(d2d_decrypt($encrypted_data, $decrypted_data, $private_key));
