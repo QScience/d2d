@@ -398,7 +398,7 @@ function d2d_patterns_add_instance($form_id, &$form_state) {
 }
 
 function d2d_patterns_edit_instance($form_id, &$form_state) {
-  $i= $form_state['values'];
+  $i = $form_state['values'];
   $update = array();
   if (isset($i['d2d_id'])) $update['d2d_id'] = $i['d2d_id'];
   if (isset($i['name'])) $update['name'] = $i['name'];
@@ -406,14 +406,18 @@ function d2d_patterns_edit_instance($form_id, &$form_state) {
   if (isset($i['url'])) $update['url'] = $i['url'];
   
   if (empty($i['id'])) { // falsy
-    return patterns_results(PATTERNS_ERR, t('A an error occurred, could not update intance'));
+    return patterns_results(PATTERNS_ERR, t('A an error occurred, could not update instance'));
   }
   
-  $id = d2d_api_instance_update($i['id'], $update);
+  $numup = d2d_api_instance_update($i['id'], $update);
 
+  if ($numup != 1) {
+    return patterns_results(PATTERNS_ERR, t('A an error occurred, while updating the instance. Please verify the database.'));
+  }
+  
   if (isset($i['public_key'])) {
-    $id_pk = _d2d_patterns_insert_public_key($id, $i['public_key']);
-    d2d_api_public_key_select($id, $id_pk);
+    $id_pk = _d2d_patterns_insert_public_key($i['id'], $i['public_key']);
+    d2d_api_public_key_select($i['id'], $id_pk);
   }
   return patterns_results();  
 }
