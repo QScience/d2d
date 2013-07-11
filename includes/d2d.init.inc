@@ -103,7 +103,7 @@ function d2d_form_init_submit($form, &$form_state) {
   // add own instance to database
   $instance = array(
     'name' => $form_state['values']['name'],
-    'url' => $GLOBALS['base_url'] . '/xmlrpc.php',
+    'url' => $form_state['values']['address'],
     'd2d_id' => $my_d2d_id,
     'description' => 'this instance.',
   );
