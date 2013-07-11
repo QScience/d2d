@@ -453,7 +453,7 @@ function _d2d_patterns_fix_imported_key($key) {
   }
   
   $key = d2d_strip_comments_from_key($key);
-  // replace whitespace characters with a single space
+  // remove whitespace characters
   $key = preg_replace('/\s+/', '', $key);
   
   if (!is_null($type)) {
@@ -504,7 +504,7 @@ function d2d_patterns_export_all_public_keys($args = NULL, &$result = NULL) {
 }
 
 function d2d_patterns_export_all_selected_keys($args = NULL, &$result = NULL) {
-  $$action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
+  $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
 	return _d2d_patterns_export_public_keys($action_type, TRUE);
 }
 
