@@ -5,6 +5,7 @@
  */
 
 /**
+ * Send request form.
  */
 function d2d_form_send_requests() {
   $form = array();
@@ -16,6 +17,7 @@ function d2d_form_send_requests() {
 }
 
 /**
+ * Submit handler for d2d_form_send_requests().
  */
 function d2d_form_send_requests_submit($form, &$form_state) {
   d2d_remove_outdated_outgoing_requests();
@@ -51,7 +53,18 @@ function d2d_built_outgoing_requests_table($types) {
         if (!array_key_exists($record->receiver_id, $persistent_state[$record->type])) {
           $persistent_state[$record->type][$record->receiver_id] = NULL;
         }
-        $description = call_user_func_array($hook['callback_describe'], array($arguments, $record->time_insert, $record->time_next_send, $record->time_invalid, $record->max_send_trials, $instances[$record->receiver_id], &$persistent_state[$record->type][$record->receiver_id]));
+        $description = call_user_func_array(
+          $hook['callback_describe'],
+          array(
+            $arguments,
+            $record->time_insert,
+            $record->time_next_send,
+            $record->time_invalid,
+            $record->max_send_trials,
+            $instances[$record->receiver_id],
+            &$persistent_state[$record->type][$record->receiver_id],
+          )
+        );
       }
     }
     $receiver = l($instances[$record->receiver_id]['d2d_id'], 'admin/d2d/instances/' . $record->receiver_id . '/details');
@@ -72,7 +85,19 @@ function d2d_built_outgoing_requests_table($types) {
   }
   $table = array(
     '#theme' => 'table',
-    '#header' => array('ID', 'Receiver', 'Type', 'Description', 'Time Inserted', 'Time Next Send', 'Time Invalid', '#Resend', 'PK', 'Op', 'Op'),
+    '#header' => array(
+      'ID',
+      'Receiver',
+      'Type',
+      'Description',
+      'Time Inserted',
+      'Time Next Send',
+      'Time Invalid',
+      '#Resend',
+      'PK',
+      'Op',
+      'Op',
+    ),
     '#rows' => $rows,
     '#empty' => t('No outgoing requests found.'),
   );
@@ -80,6 +105,7 @@ function d2d_built_outgoing_requests_table($types) {
 }
 
 /**
+ * System tab.
  */
 function d2d_show_system_tab() {
   d2d_notify();
@@ -94,6 +120,7 @@ function d2d_show_system_tab() {
 }
 
 /**
+ * Deletes outgoing request.
  */
 function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -103,6 +130,7 @@ function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
 }
 
 /**
+ * Sends outgoing request.
  */
 function d2d_outgoing_requests_send_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
