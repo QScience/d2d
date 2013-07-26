@@ -209,6 +209,6 @@ function d2d_form_settings_keys_generate_validate($form, &$form_state) {
   }
   $form_state['complete form']['public_key']['#value'] = $public_key;
   $form_state['complete form']['private_key']['#value'] = $private_key;
-  form_set_error(''); // TODO: this is basically a hack
-  drupal_set_message(t('Public / private key pair has been generated. Click \'Save\' to proceed with that pair.'));
+  form_set_error(''); // TODO: this is basically a hack.
+  drupal_set_message(t('Public / private key pair has been generated. Click "Save" to proceed with that pair.'));
 }
