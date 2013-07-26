@@ -5,24 +5,24 @@
  * A module to built a network of Drupal instances.
  */
 
-drupal_load_include('inc','d2d','includes/d2d.constants');
-drupal_load_include('inc','d2d','includes/d2d.crypto');
-drupal_load_include('inc','d2d','includes/d2d.api');
-drupal_load_include('inc','d2d','includes/d2d.misc');
-drupal_load_include('inc','d2d','includes/d2d.notifications');
-drupal_load_include('inc','d2d','includes/d2d.settings');
-drupal_load_include('inc','d2d','includes/d2d.util');
-drupal_load_include('inc','d2d','includes/d2d.init');
-drupal_load_include('inc','d2d','includes/d2d.list_instances');
-drupal_load_include('inc','d2d','includes/d2d.rpc');
-drupal_load_include('inc','d2d','includes/d2d.edit_instance');
-drupal_load_include('inc','d2d','includes/d2d.manage_groups');
-drupal_load_include('inc','d2d','includes/d2d.edit_group');
-drupal_load_include('inc','d2d','includes/d2d.srpc');
-drupal_load_include('inc','d2d','includes/d2d.secure_rpc');
-drupal_load_include('inc','d2d','includes/d2d.system');
-drupal_load_include('inc','d2d','includes/d2d.requests');
-drupal_load_include('inc','d2d','includes/d2d.friendship');
+module_load_include('inc','d2d','includes/d2d.constants');
+module_load_include('inc','d2d','includes/d2d.crypto');
+module_load_include('inc','d2d','includes/d2d.api');
+module_load_include('inc','d2d','includes/d2d.misc');
+module_load_include('inc','d2d','includes/d2d.notifications');
+module_load_include('inc','d2d','includes/d2d.settings');
+module_load_include('inc','d2d','includes/d2d.util');
+module_load_include('inc','d2d','includes/d2d.init');
+module_load_include('inc','d2d','includes/d2d.list_instances');
+module_load_include('inc','d2d','includes/d2d.rpc');
+module_load_include('inc','d2d','includes/d2d.edit_instance');
+module_load_include('inc','d2d','includes/d2d.manage_groups');
+module_load_include('inc','d2d','includes/d2d.edit_group');
+module_load_include('inc','d2d','includes/d2d.srpc');
+module_load_include('inc','d2d','includes/d2d.secure_rpc');
+module_load_include('inc','d2d','includes/d2d.system');
+module_load_include('inc','d2d','includes/d2d.requests');
+module_load_include('inc','d2d','includes/d2d.friendship');
 
 class D2DRemoteException extends Exception { }
 
