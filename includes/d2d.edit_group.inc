@@ -40,7 +40,7 @@ function d2d_form_edit_group($form, &$form_state, $id, $name, $description, $def
     '#value' => $id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Save group',
   );
   return $form;
@@ -61,7 +61,7 @@ function d2d_form_edit_group_validate($form, &$form_state) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters.', array('@max_length' => D2D_GROUP_DESCRIPTION_MAX_LENGTH)));
   }
 }
- 
+
 /**
  * Process edit group form.
  */
@@ -91,7 +91,12 @@ function d2d_edit_group($id) {
     '#type' => 'fieldset',
   );
   $form_state = array();
-  $form_state['build_info']['args'] = array($id, $group['name'], $group['description'], $group['auto_member']);
+  $form_state['build_info']['args'] = array(
+    $id,
+    $group['name'],
+    $group['description'],
+    $group['auto_member'],
+  );
   $build['main']['details'] = drupal_build_form('d2d_form_edit_group', $form_state);
   return $build;
 }
