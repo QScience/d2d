@@ -2,6 +2,5 @@ name = D2D Example
 description = "Example module for D2D"
 package = D2D
 core = 7.x
-files[] = d2d_example.module
-files[] = d2d_example.install
+
 dependencies[] = d2d

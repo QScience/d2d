@@ -29,10 +29,10 @@ function d2d_notify($exclude=array()) {
     $n_unread = d2d_api_notification_count_unread();
     if ($n_unread > 0) {
       if ($n_unread == 1) {
-        drupal_set_message(t('You have @count unread notification. Click !link to read it.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
+        drupal_set_message(t('You have @count unread notification. Click @link to read it.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
       }
       else {
-        drupal_set_message(t('You have @count unread notifications. Click !link to read them.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
+        drupal_set_message(t('You have @count unread notifications. Click @link to read them.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
       }
     }
   }
@@ -174,7 +174,7 @@ function d2d_show_notification_details($id) {
     $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
     $arguments = d2d_explode($notification['content']);
     if (!d2d_check_array($arguments, $argument_checks)) {
-      drupal_set_message('Notification erroneous', 'error');
+      drupal_set_message(t('Notification erroneous'), 'error');
       drupal_goto('admin/d2d/notifications');
     }
     $attributes = array(

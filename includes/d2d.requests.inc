@@ -449,7 +449,7 @@ function d2d_secure_request($request64, $version) {
       return xmlrpc_error(0, 'callback did not return proper return value');
     }
   }
-  else if (!is_null($request_return)) {
+  elseif (!is_null($request_return)) {
     $argument_checks = (array_key_exists('arguments_return', $hk) ? $hk['arguments_return'] : array());
     if (!d2d_check_array($request_return, $argument_checks)) {
       return xmlrpc_error(0, 'callback did not return proper return value');

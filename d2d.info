@@ -4,6 +4,5 @@ package = D2D
 core = 7.x
 php = 5.3
 
-files[] = d2d.module
 files[] = tests/d2d.test
 files[] = tests/static.test

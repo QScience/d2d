@@ -20,7 +20,7 @@ function d2d_forms_select_friends(&$form = array(), $value = 'd2d_id', $display 
   $friends = d2d_api_friend_get();
   
   $options = array();
-  foreach($friends as $f) {
+  foreach ($friends as $f) {
     $options[$f[$value]] = $f[$display];
   }
   

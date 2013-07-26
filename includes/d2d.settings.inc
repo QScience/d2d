@@ -181,7 +181,7 @@ function d2d_form_settings_keys() {
   if (d2d_is_online()) {
     $form['submit']['#disabled'] = TRUE;
     $form['generate_keys']['#disabled'] = TRUE;
-    drupal_set_message(t('You must be in !link to change the public / private key pair.', array('!link' => l('offline mode', 'admin/d2d/settings/advanced'))), 'warning');
+    drupal_set_message(t('You must be in !link to change the public / private key pair.', array('!link' => l(t('offline mode'), 'admin/d2d/settings/advanced'))), 'warning');
   }
   return $form;
 }
