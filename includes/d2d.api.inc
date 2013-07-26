@@ -4,10 +4,7 @@
  * Database related functions.
  */
 
-//////////////
-// PUBLIC KEY
-//////////////
-
+// PUBLIC KEYS.
 /**
  * Selects public key of an instance.
  */
@@ -29,20 +26,20 @@ function d2d_api_public_key_unselect($instance_id) {
 /**
  * Updates the row of the {d2d_public_keys} table with the given id.
  *
- * @return integer The number of updated rows (Should be 1 for a successfull operation)
+ * @return int
+ *   The number of updated rows (Should be 1 for a successfull operation)
  */
 function d2d_api_public_key_update($id, $update) {
   $num_updated = db_update('d2d_public_keys')
     ->fields($update)
     ->condition('id', $id)
     ->execute();
- 
+
   return $num_updated;
 }
 
 /**
  * Removes a public key from the database.
- * 
  */
 function d2d_api_public_key_delete($id) {
   $num_deleted = db_delete('d2d_public_keys')
@@ -54,9 +51,13 @@ function d2d_api_public_key_delete($id) {
 /**
  * Insert a new row in the {d2d_public_keys} table.
  *
- * @param number $instance_id The database id of the instance
- * @param string $public_key The public key in plain text
- * @return integer The id of the newly inserted row
+ * @param number $instance_id
+ *   The database id of the instance
+ * @param string $public_key
+ *   The public key in plain text
+ *
+ * @return int
+ *   The id of the newly inserted row
  */
 function d2d_api_public_key_set($instance_id, $public_key) {
   $id_pk = db_insert('d2d_public_keys')->fields(array(
@@ -68,26 +69,26 @@ function d2d_api_public_key_set($instance_id, $public_key) {
 
 
 /**
- * Returns a query object that joins that d2d_public_keys 
- * and d2d_instances tables.
+ * Returns a query object that joins d2d_public_keys and d2d_instances tables.
  *
  * This function should not be called directly.
  */
 function _d2d_api_public_key_get_join_query() {
   $query = db_select('d2d_public_keys', 'k');
-  
+
   $query->join('d2d_instances', 'i', 'i.id = k.instance_id');
   $query
   ->fields('i', array('d2d_id'))
   ->fields('k', array('id', 'instance_id', 'public_key'));
-  
+
   return $query;
 }
 
 /**
  * Retrieves currently selected public key objects from the database.
  *
- * @return array|stdClass The result set
+ * @return array|stdClass
+ *   The result set
  */
 function d2d_api_public_key_get_selected() {
   $query = _d2d_api_public_key_get_join_query();
@@ -100,18 +101,17 @@ function d2d_api_public_key_get_selected() {
  * If the d2d_id parameter is specified, it returns only the keys
  * for the instance with the given d2d_id.
  *
- * @param string $d2d_id Restricts the result set to keys 
- *   belonging to this instance
- * @return array|stdClass The result set
+ * @param string $d2d_id
+ *   Restricts the result set to keys belonging to this instance
+ *
+ * @return array|stdClass
+ *   The result set
  */
 function d2d_api_public_key_get($d2d_id = NULL) {
-
   $query = _d2d_api_public_key_get_join_query();
-  
   if (!is_null($d2d_id)) {
     $query->condition('i.d2d_id', $d2d_id);
   }
-
   return $query->execute()->FetchAll();
 }
 
@@ -119,28 +119,34 @@ function d2d_api_public_key_get($d2d_id = NULL) {
 /**
  * Retrieves the public key with the given id.
  *
- * @param integer $id The id of the public key
- * @return stdClass The public key object as fetched from the database
+ * @param int $id
+ *   The id of the public key
+ *
+ * @return stdClass
+ *   The public key object as fetched from the database
  */
 function d2d_api_public_key_get_by_id($id) {
-
   $query = db_select('d2d_public_keys', 'k')
               ->fields('k')
               ->condition('k.id', $id);
-
   return $query->execute()->FetchObject();
 }
 
 
 /**
- * Retrieves the numeric id of a public key identified
- * by the pair d2d_id and public key plain text.
+ * Retrieves the numeric id of a public key.
  *
- * @param string $d2d_id The d2d id of an instance in the database
- * @param string $public_key The plain text public key
- * @return boolean|integer The public key id, or FALSE if an error occurs
+ * Public key is identified by the pair d2d_id and public key plain text.
  *
- * @see d2d_public_key_equal
+ * @param string $d2d_id
+ *   The d2d id of an instance in the database
+ * @param string $public_key
+ *   The plain text public key
+ *
+ * @return boolean|integer
+ *   The public key id, or FALSE if an error occurs
+ *
+ * @see d2d_public_key_equal()
  */
 function d2d_api_public_key_return_id($d2d_id, $public_key) {
   $keys = d2d_api_public_key_get($d2d_id);
@@ -152,45 +158,43 @@ function d2d_api_public_key_return_id($d2d_id, $public_key) {
   return FALSE;
 }
 
-
+/**
+ * Checks if specified public key for an instance already exists.
+ */
 function d2d_api_public_key_exist($d2d_id, $public_key) {
   return d2d_api_public_key_return_id($d2d_id, $public_key) !== FALSE;
 }
 
-//////////////
-// INSTANCE
-//////////////
-
+// INSTANCES.
 /**
  * Removes instance and all associated entries from the database.
- *
  */
-function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
+function d2d_api_instance_delete($instance_id, $notify = FALSE, $verbose = FALSE) {
   $instance = d2d_api_instance_get_by_id($instance_id);
-  // remove friendship
+  // Remove friendship.
   d2d_api_friendship_update($instance_id, 0);
   $return = $notify ? d2d_api_friendship_send($instance_id, TRUE, 1, $verbose) : NULL;
-  // remove group memberships
+  // Remove group memberships.
   db_delete('d2d_group_memberships')
   ->condition('instance_id', $instance_id)
   ->execute();
-  // remove public keys associated with this instance
+  // Remove public keys associated with this instance.
   db_delete('d2d_public_keys')
   ->condition('instance_id', $instance_id)
   ->execute();
-  // remove incoming requests
+  // Remove incoming requests.
   db_delete('d2d_incoming_requests')
   ->condition('sender_d2d_id', $instance['d2d_id'])
   ->execute();
-  // remove outgoing requests
+  // Remove outgoing requests.
   db_delete('d2d_outgoing_requests')
   ->condition('receiver_id', $instance_id)
   ->execute();
-  // remove instance
+  // Remove instance.
   db_delete('d2d_instances')
   ->condition('id', $instance_id)
   ->execute();
-  // call hook
+  // Call hook.
   module_invoke_all('d2d_instance_removed', $instance);
   return $return;
 }
@@ -198,8 +202,11 @@ function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
 /**
  * Creates a new instance in the database.
  *
- * @param unknown_type $instance
- * @return integer The id in the database (not the d2d_id)
+ * @param array $instance
+ *   Associative array describing the instance to be inserted into the db.
+ *
+ * @return int
+ *   The id in the database (not the d2d_id)
  */
 function d2d_api_instance_add($instance, $set_default_group_membership = TRUE) {
   $id = db_insert('d2d_instances')->fields(array(
@@ -216,18 +223,19 @@ function d2d_api_instance_add($instance, $set_default_group_membership = TRUE) {
   return $id;
 }
 
-/////////////////
-// OWN PUBLIC KEY
-/////////////////
+// OWN PUBLIC KEY.
 /**
  * Retrieves own public key (plain text).
  *
- * @return string The public key
+ * @return string
+ *   The public key
  */
 function d2d_api_own_public_key_get() {
   $my_d2d_id = d2d_api_own_d2d_id_get();
   $key = d2d_api_public_key_get($my_d2d_id);
-  return empty($key) ? NULL : $key[0]->public_key;  // TODO: this is correct if at most one candidate key for own instance exists, would be buggy if you mess around and this invariant does not hold
+  // TODO: this is correct if at most one candidate key for own instance
+  // exists, would be buggy if you mess around and this invariant does not hold.
+  return empty($key) ? NULL : $key[0]->public_key;
 }
 
 /**
@@ -235,28 +243,28 @@ function d2d_api_own_public_key_get() {
  *
  * Delete all others public keys associated with own instance.
  *
- * @param string The public key plain text
- * @return integer The public key id
+ * @param string $public_key
+ *   The public key plain text
+ *
+ * @return int
+ *   The public key id
  */
 function d2d_api_own_public_key_set($public_key) {
   $id = d2d_api_own_instance_id_get();
   $id_pk = d2d_api_public_key_set($id, $public_key);
   d2d_api_instance_update($id, array(
       'public_key_id' => $id_pk,
-  )); 
+  ));
 
   db_delete('d2d_public_keys')
     ->condition('id', $id_pk, '<>')
     ->condition('instance_id', $id)
     ->execute();
-  
+
   return $id_pk;
 }
 
-///////////////////
-// OWN PRIVATE KEY
-///////////////////
-
+// OWN PRIVATE KEY.
 /**
  * Returns own instance private key.
  */
@@ -280,10 +288,7 @@ function d2d_api_own_private_key_delete() {
   variable_del('d2d_private_key');
 }
 
-//////////////
-// OWN D2D_ID
-//////////////
-
+// OWN D2D_ID.
 /**
  * Returns own instance d2d_id.
  */
@@ -295,25 +300,21 @@ function d2d_api_own_d2d_id_get() {
  * Sets own instance d2d_id.
  *
  * When this is used, the own_instance_id should probably be updated too.
- *
  */
-function d2d_api_own_d2d_id_set($d2d_id) {  
+function d2d_api_own_d2d_id_set($d2d_id) {
   variable_set('d2d_my_id', $d2d_id);
 }
 
 /**
  * Deletes own instance d2d_id.
  *
- * Notice: this just deletes a reference in the table variable
+ * Note: this just deletes a reference in the table variable
  */
-function d2d_api_own_d2d_id_delete() {  
+function d2d_api_own_d2d_id_delete() {
   variable_del('d2d_my_id');
 }
 
-///////////////////
-// OWN INSTANCE_ID
-///////////////////
-
+// OWN INSTANCE_ID.
 /**
  * Returns own instance database id.
  */
@@ -325,7 +326,6 @@ function d2d_api_own_instance_id_get() {
  * Sets own instance database id.
  *
  * When this is used, the own_instance_d2d_id should probably be updated too.
- *
  */
 function d2d_api_own_instance_id_set($id) {
   variable_set('d2d_my_instance_id', $id);
@@ -341,17 +341,14 @@ function d2d_api_own_instance_id_delete() {
 }
 
 
-/////////////////
-// OWN INSTANCE
-///////////////
-
+// OWN INSTANCE.
 /**
- *Deletes own instance from database.
+ * Deletes own instance from database.
  *
  * This should only be called only in offline mode.
  */
 function d2d_api_own_instance_delete() {
-  $myid = d2d_api_own_instance_id_get();  
+  $myid = d2d_api_own_instance_id_get();
   if (is_null($myid)) {
     return FALSE;
   }
@@ -359,15 +356,16 @@ function d2d_api_own_instance_delete() {
   d2d_api_own_private_key_delete();
   d2d_api_own_instance_id_delete();
   d2d_api_own_d2d_id_delete();
-  menu_rebuild(); // clear cache
+  menu_rebuild();
   return TRUE;
 }
 
 /**
  * Returns an associative array with data about own instance.
  *
- * @param bool $private_ley Optional. TRUE, if you want to include the private
- *   key in the associative array
+ * @param bool $private_key
+ *   Optional. TRUE, if you want to include the private key in the associative
+ *   array
  */
 function d2d_api_own_instance_get($private_key = FALSE) {
   $id = d2d_api_own_instance_id_get();
@@ -378,17 +376,15 @@ function d2d_api_own_instance_get($private_key = FALSE) {
   return $own;
 }
 
-//////////////
-// INSTANCE
-//////////////
-
+// INSTANCES.
 /**
  * Low level primitive to load one or more instances from the database.
  *
- * @param integer $id Optional. If set load just the instance with this id
- * @param bool $id_as_d2d_id. If TRUE, treats the id as a d2d_id, and returns
- *   an associative array of instances with the d2d_id as identifier. Defaults, 
- *   FALSE
+ * @param int $id
+ *   Optional. If set load just the instance with this id
+ * @param bool $id_as_d2d_id
+ *   If TRUE, treats the id as a d2d_id, and returns an associative array of
+ *   instances with the d2d_id as identifier.
  */
 function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
 
@@ -397,14 +393,14 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
   $query
     ->fields('k', array('public_key'))
     ->fields('i');
-  // Returns only one instance
+  // Returns only one instance.
   if (!is_null($id)) {
     $query->condition($id_as_d2d_id ? 'i.d2d_id' : 'i.id', $id);
     $result = $query->execute();
     $instance = $result->fetchAssoc();
     if (empty($instance)) {
       return FALSE;
-    } 
+    }
     _d2d_decorate_instance_array($instance);
     return $instance;
   }
@@ -420,8 +416,11 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
  * If an id is set, only the instance with d2d_id equal to id
  * is returned.
  *
- * @param integer $id Optional. The d2d_id of the instance
- * @return array|boolean The list of instances
+ * @param int $d2d_id
+ *   Optional. The d2d_id of the instance
+ *
+ * @return array|boolean
+ *   The list of instances
  */
 function d2d_api_instance_get($d2d_id = NULL) {
   return _d2d_api_instance_get($d2d_id, TRUE);
@@ -434,9 +433,12 @@ function d2d_api_instance_get($d2d_id = NULL) {
  *
  * If an id is set, only the instance with database id equal to id
  * is returned.
- * 
- * @param integer $id Optional. The id of the instance
- * @return array|boolean The list of instances
+ *
+ * @param int $id
+ *   Optional. The id of the instance
+ *
+ * @return array|boolean
+ *   The list of instances
  */
 function d2d_api_instance_get_by_id($id = NULL) {
   return _d2d_api_instance_get($id, FALSE);
@@ -445,9 +447,13 @@ function d2d_api_instance_get_by_id($id = NULL) {
 /**
  * Updates fields of an instance.
  *
- * @param integer $id The id of the instance
- * @param array Associative array containing the updated values
- * @return integer The number of instances modified (should be 1, if 
+ * @param int $instance_id
+ *   The id of the instance
+ * @param array $fields
+ *   Associative array containing the updated values
+ *
+ * @return int
+ *   The number of instances modified (should be 1, if
  *   operation is successful)
  */
 function d2d_api_instance_update($instance_id, $fields) {
@@ -460,7 +466,6 @@ function d2d_api_instance_update($instance_id, $fields) {
 
 /**
  * Returns TRUE if there is an instance without a public key.
- *
  */
 function d2d_api_instance_without_public_key_exists() {
   $query = db_select('d2d_instances', 'i');
@@ -469,25 +474,20 @@ function d2d_api_instance_without_public_key_exists() {
   $query->fields('i');
   $result = $query->execute()->fetchObject();
   return !empty($result);
-//   $result = db_query('SELECT EXISTS(SELECT 1 FROM (SELECT p.public_key as public_key FROM {d2d_instances} i LEFT OUTER JOIN {d2d_public_keys} p ON i.public_key_id = p.id) t WHERE t.public_key IS NULL) ex');
-//   if ($row = $result->fetchAssoc()) {
-//     return $row['ex'] != 0;
-//   }
-//   return FALSE;
 }
 
-///////////
-// FRIENDS
-///////////
-
+// FRIENDS.
 /**
  * Low level api to load all the friend instances from the database.
  *
- * @param bool  $d2d_id If TRUE, returns an associative array of instances 
- *   with the d2d_id as identifier.    
- * @return array $friends Associative array of friend instances
+ * @param bool $d2d_id
+ *   If TRUE, returns an associative array of instances
+ *   with the d2d_id as identifier.
  *
- * @see _d2d_process_result_set_instance
+ * @return array
+ *   Associative array of friend instances
+ *
+ * @see _d2d_process_result_set_instance()
  */
 function _d2d_api_friend_get($d2d_id) {
 
@@ -497,20 +497,21 @@ function _d2d_api_friend_get($d2d_id) {
             ->fields('i')
             ->fields('k', array('public_key'))
             ->condition('i.friendship_state', 3);
-   
+
   $result = $query->execute();
   $friends = _d2d_process_result_set_instance($result, $d2d_id);
-  
+
   return $friends;
 }
 
 /**
  * Returns all the friend instances from the database.
  *
- * @return array $friends Associative array of friend instances, with 
- *   the d2d_id of the instances used as identifier.
+ * @return array
+ *   Associative array of friend instances, with the d2d-id of the instances
+ *   used as identifier.
  *
- * @see _d2d_api_friend_get
+ * @see _d2d_api_friend_get()
  */
 function d2d_api_friend_get() {
   return _d2d_api_friend_get(TRUE);
@@ -519,10 +520,11 @@ function d2d_api_friend_get() {
 /**
  * Returns all the friend instances from the database.
  *
- * @return array $friends Associative array of friend instances, with
- *   the database id of the instances used as identifier.
+ * @return array
+ *   Associative array of friend instances, with the database id of ther
+ *   instances used as identifier.
  *
- * @see _d2d_api_friend_get
+ * @see _d2d_api_friend_get()
  */
 function d2d_api_friend_get_by_id() {
   return _d2d_api_friend_get(FALSE);
@@ -531,10 +533,10 @@ function d2d_api_friend_get_by_id() {
 /**
  * Returns the friend instance with the specified url.
  *
- * @return array $friend The requested friend instances, or FALSE
- *   if none is found.
+ * @return array
+ *   The requested friend instances, or FALSE if none is found.
  *
- * @see _d2d_api_friend_get
+ * @see _d2d_api_friend_get()
  */
 function d2d_api_friend_get_by_url($url) {
   $friends = d2d_api_friend_get();
@@ -546,28 +548,23 @@ function d2d_api_friend_get_by_url($url) {
   return FALSE;
 }
 
-//////////////
-// FRIENDSHIP
-//////////////
-
+// FRIENDSHIP.
 /**
  * Update state of friendship.
- * 
  */
-function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state=NULL, $sender_id=NULL) {
+function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state = NULL, $sender_id = NULL) {
   db_update('d2d_instances')
     ->fields(array('friendship_state' => $friendship_state))
     ->condition('id', $friend_id)
     ->execute();
-  // call hook
+  // Call hook.
   module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state, $old_friendship_state, $sender_id);
 }
 
 /**
  * Sends out a friendship request.
- *
  */
-function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose=FALSE) {
+function d2d_api_friendship_send($id, $send_now, $max_number_of_resends = D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose = FALSE) {
   $request_id = d2d_add_request($id, 'd2d_friendship', array(), $max_number_of_resends, TRUE);
   if ($send_now) {
     return d2d_send_outgoing_requests(array($request_id), $verbose);
@@ -577,13 +574,9 @@ function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQU
   }
 }
 
-/////////
-// GROUP
-////////
-
+// GROUPS.
 /**
- * Returns the group with the specified id. 
- *
+ * Returns the group with the specified id.
  */
 function d2d_api_group_get($group_id = NULL, $auto_member_only = FALSE) {
   $query = db_select('d2d_groups', 'g')->fields('g');
@@ -624,7 +617,6 @@ function d2d_api_group_get_by_name($group_name) {
 
 /**
  * Removes the groups with specified id.
- *
  */
 function d2d_api_group_delete($group_ids) {
   if (empty($group_ids)) {
@@ -637,18 +629,18 @@ function d2d_api_group_delete($group_ids) {
   }
 }
 
-
 /**
  * Creates a new group.
  */
 function d2d_api_group_add($name, $description, $auto_member) {
   try {
     $id = db_insert('d2d_groups')->fields(
-        array(
-            'name' => $name,
-            'description' => $description,
-            'auto_member' => $auto_member ? 1 : 0,
-        ))->execute();
+      array(
+        'name' => $name,
+        'description' => $description,
+        'auto_member' => $auto_member ? 1 : 0,
+      )
+    )->execute();
     return $id;
   }
   catch (Exception $e) {
@@ -670,10 +662,7 @@ function d2d_api_group_update($id, $name, $description, $auto_member) {
   ->execute();
 }
 
-////////////////////
-// GROUP MEMBERSHIP
-///////////////////
-
+// GROUP MEMBERSHIP.
 /**
  * Returns all groups with a flag indicating group membership of given instance.
  */
@@ -686,11 +675,11 @@ function d2d_api_group_membership_get($instance_id) {
   $groups = array();
   foreach ($result as $record) {
     $groups[$record->id] = array(
-        'id' => $record->id,
-        'name' => $record->name,
-        'description' => $record->description,
-        'auto_member' => $record->auto_member,
-        'is_member' => !is_null($record->group_id),
+      'id' => $record->id,
+      'name' => $record->name,
+      'description' => $record->description,
+      'auto_member' => $record->auto_member,
+      'is_member' => !is_null($record->group_id),
     );
   }
   return $groups;
@@ -712,25 +701,21 @@ function d2d_api_group_membership_delete($group_ids) {
 
 /**
  * Updates group memberships for the instance with given database id.
- *
  */
 function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
   db_delete('d2d_group_memberships')
   ->condition('instance_id', $instance_id)->execute();
-
   if (!empty($group_ids)) {
     d2d_api_group_membership_add($instance_id, $group_ids);
   }
   else {
-    // call hook
+    // Call hook.
     module_invoke_all('d2d_group_membership', $instance_id, $group_ids);
   }
 }
 
 /**
  * Adds group memberships for the instance with given database id.
- * @param unknown_type $instance_id
- * @param unknown_type $group_ids
  */
 function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
   if (!empty($group_ids)) {
@@ -739,16 +724,12 @@ function d2d_api_group_membership_add($instance_id, $group_ids = array()) {
       $query->values(array('group_id' => $group_id, 'instance_id' => $instance_id));
     }
     $query->execute();
-
-    // call hook
+    // Call hook.
     module_invoke_all('d2d_group_membership', $instance_id, $group_ids);
   }
 }
 
-//////////////
-// PERMISSION
-//////////////
-
+// PERMISSIONS.
 /**
  * Returns the current permission table.
  */
@@ -818,16 +799,13 @@ function d2d_api_method_permission_exists($instance_id, $method) {
   return $result->fetchAssoc() ? TRUE : FALSE;
 }
 
-////////////////
-// NOTIFICATION
-////////////////
-
+// NOTIFICATIONS.
 /**
  * Counts the number of unread notifications.
  */
 function d2d_api_notification_count_unread() {
-  // TODO: some of the notifications might not have a callback that allows to
-  // view them, hence they are counted as unread but also are not listed
+  // TODO: Some of the notifications might not have a callback that allows to
+  // view them, hence they are counted as unread but also are not listed.
   $query = db_select('d2d_notifications', 'n');
   $query = $query->condition('n.seen', 0);
   $query = $query->fields('n', array('id'));
@@ -839,8 +817,16 @@ function d2d_api_notification_count_unread() {
  * Inserts a notification into the database.
  */
 function d2d_api_notification_insert($type, $d2d_id, $content) {
-  db_insert('d2d_notifications')->fields(array('type', 'd2d_id', 'content', 'timestamp'))
-    ->values(array('type' => $type, 'd2d_id' => $d2d_id, 'content' => $content, 'timestamp' => d2d_get_time()))
+  db_insert('d2d_notifications')
+    ->fields(array('type', 'd2d_id', 'content', 'timestamp'))
+    ->values(
+      array(
+        'type' => $type,
+        'd2d_id' => $d2d_id,
+        'content' => $content,
+        'timestamp' => d2d_get_time(),
+      )
+    )
     ->execute();
 }
 
@@ -865,6 +851,9 @@ function d2d_api_notification_delete($notification_id) {
     ->execute();
 }
 
+/**
+ * Returns notification of specified type(s).
+ */
 function d2d_api_notification_get_by_type($types) {
   $query = db_select('d2d_notifications', 'n');
   if (!is_null($types)) {
@@ -873,8 +862,7 @@ function d2d_api_notification_get_by_type($types) {
     }
     $query = $query->condition('n.type', $types);
   }
-  $query = $query->fields('n')
-                 ->orderBy('n.id', 'DESC');
+  $query = $query->fields('n')->orderBy('n.id', 'DESC');
   $result = $query->execute();
   $notifications = array();
   foreach ($result as $record) {
@@ -889,6 +877,10 @@ function d2d_api_notification_get_by_type($types) {
   }
   return $notifications;
 }
+
+/**
+ * Returns a notification by its id.
+ */
 function d2d_api_notification_get($notification_id) {
   $query = db_select('d2d_notifications', 'n');
   $query = $query->condition('n.id', $notification_id);
@@ -898,14 +890,11 @@ function d2d_api_notification_get($notification_id) {
   return $notification ? $notification : NULL;
 }
 
-//////////
-// METHOD
-//////////
-
+// METHODS.
 /**
  * Returns a list of methods an instance may call if it is a friend.
  */
-function d2d_api_method_get($instance_id, $look_up_table=FALSE) {
+function d2d_api_method_get($instance_id, $look_up_table = FALSE) {
   $query = db_select('d2d_group_memberships', 'gm');
   $query = $query->condition('gm.instance_id', $instance_id);
   $query->join('d2d_permissions', 'p', 'gm.group_id = p.group_id');
