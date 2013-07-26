@@ -12,10 +12,15 @@
  * converted to a string before replacing. If it's neither a string nor an
  * integer, FALSE is returned.
  *
- * @param mixed $search the value(s) being searched for
- * @param mixed $replace the replacement value(s)
- * @param string|int $string the value being searched and replaced on
- * @return string|bool the replaced value or FALSE, if replacement failed
+ * @param mixed $search
+ *   the value(s) being searched for
+ * @param mixed $replace
+ *   the replacement value(s)
+ * @param string|int $string
+ *   the value being searched and replaced on
+ *
+ * @return string|bool
+ *   the replaced value or FALSE, if replacement failed
  */
 function d2d_replace($search, $replace, $string) {
   if (is_int($string)) {
@@ -34,12 +39,15 @@ function d2d_replace($search, $replace, $string) {
  * Encodes both the type and the value of the argument.
  *
  * If $value === NULL it is encoded as "n$",
- * if $value is a boolean it is encoded as either
+ * if $value is a bool it is encoded as either
  * "b$0" or "b$1". Otherwise, $value is encoded as
  * "s$" . $string, where $string = strval($value).
  *
- * @param mixed $value the value to be encoded
- * @return string the encoded value or FALSE; if encoding failed
+ * @param mixed $value
+ *   the value to be encoded
+ *
+ * @return string
+ *   the encoded value or FALSE; if encoding failed
  */
 function d2d_value_encode($value) {
   if (is_null($value)) {
@@ -62,20 +70,29 @@ function d2d_value_encode($value) {
  *
  * @see d2d_value_encode()
  *
- * @param string $string the string to be decoded
- * @return array an array of two elements; the first value in that array
+ * @param string $string
+ *   the string to be decoded
+ *
+ * @return array
+ *   an array of two elements; the first value in that array
  *   contains a flag which is TRUE if and only if the decoind succeeded.
  *   On success, the second is the decoded version of $string.
  */
 function d2d_value_decode($string) {
   $array = preg_split('/\$/', $string, 2);
-  if (sizeof($array) != 2) {
+  if (count($array) != 2) {
     return array(FALSE, '');
   }
   switch ($array[0]) {
-    case 'n': return array(TRUE, NULL);
-    case 'b': return array(TRUE, $array[1] ? TRUE : FALSE);
-    case 's': return array(TRUE, $array[1]);
+    case 'n':
+      return array(TRUE, NULL);
+
+    case 'b':
+      return array(TRUE, $array[1] ? TRUE : FALSE);
+
+    case 's':
+      return array(TRUE, $array[1]);
+
   }
   return array(FALSE, '');
 }
@@ -94,8 +111,11 @@ function d2d_value_decode($string) {
  * => '-1') and not in array('a' => -1), that is one might have to convert /
  * cast the key to obtain the desired type.
  *
- * @param array $array the array to be imploded
- * @return string|bool the imploded array or FALSE, if implosion failed
+ * @param array $array
+ *   the array to be imploded
+ *
+ * @return string|bool
+ *   the imploded array or FALSE, if implosion failed
  */
 function d2d_implode($array) {
   if (!is_array($array)) {
@@ -103,16 +123,18 @@ function d2d_implode($array) {
   }
   $escaped_array = array();
   foreach ($array as $key => $value) {
-    // escape separators and escape-character in $key
+    // Escape separators and escape-character in $key.
     $key = d2d_replace(array('\\', ',', '='), array('\\\\', '\\,', '\\='), $key);
-    if ($key === FALSE) { // replacement failed
+    // Replacement failed.
+    if ($key === FALSE) {
       return FALSE;
     }
-    // encode $value
+    // Encode $value.
     $value = d2d_value_encode($value);
-    // escape separators and escape-character in $value
+    // Escape separators and escape-character in $value.
     $value = d2d_replace(array('\\', ',', '='), array('\\\\', '\\,', '\\='), $value);
-    if ($value === FALSE) { // replacement failed
+    // Replacement failed.
+    if ($value === FALSE) {
       return FALSE;
     }
     $escaped_array[] = "{$key}={$value}";
@@ -129,8 +151,11 @@ function d2d_implode($array) {
  * pairs must be separated using ','. Furthermore, '=' and ',' appearing in
  * keys resp. values must be escaped, see d2d_implode for further details.
  *
- * @param string $string the input string
- * @return array|bool the array resulting form splitting the input, FALSE if explosion failed
+ * @param string $string
+ *   the input string
+ *
+ * @return array|bool
+ *   the array resulting form splitting the input, FALSE if explosion failed
  */
 function d2d_explode($string) {
   if (!is_string($string)) {
@@ -139,24 +164,24 @@ function d2d_explode($string) {
   if (empty($string)) {
     return array();
   }
-  // prepend two consecutive slashes by an '@' s.t. every slash followed
-  // directly by a ',' resp. '=' really corresponds to an escaped character
+  // Prepend two consecutive slashes by an '@' s.t. every slash followed
+  // directly by a ',' resp. '=' really corresponds to an escaped character.
   $string = str_replace('\\\\', '\\\\@', $string);
-  // split array at ','-characters that are not preceded by a slash
+  // Split array at ','-characters that are not preceded by a slash.
   $array = preg_split('/(?<=[^\\\\]),|^,/', $string);
   $return_array = array();
   foreach ($array as $key => $value) {
-    // split array at '='-characters that are not preceded by a slash
+    // Split array at '='-characters that are not preceded by a slash.
     $tokens = preg_split('/(?<=[^\\\\])=|^=/', $value);
-    // not escaped '=' must occur exactly once, splitting the string into
-    // exactly two strings
-    if (sizeof($tokens) != 2) {
+    // Not escaped '=' must occur exactly once, splitting the string into
+    // exactly two strings.
+    if (count($tokens) != 2) {
       return FALSE;
     }
-    // undo first replacement for both tokens
+    // Undo first replacement for both tokens.
     $parsed_key = str_replace('\\\\@', '\\\\', $tokens[0]);
     $parsed_value = str_replace('\\\\@', '\\\\', $tokens[1]);
-    // unescape, i.e. remove slashes followed by a single character
+    // Unescape, i.e. remove slashes followed by a single character.
     $parsed_key = preg_replace('/\\\\(.)/', '\\1', $parsed_key);
     $parsed_value = preg_replace('/\\\\(.)/', '\\1', $parsed_value);
     list($success, $decoded_parsed_value) = d2d_value_decode($parsed_value);
@@ -178,9 +203,13 @@ function d2d_explode($string) {
  * checks and copied back only if returning TRUE, that is the function is free
  * of side-effects when the check fails.
  *
- * @param array &$array key-value-pairs to be checked
- * @param array $checks mapping of keys to user defined functions
- * @return bool TRUE if the check succeeds, FALSE otherwise
+ * @param array &$array
+ *   key-value-pairs to be checked
+ * @param array $checks
+ *   mapping of keys to user defined functions
+ *
+ * @return bool
+ *   TRUE if the check succeeds, FALSE otherwise
  */
 function d2d_check_array(&$array, $checks) {
   if (!is_array($array)) {
@@ -205,22 +234,26 @@ function d2d_check_array(&$array, $checks) {
  * Useful to display part of a key in status messages.
  *
  * Comments are automatically excluded from the N chars.
- * Negative N will start counting from the ending of the key.
+ * Negative n will start counting from the ending of the key.
  *
- * @param string $key The public key to shorten for preview
- * @param integer $N Optional. The number of characters to keep. Defaults, -10
- * @return string The shortened key
+ * @param string $key
+ *   The public key to shorten for preview
+ * @param int $n
+ *   Optional. The number of characters to keep. Defaults, -10
+ *
+ * @return string
+ *   The shortened key
  *
  * @see d2d_clean_public_key()
  */
-function d2d_substr_public_key($key, $N = -10) {
+function d2d_substr_public_key($key, $n = -10) {
   $key = d2d_clean_public_key($key);
 
-  if ($N < 0) {
-    return mb_substr($key, mb_strlen($key) + $N);
+  if ($n < 0) {
+    return mb_substr($key, mb_strlen($key) + $n);
   }
   else {
-    return mb_substr($key, 0, $N);
+    return mb_substr($key, 0, $n);
   }
 
 }
@@ -230,19 +263,20 @@ function d2d_substr_public_key($key, $N = -10) {
  */
 function d2d_strip_comments_from_key($key) {
   return preg_replace('!\-\-\-\-\-[^\-]+\-\-\-\-\-!s', '', $key);
-//   return preg_replace('!/-/-/-/-/-[^/-]+/-/-/-/-/-/!s', '', $key);
-  //return preg_replace('!/\*.*?\*/!s', '', $text);
 }
 
 /**
  * Cleans the public key string.
  *
- * Trim, removes comments and other characters.
+ * Trims, removes comments and other characters.
  *
- * @param string $key The public key to clean
- * @param boolean $keep_comment Optional. Keeps comment about begin/end
- *  public key. Defaults, FALSE
- * @return string The cleaned key
+ * @param string $key
+ *   The public key to clean
+ * @param bool $keep_comment
+ *   Optional. Keeps comment about begin/end public key. Defaults, FALSE
+ *
+ * @return string
+ *   The cleaned key
  */
 function d2d_clean_public_key($key, $keep_comment = FALSE) {
   if (!$keep_comment) {
@@ -256,9 +290,13 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
  *
  * Both keys are cleaned, and then compared
  *
- * @param string $key1 The first public key to compare
- * @param string $key2 The second public key to compare
- * @return boolean TRUE if the public keys are equal
+ * @param string $key1
+ *   The first public key to compare
+ * @param string $key2
+ *   The second public key to compare
+ *
+ * @return bool
+ *   TRUE if the public keys are equal
  *
  * @see d2d_clean_public_key()
  */
@@ -324,6 +362,7 @@ function d2d_is_hex_string($string) {
 }
 
 /**
+ * Verifies if the length of a d2d-id is correct.
  */
 function d2d_check_d2d_id_length($id) {
   return strlen($id) == D2D_INSTANCE_IDENTIFIER_LENGTH;
