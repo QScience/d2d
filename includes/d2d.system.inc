@@ -9,7 +9,7 @@
 function d2d_form_send_requests() {
   $form = array();
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Send all open requests now',
   );
   return $form;

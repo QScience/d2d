@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Secure RPC provided by D2D.
+ */
 
 /**
  * Implements hook_d2d_secure_rpc().
@@ -19,11 +23,19 @@ function d2d_d2d_secure_rpc() {
   );
   return $methods;
 }
+
+/**
+ * Returns public key for specified instance.
+ */
 function d2d_srpc_get_public_key($arguments, $rpc_info) {
   $d2d_id = $arguments['d2d_id'];
   $instance = d2d_api_instance_get($d2d_id);
   return $instance && $instance['public_key'] ? $instance['public_key'] : '';
 }
+
+/**
+ * Returns an imploded array of permissions for the remote instance.
+ */
 function d2d_srpc_list_permissions($arguments, $rpc_info) {
   $id = $rpc_info['instance']['id'];
   $method_table = d2d_api_method_get($id, TRUE);

@@ -1,7 +1,11 @@
 <?php
 /**
  * @file
- * function called on callers side to invoke remote function
+ * Function called on callers side to invoke remote function.
+ */
+
+/**
+ * Call secure RPC on remote instance.
  */
 function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) {
   $t = d2d_get_time();
@@ -15,9 +19,6 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
   }
   $my_instance = d2d_api_own_instance_get(TRUE);
   $imploded_arguments = d2d_implode($arguments);
-  //$entity_a = $friend['url'];
-  //$public_key_a = $friend['public_key'];
-  //$id_a = $friend['id'];
   $nonce = d2d_random_nonce();
   $request = array(
     'type' => 'secure_rpc',
@@ -34,12 +35,12 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('error imploding request');
     return FALSE;
   }
-  // encrypt request
+  // Encrypt request.
   if (!d2d_encrypt($imploded_request, $encrypted_request, $friend['public_key'])) {
     $error_string = t('failed encryption');
     return FALSE;
   }
-  // sign encrypted request
+  // Sign encrypted request.
   $signed_request = d2d_sign($encrypted_request, $my_instance['private_key'], $my_instance['d2d_id']);
   if ($signed_request === FALSE) {
     $error_string = t('failed signing');
@@ -50,20 +51,27 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('remote error:') . ' ' . xmlrpc_error_msg();
     return FALSE;
   }
-  // convert $result64 in MIME base64
+  // Convert $result64 in MIME base64.
   $result = base64_decode($result64, TRUE);
   if ($result === FALSE) {
     $error_string = t('failed base64 decoding');
     return FALSE;
   }
-  // explode $result
+  // Explode $result.
   $exploded_result = d2d_explode($result);
   if ($exploded_result === FALSE) {
     $error_string = t('could not explode result');
     return FALSE;
   }
-  // check if $exploded_result is of desired structure
-  if (!d2d_check_array($exploded_result, array('data' => 'is_string', 'signature' => 'is_string', 'signer' => 'is_string'))) {
+  // Check if $exploded_result is of desired structure.
+  if (!d2d_check_array(
+    $exploded_result,
+    array(
+      'data' => 'is_string',
+      'signature' => 'is_string',
+      'signer' => 'is_string',
+    )
+  )) {
     $error_string = t('exploded result is not of desired strucutre');
     return FALSE;
   }
@@ -77,38 +85,38 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('wrong signature');
     return FALSE;
   }
-  // explode $encrypted_data
+  // Explode $encrypted_data.
   $cipher_envkey = d2d_explode($encrypted_data);
   if ($cipher_envkey === FALSE) {
     $error_string = t('failed exploding encrypted data');
     return FALSE;
   }
-  // check if exploded $encrypted_data is of desired structure
+  // Check if exploded $encrypted_data is of desired structure.
   if (!d2d_check_array($cipher_envkey, array('cipher' => 'is_string', 'env_key' => 'is_string'))) {
     $error_string = t('encrypted data not of desired structure');
     return FALSE;
   }
-  // finally decrypt
+  // Finally decrypt.
   if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     $error_string = t('failed decrypytion');
     return FALSE;
   }
-  // explode $data
+  // Explode $data.
   $exploded_data = d2d_explode($data);
   if ($exploded_data === FALSE) {
     $error_string = t('failed explosion');
     return FALSE;
   }
-  // check if $exploded_data is of desired structure
+  // Check if $exploded_data is of desired structure.
   $check = array(
-      'type' => 'is_string',
-      'version' => 'is_string',
-      'method_name' => 'is_string',
-      'return' => 'is_string',
-      'callee' => 'is_string',
-      'caller' => 'is_string',
-      'timestamp' => 'd2d_check_convert_int',
-      'nonce' => 'd2d_check_nonce',
+    'type' => 'is_string',
+    'version' => 'is_string',
+    'method_name' => 'is_string',
+    'return' => 'is_string',
+    'callee' => 'is_string',
+    'caller' => 'is_string',
+    'timestamp' => 'd2d_check_convert_int',
+    'nonce' => 'd2d_check_nonce',
   );
   if (!d2d_check_array($exploded_data, $check)) {
     $error_string = t('exploded data not of desired structure');
@@ -146,30 +154,37 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
 }
 
 /**
- *
+ * Handles a secure RPC request.
  */
 function d2d_secure_rpc($request64, $version) {
   $t = d2d_get_time();
   if (!d2d_is_online()) {
     return xmlrpc_error(0, 'instance is not online');
   }
-  // check version
+  // Check version.
   if ($version !== d2d_get_version()) {
     return xmlrpc_error(0, 'wrong version');
   }
-  // convert $request64 from MIME base64
-  // note that if $request64 is binary, an xml-rpc-error is returned
+  // Convert $request64 from MIME base64.
+  // Note that if $request64 is binary, an xml-rpc-error is returned.
   $request = base64_decode($request64, TRUE);
   if ($request === FALSE) {
     return xmlrpc_error(0, 'failed base64 decoding');
   }
-  // explode $request
+  // Explode $request.
   $message = d2d_explode($request);
   if ($message === FALSE) {
     return xmlrpc_error(0, 'could not explode request');
   }
-  // check if exploded $request is of desired structure
-  if (!d2d_check_array($message, array('data' => 'is_string', 'signature' => 'is_string', 'signer' => 'd2d_check_d2d_id'))) {
+  // Check if exploded $request is of desired structure.
+  if (!d2d_check_array(
+    $message,
+    array(
+      'data' => 'is_string',
+      'signature' => 'is_string',
+      'signer' => 'd2d_check_d2d_id',
+    )
+  )) {
     return xmlrpc_error(0, 'request is not of desired strucutre');
   }
   $signer = $message['signer'];
@@ -180,29 +195,28 @@ function d2d_secure_rpc($request64, $version) {
   $encrypted_data = $message['data'];
   $signature = $message['signature'];
   $friend = d2d_api_instance_get($signer);
-  // TODO: double check this condition
   if (!$friend || !$friend['is_friend'] || is_null($friend['public_key']) || openssl_verify($encrypted_data, $signature, $friend['public_key']) !== 1) {
     return xmlrpc_error(0, 'no friendship found or wrong signature');
   }
-  // explode $encrypted_data
+  // Explode $encrypted_data.
   $cipher_envkey = d2d_explode($encrypted_data);
   if ($cipher_envkey === FALSE) {
     return xmlrpc_error(0, 'failed exploding encrypted data');
   }
-  // check if exploded $encrypted_data is of desired structure
+  // Check if exploded $encrypted_data is of desired structure.
   if (!d2d_check_array($cipher_envkey, array('cipher' => 'is_string', 'env_key' => 'is_string'))) {
     return xmlrpc_error(0, 'encrypted data not of desired structure');
   }
-  // finally decrypt
+  // Finally decrypt.
   if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     return xmlrpc_error(0, 'failed decrypytion');
   }
-  // explode $data
+  // Explode $data.
   $exploded_data = d2d_explode($data);
   if ($exploded_data === FALSE) {
     return xmlrpc_error(0, 'failed explosion');
   }
-  // check if $exploded_data is of desired structure
+  // Check if $exploded_data is of desired structure.
   $check = array(
     'type' => 'is_string',
     'version' => 'is_string',
@@ -236,7 +250,7 @@ function d2d_secure_rpc($request64, $version) {
   if (!d2d_verify_nonce($exploded_data['timestamp'], $exploded_data['nonce'])) {
     return xmlrpc_error(0, 'duplicate nonce detected');
   }
-  // check if method name is properly mapped
+  // Check if method name is properly mapped.
   $hks = module_invoke_all('d2d_secure_rpc');
   if (!array_key_exists($method_name, $hks)) {
     return xmlrpc_error(0, 'method does not exist');
@@ -259,7 +273,7 @@ function d2d_secure_rpc($request64, $version) {
   }
   $rpc_info = array(
     'instance' => $friend,
-    'ip' => $_SERVER['REMOTE_ADDR'],
+    'ip' => ip_address(),
   );
   try {
     $ret = call_user_func($callback, $exploded_arguments, $rpc_info);
@@ -279,7 +293,13 @@ function d2d_secure_rpc($request64, $version) {
     elseif (strlen($arguments_string) > 1024) {
       $arguments_string = substr($arguments_string, 0, 1024);
     }
-    watchdog('D2D', 'Exception in d2d_secure_rpc: \'%exception_message\', $callback=%callback, $arguments=%arguments, $rpc_info=%rpc_info', array('%callback' => var_export($callback, TRUE), '%exception_message' => $e->getMessage(), '%arguments' => $arguments_string, '%rpc_info' => var_export($rpc_info, TRUE)));
+    $watchdog_argument = array(
+      '%callback' => var_export($callback, TRUE),
+      '%exception_message' => $e->getMessage(),
+      '%arguments' => $arguments_string,
+      '%rpc_info' => var_export($rpc_info, TRUE),
+    );
+    watchdog('D2D', 'Exception in d2d_secure_rpc: \'%exception_message\', $callback=%callback, $arguments=%arguments, $rpc_info=%rpc_info', $watchdog_argument);
     return xmlrpc_error(0, 'exception in the function called on remote host');
   }
   if (!is_string($ret)) {
@@ -299,11 +319,11 @@ function d2d_secure_rpc($request64, $version) {
   if ($imploded_return === FALSE) {
     return xmlrpc_error(0, 'error imploding return');
   }
-  // encrypt return
+  // Encrypt return.
   if (!d2d_encrypt($imploded_return, $encrypted_return, $friend['public_key'])) {
     return xmlrpc_error(0, 'failed encryption!');
   }
-  // sign encrypted return 
+  // Sign encrypted return.
   $signed_return = d2d_sign($encrypted_return, $my_instance['private_key'], $my_instance['private_key']);
   if ($signed_return === FALSE) {
     return xmlrpc_error(0, 'failed signing');

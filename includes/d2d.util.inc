@@ -12,7 +12,7 @@
  * converted to a string before replacing. If it's neither a string nor an
  * integer, FALSE is returned.
  *
- * @param mixed $search the value(s) being searched for 
+ * @param mixed $search the value(s) being searched for
  * @param mixed $replace the replacement value(s)
  * @param string|int $string the value being searched and replaced on
  * @return string|bool the replaced value or FALSE, if replacement failed
@@ -22,7 +22,7 @@ function d2d_replace($search, $replace, $string) {
     $string = strval($string);
   }
   if (is_string($string)) {
-    $string = str_replace($search, $replace, $string); 
+    $string = str_replace($search, $replace, $string);
   }
   else {
     return FALSE;
@@ -60,7 +60,7 @@ function d2d_value_encode($value) {
 /**
  * Decodes a string that has been encoded by d2d_value_encode.
  *
- * @see d2d_value_encode
+ * @see d2d_value_encode()
  *
  * @param string $string the string to be decoded
  * @return array an array of two elements; the first value in that array
@@ -90,7 +90,7 @@ function d2d_value_decode($string) {
  * prepended with an addtional '\\', i.e. they are escaped to allow unique
  * reconstruction of the provided array from the returned string.
  * Note that a unique reconstruction is only possible for array values being of
- * type string, e.g. d2d_implode('a=-1') will result in array('a'
+ * type string, e.g., d2d_implode('a=-1') will result in array('a'
  * => '-1') and not in array('a' => -1), that is one might have to convert /
  * cast the key to obtain the desired type.
  *
@@ -201,17 +201,17 @@ function d2d_check_array(&$array, $checks) {
 
 /**
  * Shortens a public key string to N characters.
- * 
+ *
  * Useful to display part of a key in status messages.
- * 
+ *
  * Comments are automatically excluded from the N chars.
  * Negative N will start counting from the ending of the key.
- * 
+ *
  * @param string $key The public key to shorten for preview
  * @param integer $N Optional. The number of characters to keep. Defaults, -10
  * @return string The shortened key
- * 
- * @see d2d_clean_public_key
+ *
+ * @see d2d_clean_public_key()
  */
 function d2d_substr_public_key($key, $N = -10) {
   $key = d2d_clean_public_key($key);
@@ -222,27 +222,12 @@ function d2d_substr_public_key($key, $N = -10) {
   else {
     return mb_substr($key, 0, $N);
   }
-  
+
 }
 
-// function d2d_strip_comments_from_key($key, $public = TRUE) {
-//   $begin = $public ? '-----BEGIN PUBLIC KEY-----' : '-----BEGIN PRIVATE KEY-----';
-//   $end = $public ? '-----END PUBLIC KEY-----' : '-----END PRIVATE KEY-----';
-//   $limit = 0;
-//   $comment_begin = strpos($key, $begin);
-//   if ($comment_begin !== FALSE) {
-//     $limit = $keep_comment ? $comment_begin : $comment_begin + 26; //
-//     $key = substr($key, $limit);
-//   }
-  
-//   $comment_end = strpos($key, $end);
-//   if ($comment_end !== FALSE) {
-//     $limit = $keep_comment ? $comment_end + 25 : $comment_end; //
-//     $key = substr($key, 0, $limit);
-//   }
-//   return $key;
-// }
-
+/**
+ * Strips comments from a public/private key.
+ */
 function d2d_strip_comments_from_key($key) {
   return preg_replace('!\-\-\-\-\-[^\-]+\-\-\-\-\-!s', '', $key);
 //   return preg_replace('!/-/-/-/-/-[^/-]+/-/-/-/-/-/!s', '', $key);
@@ -251,11 +236,11 @@ function d2d_strip_comments_from_key($key) {
 
 /**
  * Cleans the public key string.
- * 
- * Trim, removes comments and other characters. 
- * 
+ *
+ * Trim, removes comments and other characters.
+ *
  * @param string $key The public key to clean
- * @param boolean $keep_comment Optional. Keeps comment about begin/end 
+ * @param boolean $keep_comment Optional. Keeps comment about begin/end
  *  public key. Defaults, FALSE
  * @return string The cleaned key
  */
@@ -268,14 +253,14 @@ function d2d_clean_public_key($key, $keep_comment = FALSE) {
 
 /**
  * Compares two strings containing public keys.
- * 
+ *
  * Both keys are cleaned, and then compared
- * 
+ *
  * @param string $key1 The first public key to compare
  * @param string $key2 The second public key to compare
  * @return boolean TRUE if the public keys are equal
- * 
- * @see d2d_clean_public_key
+ *
+ * @see d2d_clean_public_key()
  */
 function d2d_public_key_equal($key1, $key2) {
   $key1 = d2d_clean_public_key($key1);
@@ -283,9 +268,9 @@ function d2d_public_key_equal($key1, $key2) {
   return $key1 === $key2;
 }
 
-//////////////////////////////////////////////////////////
-// The following tiny functions should be self-describing.
-//////////////////////////////////////////////////////////
+/**
+ * Checks if argument contains an integer and converts its type.
+ */
 function d2d_check_convert_int(&$x) {
   $y = intval($x);
   if ($x != strval($y)) {
@@ -296,12 +281,20 @@ function d2d_check_convert_int(&$x) {
     return TRUE;
   }
 }
+
+/**
+ * Converts bool to int.
+ */
 function d2d_bool_to_int($b) {
   if ($b) {
     return 1;
   }
   return $b === NULL ? NULL : 0;
 }
+
+/**
+ * Generates a random hexadecimal string.
+ */
 function d2d_random_hex_string($len) {
   $ret = '';
   for ($i = 0; $i < $len; $i++) {
@@ -315,27 +308,58 @@ function d2d_random_hex_string($len) {
   }
   return $ret;
 }
+
+/**
+ * Generates a random d2d-id.
+ */
 function d2d_random_d2d_id() {
   return d2d_random_hex_string(D2D_INSTANCE_IDENTIFIER_LENGTH);
 }
+
+/**
+ * Checks if a string consists only of hexadecimal characters.
+ */
 function d2d_is_hex_string($string) {
   return preg_match('/^[A-F0-9]*$/', $string) ? TRUE : FALSE;
 }
+
+/**
+ */
 function d2d_check_d2d_id_length($id) {
   return strlen($id) == D2D_INSTANCE_IDENTIFIER_LENGTH;
 }
+
+/**
+ * Check if a string is a valid d2d-id.
+ */
 function d2d_check_d2d_id($id) {
   return is_string($id) && d2d_check_d2d_id_length($id) && d2d_is_hex_string($id);
 }
+
+/**
+ * Check if a variable is a valid instance description.
+ */
 function d2d_check_description($str) {
   return is_string($str) && strlen($str) <= D2D_INSTANCE_DESCRIPTION_MAX_LENGTH;
 }
+
+/**
+ * Check if a variable is a valide name for a d2d instance.
+ */
 function d2d_check_name($str) {
   return is_string($str) && strlen($str) <= D2D_INSTANCE_NAME_MAX_LENGTH;
 }
+
+/**
+ * Check if a variable is a valid nonce.
+ */
 function d2d_check_nonce($nonce) {
   return is_string($nonce) && (strlen($nonce) == D2D_NONCE_LENGTH) && d2d_is_hex_string($nonce);
 }
+
+/**
+ * Generates a random nonce.
+ */
 function d2d_random_nonce() {
   return d2d_random_hex_string(D2D_NONCE_LENGTH);
 }

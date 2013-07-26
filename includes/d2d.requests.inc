@@ -33,7 +33,10 @@ function d2d_d2d_handle_incoming_request() {
   return $types;
 }
 
-function d2d_add_request($receiver_id, $type, $data, $max_resend_trials, $verbose=FALSE) {
+/**
+ * Adds an outgoing request to the database.
+ */
+function d2d_add_request($receiver_id, $type, $data, $max_resend_trials, $verbose = FALSE) {
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
   if (!array_key_exists($type, $hooks)) {
     if ($verbose) {
@@ -69,22 +72,29 @@ function d2d_add_request($receiver_id, $type, $data, $max_resend_trials, $verbos
   return $id;
 }
 
+/**
+ * Removes outdated outgoing requests from the database.
+ */
 function d2d_remove_outdated_outgoing_requests() {
   $t = d2d_get_time();
-  // remove requests that are invalid (time_invalid <= $t)
+  // Remove requests that are invalid (time_invalid <= $t).
   db_delete('d2d_outgoing_requests')
     ->condition('time_invalid', $t, '<=')
     ->execute();
-  // remove requests that have been sent too often
+  // Remove requests that have been sent too often.
   db_delete('d2d_outgoing_requests')
     ->condition('max_send_trials', 0, '<=')
     ->execute();
-  // TODO: possibly:
-  // get hooks that handle outgoing requests
-  // remove requests that cannot be handled
-  // if specified as an attributes of the hooks, remove certain requests
-  // if there is another request of the same type that is newer
+  // TODO: a possible improvement would be
+  // - get hooks that handle outgoing requests
+  // - remove requests that cannot be handled
+  // - if specified as an attributes of the hooks, remove certain requests
+  // - if there is another request of the same type that is newer.
 }
+
+/**
+ * Sends a single outgoing request.
+ */
 function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_instance, $my_private_key, $return_check, &$error_string) {
   $t = d2d_get_time();
   $imploded_arguments = d2d_implode($arguments);
@@ -105,12 +115,12 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     $error_string = t('error imploding request');
     return FALSE;
   }
-  // encrypt request
+  // Encrypt request.
   if (!d2d_encrypt($imploded_request, $encrypted_request, $instance['public_key'])) {
     $error_string = t('failed encryption');
     return FALSE;
   }
-  // sign encrypted request
+  // Sign encrypted request.
   $signed_request = d2d_sign($encrypted_request, $my_private_key, $my_instance['d2d_id']);
   if ($signed_request === FALSE) {
     $error_string = t('failed signing');
@@ -121,20 +131,27 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     $error_string = t('remote error:') . ' ' . xmlrpc_error_msg();
     return FALSE;
   }
-  // convert $result64 in MIME base64
+  // Convert $result64 in MIME base64.
   $result = base64_decode($result64, TRUE);
   if ($result === FALSE) {
     $error_string = t('failed base64 decoding');
     return FALSE;
   }
-  // explode $result
+  // Explode $result.
   $exploded_result = d2d_explode($result);
   if ($exploded_result === FALSE) {
     $error_string = t('could not explode result');
     return FALSE;
   }
-  // check if $exploded_result is of desired structure
-  if (d2d_check_array($exploded_result, array('data' => 'is_string', 'signature' => 'is_string', 'signer' => 'is_string'))) {
+  // Check if $exploded_result is of desired structure.
+  if (d2d_check_array(
+    $exploded_result,
+    array(
+      'data' => 'is_string',
+      'signature' => 'is_string',
+      'signer' => 'is_string',
+    )
+  )) {
     $signer = $exploded_result['signer'];
     if ($signer !== $instance['d2d_id']) {
       $error_string = t('signer of return result mismatch');
@@ -146,29 +163,29 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
       $error_string = t('wrong signature');
       return FALSE;
     }
-    // explode $encrypted_data
+    // Explode $encrypted_data.
     $cipher_envkey = d2d_explode($encrypted_data);
     if ($cipher_envkey === FALSE) {
       $error_string = t('failed exploding encrypted data');
       return FALSE;
     }
-    // check if exploded $encrypted_data is of desired structure
+    // Check if exploded $encrypted_data is of desired structure.
     if (!d2d_check_array($cipher_envkey, array('cipher' => 'is_string', 'env_key' => 'is_string'))) {
       $error_string = t('encrypted data not of desired structure');
       return FALSE;
     }
-    // finally decrypt
+    // Finally decrypt.
     if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_private_key)) {
       $error_string = t('failed decrypytion');
       return FALSE;
     }
-    // explode $data
+    // Explode $data.
     $exploded_data = d2d_explode($data);
     if ($exploded_data === FALSE) {
       $error_string = t('failed explosion');
       return FALSE;
     }
-    // check if $exploded_data is of desired structure
+    // Check if $exploded_data is of desired structure.
     $check = array(
       'type' => 'is_string',
       'version' => 'is_string',
@@ -251,21 +268,24 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     return FALSE;
   }
 }
+
+/**
+ * Reevaluates the signatures of the incoming request of specified instance.
+ */
 function d2d_incoming_requests_reevaluate_signatures($instance) {
   $ids = array();
-  $result = db_query('SELECT id ' .
-      ' FROM {d2d_incoming_requests}' .
-      ' WHERE sender_d2d_id <= :d2d_id' .
-      ' ORDER BY id ASC',
-      array(':d2d_id' => $instance['d2d_id'])
-      );
+  $result = db_query('SELECT id FROM {d2d_incoming_requests}' .
+    ' WHERE sender_d2d_id <= :d2d_id ORDER BY id ASC',
+    array(':d2d_id' => $instance['d2d_id'])
+  );
   foreach ($result as $record) {
     $ids[] = $record->id;
   }
   $hks = module_invoke_all('d2d_handle_incoming_request');
   foreach ($ids as $request_id) {
     $result = db_query('SELECT sender_d2d_id, type, arguments, time_insert, timestamp, url, ip, signed_data, signature, signature_valid FROM {d2d_incoming_requests} WHERE id=:id', array(':id' => $request_id));
-    if (!($request = $result->fetchAssoc())) {
+    $request = $result->fetchAssoc();
+    if (!$request) {
       continue;
     }
     $type = $request['type'];
@@ -301,7 +321,15 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
       );
       try {
         $request_return = NULL;
-        $keep = call_user_func_array($callback, array($exploded_arguments, $rpc_info, FALSE, &$request_return));
+        $keep = call_user_func_array(
+          $callback,
+          array(
+            $exploded_arguments,
+            $rpc_info,
+            FALSE,
+            &$request_return,
+          )
+        );
       }
       catch (D2DRemoteException $e) {
         $keep = FALSE;
@@ -316,28 +344,39 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
     }
   }
 }
+
+/**
+ * Handles secure request.
+ */
 function d2d_secure_request($request64, $version) {
   $t = d2d_get_time();
   if (!d2d_is_online()) {
     return xmlrpc_error(0, 'instance is not online');
   }
-  // check version
+  // Check version.
   if ($version !== d2d_get_version()) {
     return xmlrpc_error(0, 'wrong version');
   }
-  // convert $request64 if in MIME base64
-  // note that if $request64 is binary, an xml-rpc-error is returned
+  // Convert $request64 if in MIME base64.
+  // Note that if $request64 is binary, an xml-rpc-error is returned.
   $request = base64_decode($request64, TRUE);
   if ($request === FALSE) {
     return xmlrpc_error(0, 'failed base64 decoding');
   }
-  // explode $request
+  // Explode $request.
   $message = d2d_explode($request);
   if ($message === FALSE) {
     return xmlrpc_error(0, 'could not explode request');
   }
-  // check if exploded $request is of desired structure
-  if (!d2d_check_array($message, array('data' => 'is_string', 'signature' => 'is_string', 'signer' => 'd2d_check_d2d_id'))) {
+  // Check if exploded $request is of desired structure.
+  if (!d2d_check_array(
+    $message,
+    array(
+      'data' => 'is_string',
+      'signature' => 'is_string',
+      'signer' => 'd2d_check_d2d_id',
+    )
+  )) {
     return xmlrpc_error(0, 'request is not of desired strucutre');
   }
   $signer = $message['signer'];
@@ -357,25 +396,25 @@ function d2d_secure_request($request64, $version) {
     }
     $signature_valid = TRUE;
   }
-  // explode $encrypted_data
+  // Explode $encrypted_data.
   $cipher_envkey = d2d_explode($encrypted_data);
   if ($cipher_envkey === FALSE) {
     return xmlrpc_error(0, 'failed exploding encrypted data');
   }
-  // check if exploded $encrypted_data is of desired structure
+  // Check if exploded $encrypted_data is of desired structure.
   if (!d2d_check_array($cipher_envkey, array('cipher' => 'is_string', 'env_key' => 'is_string'))) {
     return xmlrpc_error(0, 'encrypted data not of desired structure');
   }
-  // finally decrypt
+  // Finally decrypt.
   if (!openssl_open($cipher_envkey['cipher'], $data, $cipher_envkey['env_key'], $my_instance['private_key'])) {
     return xmlrpc_error(0, 'failed decrypytion');
   }
-  // explode $data
+  // Explode $data.
   $exploded_data = d2d_explode($data);
   if ($exploded_data === FALSE) {
     return xmlrpc_error(0, 'failed explosion');
   }
-  // check if $exploded_data is of desired structure
+  // Check if $exploded_data is of desired structure.
   $check = array(
     'type' => 'is_string',
     'version' => 'is_string',
@@ -410,7 +449,7 @@ function d2d_secure_request($request64, $version) {
   if (!d2d_verify_nonce($exploded_data['timestamp'], $exploded_data['nonce'])) {
     return xmlrpc_error(0, 'duplicate nonce detected');
   }
-  // check if request type is properly mapped
+  // Check if request type is properly mapped.
   $hks = module_invoke_all('d2d_handle_incoming_request');
   if (!array_key_exists($exploded_data['request_type'], $hks)) {
     return xmlrpc_error(0, 'handler for request type does not exist');
@@ -428,7 +467,7 @@ function d2d_secure_request($request64, $version) {
   if (!d2d_check_array($exploded_arguments, $argument_checks)) {
     return xmlrpc_error(0, 'arguments failed check');
   }
-  $ip = $_SERVER['REMOTE_ADDR'];
+  $ip = ip_address();
   $rpc_info = array(
     'd2d_id' => $signer,
     'signature_valid' => $signature_valid,
@@ -439,7 +478,15 @@ function d2d_secure_request($request64, $version) {
   );
   try {
     $request_return = NULL;
-    $keep = call_user_func_array($callback, array($exploded_arguments, $rpc_info, TRUE, &$request_return));
+    $keep = call_user_func_array(
+      $callback,
+      array(
+        $exploded_arguments,
+        $rpc_info,
+        TRUE,
+        &$request_return,
+      )
+    );
   }
   catch (D2DRemoteException $e) {
     return xmlrpc_error(0, $e->getMessage());
@@ -474,8 +521,8 @@ function d2d_secure_request($request64, $version) {
     ))->execute();
   }
   if (is_null($request_return)) {
-    // no public key available for sender, return can only be
-    // signed but not encrypted
+    // No public key available for sender, return can only be
+    // signed but not encrypted.
     $return = array(
       'type' => 'secure_request_return',
       'version' => d2d_get_version(),
@@ -512,11 +559,11 @@ function d2d_secure_request($request64, $version) {
     if ($imploded_return === FALSE) {
       return xmlrpc_error(0, 'error imploding return');
     }
-    // encrypt return
+    // Encrypt return.
     if (!d2d_encrypt($imploded_return, $encrypted_return, $instance['public_key'])) {
       return xmlrpc_error(0, 'failed encryption!');
     }
-    // sign encrypted return 
+    // Sign encrypted return.
     $signed_return = d2d_sign($encrypted_return, $my_instance['private_key'], $my_instance['d2d_id']);
     if ($signed_return === FALSE) {
       return xmlrpc_error(0, 'failed signing');
@@ -524,32 +571,32 @@ function d2d_secure_request($request64, $version) {
     return base64_encode($signed_return);
   }
 }
-function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
-  // check if instance is online
+
+/**
+ * Send outgoing requests specified by their ids.
+ */
+function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
+  // Check if instance is online.
   if (!d2d_is_online()) {
     return 0;
   }
-  // number of successfully sent requests
+  // Number of successfully sent requests.
   $n_sucessfully_sent = 0;
-  // get current time and keys, url, d2d id of own instance
+  // Get current time and keys, url, d2d id of own instance.
   $t = d2d_get_time();
   $my_instance = d2d_api_own_instance_get();
   $my_private_key = variable_get('d2d_private_key');
-  // get hooks that handle outgoing requests
+  // Get hooks that handle outgoing requests.
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
-  // get information about all instances
+  // Get information about all instances.
   $instances = d2d_api_instance_get_by_id();
-  // get ids of requests to be sent now
+  // Get ids of requests to be sent now.
   $send_now = TRUE;
   if (is_null($ids)) {
     $send_now = FALSE;
     $ids = array();
-    // select all outgoing requests, invalid ones have been removed earlier
-    $result = db_query('SELECT id ' .
-      ' FROM {d2d_outgoing_requests}' .
-//      ' WHERE time_next_send <= :t' .
-//      ' AND time_invalid > :t' .
-//      ' AND max_send_trials >= 1' .
+    // Select all outgoing requests, invalid ones have been removed earlier.
+    $result = db_query('SELECT id FROM {d2d_outgoing_requests}' .
       ' ORDER BY id DESC',
       array(':t' => $t)
     );
@@ -559,26 +606,27 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
   }
   $persistent_state = array();
   foreach ($ids as $request_id) {
-    // receive database entry for that request
+    // Receive database entry for that request.
     $result = db_query('SELECT receiver_id, type, data, time_insert, time_next_send, time_invalid, max_send_trials FROM {d2d_outgoing_requests} WHERE id=:id', array(':id' => $request_id));
-    if (!($request = $result->fetchAssoc())) {
+    $request = $result->fetchAssoc();
+    if (!$request) {
       continue;
     }
-    // check if instance is in database
-    // if not: delete, continue
+    // Check if instance is in database,
+    // if not: delete, continue.
     $delete = FALSE;
     if (!array_key_exists($request['receiver_id'], $instances)) {
       $delete = TRUE;
     }
-    // check if hook to handle the request exists,
-    // if not: delete, continue
+    // Check if hook to handle the request exists,
+    // if not: delete, continue.
     if (!$delete && !array_key_exists($request['type'], $hooks)) {
       $delete = TRUE;
     }
     else {
       $hook = $hooks[$request['type']];
     }
-    // check and convert data
+    // Check and convert data.
     if (!$delete) {
       $argument_checks = (array_key_exists('arguments_save', $hook) ? $hook['arguments_save'] : array());
       $arguments = d2d_explode($request['data']);
@@ -586,11 +634,8 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
         $delete = TRUE;
       }
     }
-    // use function to handle the request to determine if request shall be
-    // send now, later, or be deleted
-    // function also prepares data to be sent
-    // later: continue
-    // now: delete, continue
+    // Use function to handle the request to determine if request shall be
+    // send now, later, or be deleted. Function also prepares data to be sent.
     if (!$delete) {
       if (!array_key_exists($request['type'], $persistent_state)) {
         $persistent_state[$request['type']] = array();
@@ -599,7 +644,19 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
         $persistent_state[$request['type']][$request['receiver_id']] = NULL;
       }
       $arguments_send = NULL;
-      $return = call_user_func_array($hook['callback_process'], array($arguments, $request['time_insert'], $request['time_next_send'], $request['time_invalid'], $request['max_send_trials'], $instances[$request['receiver_id']], &$persistent_state[$request['type']][$request['receiver_id']], &$arguments_send));
+      $return = call_user_func_array(
+        $hook['callback_process'],
+        array(
+          $arguments,
+          $request['time_insert'],
+          $request['time_next_send'],
+          $request['time_invalid'],
+          $request['max_send_trials'],
+          $instances[$request['receiver_id']],
+          &$persistent_state[$request['type']][$request['receiver_id']],
+          &$arguments_send,
+        )
+      );
       if ($return === FALSE) {
         continue;
       }
@@ -613,14 +670,14 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
         }
       }
     }
-    // check if public key is available, if not: continue
+    // Check if public key is available, if not: continue.
     if (!$delete && is_null($instances[$request['receiver_id']]['public_key'])) {
       continue;
     }
-    // ready for sending.
-    // if max_send_trials is 0 then delete entry, set flag that
-    // entry has been deleted
-    // otherwise update time_next_send and max_send_trials
+    // Ready for sending.
+    // If max_send_trials is 0 then delete entry, set flag that
+    // entry has been deleted,
+    // otherwise update time_next_send and max_send_trials.
     $delete_before_send = FALSE;
     if (!$delete && ($send_now || $request['time_next_send'] <= $t)) {
       $request['max_send_trials']--;
@@ -646,12 +703,12 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
     if ($delete) {
       continue;
     }
-    // call function that sends the request
+    // Call function that sends the request.
     $return_checks = (array_key_exists('arguments_return', $hook) ? $hook['arguments_return'] : array());
     $error_string = NULL;
     $return = d2d_send_single_outgoing_request($request['type'], $arguments_send, $instances[$request['receiver_id']], $my_instance, $my_private_key, $return_checks, $error_string);
     if ($return !== FALSE) {
-      $n_sucessfully_sent++;
+      ++$n_sucessfully_sent;
       db_delete('d2d_outgoing_requests')
         ->condition('id', $request_id)
         ->execute();
@@ -659,7 +716,21 @@ function d2d_send_outgoing_requests($ids, $verbose=FALSE) {
     if ($return === FALSE && $verbose) {
       drupal_set_message(check_plain($error_string), 'error');
     }
-    call_user_func_array($hook['callback_return'], array($return, $arguments, $arguments_send, $request['time_insert'], $request['time_next_send'], $request['time_invalid'], $request['max_send_trials'], $error_string, &$instances[$request['receiver_id']], &$persistent_state[$request['type']][$request['receiver_id']]));
+    call_user_func_array(
+      $hook['callback_return'],
+      array(
+        $return,
+        $arguments,
+        $arguments_send,
+        $request['time_insert'],
+        $request['time_next_send'],
+        $request['time_invalid'],
+        $request['max_send_trials'],
+        $error_string,
+        &$instances[$request['receiver_id']],
+        &$persistent_state[$request['type']][$request['receiver_id']],
+      )
+    );
   }
   return $n_sucessfully_sent;
 }
