@@ -25,7 +25,7 @@ function d2d_xmlrpc() {
     'd2d.secureRPC',
     'd2d_secure_rpc',
     array('string', 'string', 'string'),
-    t('General secure RPC')
+    t('General secure RPC'),
   );
   $methods[] = array(
     'd2d.secureRequest',
@@ -50,8 +50,9 @@ function d2d_get_public_key($d2d_id) {
 }
 /**
  * Get information about this instance.
- * (in particular this information is used for remote auto-completion
- *  of the add instance form)
+ *
+ * In particular this information is used for remote auto-completion
+ *  of the add instance form.
  */
 function d2d_get_instance_information() {
   if (!d2d_is_online()) {
