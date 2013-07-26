@@ -7,7 +7,7 @@
 require_once 'includes/d2d.constants.inc';
 
 /**
- * Implements hook_install()
+ * Implements hook_install().
  */
 function d2d_install() {
   variable_set('d2d_online', FALSE);
@@ -31,7 +31,7 @@ function d2d_install() {
 }
 
 /**
- * Implements hook_uninstall()
+ * implements hook_uninstall().
  */
 function d2d_uninstall() {
   variable_del('d2d_online');
@@ -40,13 +40,12 @@ function d2d_uninstall() {
   variable_del('d2d_timeout');
   variable_del('d2d_delta_0');
   variable_del('d2d_delta_1');
-  variable_del('d2d_private_key');
-  
+  variable_del('d2d_private_key');  
   drupal_uninstall_schema('d2d');
 }
 
 /**
- * Implements hook_schema()
+ * Implements hook_schema().
  */
 function d2d_schema() {
   $schema = array();
@@ -395,12 +394,12 @@ function d2d_schema() {
     ),
     'primary key' => array('id'),
   );
-  
+
   return $schema;
 }
 
 /**
- * Implements hook_requirements()
+ * Implements hook_requirements().
  */
 function d2d_requirements($phase) {
   $requirements = array();

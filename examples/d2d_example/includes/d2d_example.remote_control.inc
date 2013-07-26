@@ -17,7 +17,7 @@ function d2d_example_remote_control_form() {
   $options = array();
   $descriptions = array();
   $last_id = variable_get('d2d_example_remote_control_last_id');
-  $proposed_id = null;
+  $proposed_id = NULL;
   foreach ($friends as $friend) {
     $options[$friend['id']] = $friend['name'];
     $descriptions[$friend['id']] = $friend['url'];
@@ -28,7 +28,7 @@ function d2d_example_remote_control_form() {
   $form['friend'] = array(
     '#type' => 'radios',
     '#title' => t('Instance to run code on'),
-    '#default_value' => $proposed_id, 
+    '#default_value' => $proposed_id,
     '#options' => $options,
   );
   foreach ($descriptions as $id => $description) {
@@ -44,7 +44,7 @@ function d2d_example_remote_control_form() {
     '#required' => TRUE,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Run code'),
   );
   return $form;

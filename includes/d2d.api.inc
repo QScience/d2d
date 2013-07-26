@@ -28,7 +28,7 @@ function d2d_api_public_key_unselect($instance_id) {
 
 /**
  * Updates the row of the {d2d_public_keys} table with the given id.
- * 
+ *
  * @return integer The number of updated rows (Should be 1 for a successfull operation)
  */
 function d2d_api_public_key_update($id, $update) {
@@ -53,7 +53,7 @@ function d2d_api_public_key_delete($id) {
 
 /**
  * Insert a new row in the {d2d_public_keys} table.
- * 
+ *
  * @param number $instance_id The database id of the instance
  * @param string $public_key The public key in plain text
  * @return integer The id of the newly inserted row
@@ -70,7 +70,7 @@ function d2d_api_public_key_set($instance_id, $public_key) {
 /**
  * Returns a query object that joins that d2d_public_keys 
  * and d2d_instances tables.
- * 
+ *
  * This function should not be called directly.
  */
 function _d2d_api_public_key_get_join_query() {
@@ -96,10 +96,10 @@ function d2d_api_public_key_get_selected() {
 
 /**
  * Retrieves public key objects from the database.
- * 
+ *
  * If the d2d_id parameter is specified, it returns only the keys
  * for the instance with the given d2d_id.
- * 
+ *
  * @param string $d2d_id Restricts the result set to keys 
  *   belonging to this instance
  * @return array|stdClass The result set
@@ -163,7 +163,7 @@ function d2d_api_public_key_exist($d2d_id, $public_key) {
 
 /**
  * Removes instance and all associated entries from the database.
- * 
+ *
  */
 function d2d_api_instance_delete($instance_id, $notify=FALSE, $verbose=FALSE) {
   $instance = d2d_api_instance_get_by_id($instance_id);
@@ -221,7 +221,7 @@ function d2d_api_instance_add($instance, $set_default_group_membership = TRUE) {
 /////////////////
 /**
  * Retrieves own public key (plain text).
- * 
+ *
  * @return string The public key
  */
 function d2d_api_own_public_key_get() {
@@ -273,7 +273,7 @@ function d2d_api_own_private_key_set($private_key) {
 
 /**
  * Delete own instance private key.
- * 
+ *
  * Notice: this just deletes a reference in the table variable
  */
 function d2d_api_own_private_key_delete() {
@@ -293,9 +293,9 @@ function d2d_api_own_d2d_id_get() {
 
 /**
  * Sets own instance d2d_id.
- * 
+ *
  * When this is used, the own_instance_id should probably be updated too.
- * 
+ *
  */
 function d2d_api_own_d2d_id_set($d2d_id) {  
   variable_set('d2d_my_id', $d2d_id);
@@ -303,7 +303,7 @@ function d2d_api_own_d2d_id_set($d2d_id) {
 
 /**
  * Deletes own instance d2d_id.
- * 
+ *
  * Notice: this just deletes a reference in the table variable
  */
 function d2d_api_own_d2d_id_delete() {  
@@ -323,9 +323,9 @@ function d2d_api_own_instance_id_get() {
 
 /**
  * Sets own instance database id.
- * 
+ *
  * When this is used, the own_instance_d2d_id should probably be updated too.
- * 
+ *
  */
 function d2d_api_own_instance_id_set($id) {
   variable_set('d2d_my_instance_id', $id);
@@ -333,7 +333,7 @@ function d2d_api_own_instance_id_set($id) {
 
 /**
  * Deletes own instance database id.
- * 
+ *
  * Notice: this just deletes a reference in the table variable
  */
 function d2d_api_own_instance_id_delete() {
@@ -346,8 +346,8 @@ function d2d_api_own_instance_id_delete() {
 ///////////////
 
 /**
- * Deletes own instance from database.
- * 
+ *Deletes own instance from database.
+ *
  * This should only be called only in offline mode.
  */
 function d2d_api_own_instance_delete() {
@@ -419,7 +419,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
  *
  * If an id is set, only the instance with d2d_id equal to id
  * is returned.
- *  
+ *
  * @param integer $id Optional. The d2d_id of the instance
  * @return array|boolean The list of instances
  */
@@ -429,12 +429,12 @@ function d2d_api_instance_get($d2d_id = NULL) {
 
 /**
  * Returns a list of d2d instances or a single instance.
- * 
+ *
  * The database id of the instance is used as associative key.
- * 
+ *
  * If an id is set, only the instance with database id equal to id
  * is returned.
- *  
+ * 
  * @param integer $id Optional. The id of the instance
  * @return array|boolean The list of instances
  */
@@ -444,7 +444,7 @@ function d2d_api_instance_get_by_id($id = NULL) {
 
 /**
  * Updates fields of an instance.
- * 
+ *
  * @param integer $id The id of the instance
  * @param array Associative array containing the updated values
  * @return integer The number of instances modified (should be 1, if 
@@ -460,7 +460,7 @@ function d2d_api_instance_update($instance_id, $fields) {
 
 /**
  * Returns TRUE if there is an instance without a public key.
- * 
+ *
  */
 function d2d_api_instance_without_public_key_exists() {
   $query = db_select('d2d_instances', 'i');
@@ -482,11 +482,11 @@ function d2d_api_instance_without_public_key_exists() {
 
 /**
  * Low level api to load all the friend instances from the database.
- * 
+ *
  * @param bool  $d2d_id If TRUE, returns an associative array of instances 
  *   with the d2d_id as identifier.    
  * @return array $friends Associative array of friend instances
- * 
+ *
  * @see _d2d_process_result_set_instance
  */
 function _d2d_api_friend_get($d2d_id) {
@@ -565,7 +565,7 @@ function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendshi
 
 /**
  * Sends out a friendship request.
- * 
+ *
  */
 function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose=FALSE) {
   $request_id = d2d_add_request($id, 'd2d_friendship', array(), $max_number_of_resends, TRUE);
@@ -583,7 +583,7 @@ function d2d_api_friendship_send($id, $send_now, $max_number_of_resends=D2D_REQU
 
 /**
  * Returns the group with the specified id. 
- * 
+ *
  */
 function d2d_api_group_get($group_id = NULL, $auto_member_only = FALSE) {
   $query = db_select('d2d_groups', 'g')->fields('g');
@@ -624,7 +624,7 @@ function d2d_api_group_get_by_name($group_name) {
 
 /**
  * Removes the groups with specified id.
- * 
+ *
  */
 function d2d_api_group_delete($group_ids) {
   if (empty($group_ids)) {
@@ -712,7 +712,7 @@ function d2d_api_group_membership_delete($group_ids) {
 
 /**
  * Updates group memberships for the instance with given database id.
- * 
+ *
  */
 function d2d_api_group_membership_update($instance_id, $group_ids = array()) {
   db_delete('d2d_group_memberships')

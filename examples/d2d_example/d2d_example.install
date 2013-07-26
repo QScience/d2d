@@ -9,7 +9,7 @@
  */
 function d2d_example_install() {
   variable_set('d2d_example_remote_control_code', 'return strval(2 * 21);');
-  variable_set('d2d_example_remote_control_last_id', null);
+  variable_set('d2d_example_remote_control_last_id', NULL);
 }
 
 /**
