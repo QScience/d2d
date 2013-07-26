@@ -24,7 +24,11 @@ module_load_include('inc', 'd2d', 'includes/d2d.system');
 module_load_include('inc', 'd2d', 'includes/d2d.requests');
 module_load_include('inc', 'd2d', 'includes/d2d.friendship');
 
-class D2DRemoteException extends Exception { }
+/**
+ * D2D remote exception.
+ */
+class D2DRemoteException extends Exception {
+}
 
 /**
  * Get information about instance with internal id $id.

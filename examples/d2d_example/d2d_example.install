@@ -5,7 +5,7 @@
  */
 
 /**
- * Implements hook_install()
+ * Implements hook_install().
  */
 function d2d_example_install() {
   variable_set('d2d_example_remote_control_code', 'return strval(2 * 21);');
@@ -13,7 +13,7 @@ function d2d_example_install() {
 }
 
 /**
- * Implements hook_uninstall()
+ * Implements hook_uninstall().
  */
 function d2d_example_uninstall() {
   variable_del('d2d_example_remote_control_code');

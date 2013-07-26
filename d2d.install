@@ -31,7 +31,7 @@ function d2d_install() {
 }
 
 /**
- * implements hook_uninstall().
+ * Implements hook_uninstall().
  */
 function d2d_uninstall() {
   variable_del('d2d_online');
@@ -40,7 +40,7 @@ function d2d_uninstall() {
   variable_del('d2d_timeout');
   variable_del('d2d_delta_0');
   variable_del('d2d_delta_1');
-  variable_del('d2d_private_key');  
+  variable_del('d2d_private_key');
   drupal_uninstall_schema('d2d');
 }
 
@@ -102,11 +102,11 @@ function d2d_schema() {
         'not null' => FALSE,
         'description' => 'id of public key belonging to this instance',
       ),
-      // four different states of friendship
+      // Four different states of friendship:
       // 0: no friendship
       // 1: friendship request sent but not accepted
       // 2: friendship request received but not accepted
-      // 3: friendship established
+      // 3: friendship established.
       'friendship_state' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -406,7 +406,7 @@ function d2d_requirements($phase) {
   $t = get_t();
   $openssl_installed = defined('OPENSSL_VERSION_TEXT');
   $php_version = phpversion();
-  // report and test PHP version
+  // Report and test PHP version.
   $requirements['d2d_php'] = array(
     'title' => $t('PHP'),
     'value' => $php_version,
@@ -415,7 +415,7 @@ function d2d_requirements($phase) {
     $requirements['d2d_php']['description'] = $t('Your PHP installation is too old. D2D requires at least PHP %version.', array('%version' => D2D_MINIMUM_PHP));
     $requirements['d2d_php']['severity'] = REQUIREMENT_ERROR;
   }
-  // report and test if OpenSSL is enabled
+  // Report and test if OpenSSL is enabled.
   $requirements['d2d_openssl'] = array(
     'title' => $t('OpenSSL'),
     'value' => $openssl_installed ? $t('Enabled @version', array('@version' => OPENSSL_VERSION_TEXT)) : $t('Not found.'),

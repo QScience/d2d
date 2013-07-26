@@ -6,7 +6,7 @@
 
 /**
  * Generate public / private key pair.
- */ 
+ */
 function d2d_create_keys(&$public_key, &$private_key) {
   $res = @openssl_pkey_new();
   if ($res === FALSE) {
@@ -71,8 +71,13 @@ function d2d_sign2($data, $private_key, $signer) {
  * Check signature.
  */
 function d2d_verify($signature_string, $public_key, &$signature_array) {
-  if (($array = d2d_explode($signature_string)) === FALSE || !d2d_check_array($array, array('data' => 'is_string', 'signature' => 'is_string', 'signer' => 'is_string')) || 
-    (@openssl_verify($array['data'], $array['signature'], $public_key) !== 1)) {
+  $signature_format = array(
+    'data' => 'is_string',
+    'signature' => 'is_string',
+    'signer' => 'is_string',
+  );
+  $array = d2d_explode($signature_string);
+  if ($array === FALSE || !d2d_check_array($array, $signature_format) || (@openssl_verify($array['data'], $array['signature'], $public_key) !== 1)) {
     return FALSE;
   }
   $signature_array = $array;
@@ -101,12 +106,12 @@ function d2d_encrypt($data, &$encrypted_data, $public_key) {
  * Decrypt data.
  */
 function d2d_decrypt($encrypted_data, &$data, $private_key) {
-  // explode $encrypted_data
+  // Explode $encrypted_data.
   $cipher_envkey = d2d_explode($encrypted_data);
   if ($cipher_envkey === FALSE) {
     return FALSE;
   }
-  // check if exploded $encrypted_data is of desired structure
+  // Check if exploded $encrypted_data is of desired structure.
   if (!d2d_check_array($cipher_envkey, array('cipher' => 'is_string', 'env_key' => 'is_string'))) {
     return FALSE;
   }
