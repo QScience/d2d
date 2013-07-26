@@ -15,7 +15,7 @@ define('D2D_METHOD_NAME_MAX_LENGTH', 128);
 define('D2D_INSTANCE_IDENTIFIER_LENGTH', 32);
 define('D2D_NONCE_LENGTH', 32);
 
-// in seconds
+// In seconds.
 define('D2D_UTC_OFFSET_DEFAULT', 0);
 define('D2D_UTC_OFFSET_MIN', -86400);
 define('D2D_UTC_OFFSET_MAX', 86400);
@@ -36,8 +36,8 @@ define('D2D_NOTIFICATION_TYPE_MAX_LENGTH', 128);
 
 define('D2D_REQUEST_TYPE_MAX_LENGTH', 128);
 
-define('D2D_REQUEST_VALIDITY', 2 * 24 * 60 * 60); // 2 days
-define('D2D_REQUEST_TIME_UNTIL_RESEND', 30 * 60); // 30 minutes
+define('D2D_REQUEST_VALIDITY', 2 * 24 * 60 * 60);
+define('D2D_REQUEST_TIME_UNTIL_RESEND', 30 * 60);
 define('D2D_REQUEST_MAX_NUMBER_OF_RESENDS', 50);
 
 define('D2D_IP_MAX_LENGTH', 128);

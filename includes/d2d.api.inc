@@ -143,7 +143,7 @@ function d2d_api_public_key_get_by_id($id) {
  * @param string $public_key
  *   The plain text public key
  *
- * @return boolean|integer
+ * @return bool|integer
  *   The public key id, or FALSE if an error occurs
  *
  * @see d2d_public_key_equal()
@@ -419,7 +419,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
  * @param int $d2d_id
  *   Optional. The d2d_id of the instance
  *
- * @return array|boolean
+ * @return array|bool
  *   The list of instances
  */
 function d2d_api_instance_get($d2d_id = NULL) {
@@ -437,7 +437,7 @@ function d2d_api_instance_get($d2d_id = NULL) {
  * @param int $id
  *   Optional. The id of the instance
  *
- * @return array|boolean
+ * @return array|bool
  *   The list of instances
  */
 function d2d_api_instance_get_by_id($id = NULL) {

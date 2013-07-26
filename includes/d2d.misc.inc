@@ -12,8 +12,11 @@ function d2d_get_version() {
 }
 
 /**
- * Returns the options for an XML-RPC request, i.e. the third argument given
- * to xmlrpc(...)
+ * Returns the options for an XML-RPC request.
+ *
+ * Used as the third argument when calling xmlrpc().
+ *
+ * @see xmlrpc()
  */
 function d2d_xmlrpc_options() {
   return array(
@@ -24,8 +27,11 @@ function d2d_xmlrpc_options() {
 /**
  * Changes the online state of this D2D-instance.
  *
- * @param bool $online the desired new online state.
- * @return bool the new online state.
+ * @param bool $online
+ *   the desired new online state.
+ *
+ * @return bool
+ *   the new online state.
  */
 function d2d_change_online_state($online) {
   return $online ? d2d_go_online() : d2d_go_offline();
@@ -34,7 +40,8 @@ function d2d_change_online_state($online) {
 /**
  * Changes the state of this D2D-instance to offline.
  *
- * @return bool the new online state.
+ * @return bool
+ *   the new online state.
  */
 function d2d_go_offline() {
   variable_set('d2d_online', FALSE);
@@ -44,7 +51,8 @@ function d2d_go_offline() {
 /**
  * Changes the state of this D2D-instance to online.
  *
- * @return bool the new online state.
+ * @return bool
+ *   the new online state.
  */
 function d2d_go_online() {
   $public_key = d2d_api_own_public_key_get();
@@ -65,12 +73,19 @@ function d2d_is_online() {
   return variable_get('d2d_online', FALSE);
 }
 
+/**
+ * Returns time corrected by an offset.
+ */
 function d2d_get_time() {
   return time() + variable_get('d2d_utc_offset', D2D_UTC_OFFSET_DEFAULT);
 }
 
-// TODO: use t(.) for units
-function d2d_format_unit($v, $unit, $skip=FALSE) {
+/**
+ * Formats a unit.
+ *
+ * TODO: use t().
+ */
+function d2d_format_unit($v, $unit, $skip = FALSE) {
   if (!$v && $skip) {
     return '';
   }
@@ -79,11 +94,17 @@ function d2d_format_unit($v, $unit, $skip=FALSE) {
   }
 }
 
-// TODO: localization
+/**
+ * Returns the current time.
+ */
 function d2d_get_absolute_time($t) {
+  // TODO: localization.
   return date('F j, Y, g:i a', $t);
 }
 
+/**
+ * Checks if an URL is valid.
+ */
 function d2d_check_url($url) {
   if (!is_string($url)) {
     return FALSE;
@@ -94,6 +115,11 @@ function d2d_check_url($url) {
   return strlen($url) <= D2D_INSTANCE_URL_MAX_LENGTH;
 }
 
+/**
+ * Get string describing time relative to current time.
+ *
+ * TODO: localization.
+ */
 function d2d_get_relative_time($t) {
   $diff = $t - d2d_get_time();
   $prefix = '';
@@ -130,6 +156,9 @@ function d2d_get_relative_time($t) {
   return $prefix . $relative . $suffix;
 }
 
+/**
+ * Converts a bool to a string.
+ */
 function d2d_bool_to_str($b) {
   if (is_null($b)) {
     return t('may be');
@@ -140,66 +169,46 @@ function d2d_bool_to_str($b) {
 }
 
 /**
- * Return string stating friendship
- */
-function d2d_get_friendship_string($signer, $friend, $until) {
-  return d2d_implode(
-    array(
-      'type' => 'friendship',
-      'signer' => $signer,
-      'friend' => $friend,
-      'until' => $until,
-    )
-  );
-}
-
-function d2d_get_request_type($i) {
-  switch ($i) {
-    case 0:
-      return 'request';
-    case 1:
-      return 'accept';
-    case 2:
-      return 'renew';
-    default:
-      return 'N/A';
-  }
-}
-
-/**
- * Adds convenient fields to an instance array
- * 
+ * Adds convenient fields to an instance array.
+ *
  * Modifies the instance array
- * 
+ *
  * @param array $instance
+ *   The array to be decorated.
  */
 function _d2d_decorate_instance_array(&$instance) {
-  if (empty($instance)) return;
+  if (empty($instance)) {
+    return;
+  }
   $instance['is_friend'] = $instance['friendship_state'] == 3;
   $instance['is_me'] = d2d_api_own_d2d_id_get() == $instance['d2d_id'];
 }
 
 /**
- * Performs transformations on the list of instances as loaded from the database
- * 
+ * Performs transformations on list of instances as loaded from the database.
+ *
  * @param array $result_set
- * @param boolean $d2d_id If TRUE, sets the associative keys of each instance to their d2d_id. 
+ *   Array consisting of stdClass objects
+ * @param bool $d2d_id
+ *   If TRUE, sets the associative keys of each instance to their d2d_id.
  *   Defaults, FALSE (keys are set to their instance id)
- * @return array The transformed result set
+ *
+ * @return array
+ *   The transformed result set
  */
 function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
   $instances = array();
   foreach ($result_set as $record) {
     $instances[$d2d_id ? $record->d2d_id : $record->id] = array(
-        'id' => $record->id,
-        'd2d_id' => $record->d2d_id,
-        'name' => $record->name,
-        'url' => $record->url,
-        'description' => $record->description,
-        'time_inserted' => $record->time_inserted,
-        'last_alive' => $record->last_alive,
-        'public_key' => $record->public_key,
-        'friendship_state' => $record->friendship_state,
+      'id' => $record->id,
+      'd2d_id' => $record->d2d_id,
+      'name' => $record->name,
+      'url' => $record->url,
+      'description' => $record->description,
+      'time_inserted' => $record->time_inserted,
+      'last_alive' => $record->last_alive,
+      'public_key' => $record->public_key,
+      'friendship_state' => $record->friendship_state,
     );
     _d2d_decorate_instance_array($instances[$d2d_id ? $record->d2d_id : $record->id]);
   }
@@ -208,7 +217,7 @@ function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
 }
 
 /**
- * Include the instance with the provided ID in all groups that are marked as default.
+ * Include instance specified by id in all groups that are marked as default.
  */
 function d2d_set_default_group_memberships($id) {
   db_delete('d2d_group_memberships')
@@ -222,9 +231,17 @@ function d2d_set_default_group_memberships($id) {
     $query->execute();
   }
 }
+
+/**
+ * Checks if a timestamp is not too far off from a specified time.
+ */
 function d2d_verify_timestamp($current_time, $timestamp) {
   return $timestamp >= $current_time - variable_get('d2d_delta_0', D2D_DELTA_0_DEFAULT) && $timestamp <= $current_time + variable_get('d2d_delta_1', D2D_DELTA_1_DEFAULT);
 }
+
+/**
+ * Checks if a nonce has been seen before.
+ */
 function d2d_verify_nonce($timestamp, $nonce) {
   try {
     db_insert('d2d_nonces')->fields(array(
@@ -238,14 +255,24 @@ function d2d_verify_nonce($timestamp, $nonce) {
   return TRUE;
 }
 
+/**
+ * Converts a d2d-id to an internal id.
+ */
 function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
-  if (empty($d2d_id)) return FALSE;
+  if (empty($d2d_id)) {
+    return FALSE;
+  }
   $instance = d2d_api_instance_get($d2d_id);
   return $instance !== FALSE ? $instance['id'] : FALSE;
 }
 
+/**
+ * Converts an internal id to a d2d-id.
+ */
 function d2d_convert_id_to_d2d_id($id = NULL) {
-  if (empty($id)) return FALSE;
+  if (empty($id)) {
+    return FALSE;
+  }
   $instance = d2d_api_instance_get_by_id($id);
   return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
 }
