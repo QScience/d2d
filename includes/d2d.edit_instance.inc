@@ -29,8 +29,8 @@ function d2d_form_delete_public_key($form, &$form_state, $id) {
 }
 
 /**
-* Form submission handler for d2d_form_delete_public_key().
-*/
+ * Form submission handler for d2d_form_delete_public_key().
+ */
 function d2d_form_delete_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $num_updated = d2d_api_public_key_unselect($id);
