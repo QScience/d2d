@@ -5,6 +5,16 @@
  * Functions directly related to the edit instance tab.
  */
 
+/**
+ * Form constructor for deleting a public key.
+ *
+ * @param int $id
+ *   The id of the public key to delete
+ * 
+ * @see d2d_form_delete_public_key_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_delete_public_key($form, &$form_state, $id) {
   $form = array();
   $form['id'] = array(
@@ -18,6 +28,9 @@ function d2d_form_delete_public_key($form, &$form_state, $id) {
   return $form;
 }
 
+/**
+* Form submission handler for d2d_form_delete_public_key().
+*/
 function d2d_form_delete_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $num_updated = d2d_api_public_key_unselect($id);
@@ -31,6 +44,16 @@ function d2d_form_delete_public_key_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Form constructor for receiving a public key.
+ *
+ * @param int $id
+ *   The id of the instance to whom requesting the public key.
+ * 
+ * @see d2d_form_receive_public_key_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_receive_public_key($form, &$form_state, $id) {
   $form = array();
   $form['id'] = array(
@@ -44,6 +67,9 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
   return $form;
 }
 
+/**
+ * Form submission handler for d2d_form_receive_public_key().
+ */
 function d2d_form_receive_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $instance = d2d_api_instance_get_by_id($id);
@@ -63,7 +89,7 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
   }
   else {
     drupal_set_message(t('Public key has been received.'));
-    // TODO: check length / format of received string
+    // TODO: check length / format of received string.
     $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $res);
     if ($public_key_id !== FALSE) {
       drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $public_key_id)), 'error');
@@ -75,6 +101,20 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Form constructor for editing an instance.
+ *
+ * @param int $id
+ *   The id of the instance to edit.
+ *
+ * @param array $instance
+ *   Associative array containing the values to update
+ * 
+ * @see d2d_form_edit_instance_validate()
+ * @see d2d_form_edit_instance_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
   $form = array();
   $form['url'] = array(
@@ -115,6 +155,9 @@ function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
   return $form;
 }
 
+/**
+ * Form validation handler for d2d_form_edit_instance().
+ */
 function d2d_form_edit_instance_validate($form, &$form_state) {
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
     form_set_error('description', t('Provided description must be no longer than @max_length characters', array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH)));
@@ -124,6 +167,9 @@ function d2d_form_edit_instance_validate($form, &$form_state) {
   }
 }
 
+/**
+ * Form submission handler for d2d_form_edit_instance().
+ */
 function d2d_form_edit_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $name = $form_state['values']['name'];
@@ -138,6 +184,20 @@ function d2d_form_edit_instance_submit($form, &$form_state) {
   drupal_set_message(t('Details have been saved.'));
 }
 
+/**
+ * Form constructor for choosing or deleting a public key.
+ *
+ * @param int $id
+ *   The id of the instance.
+ *
+ * @param int $public_key_id
+ *   The id of the public key
+ * 
+ * @see d2d_form_delete_public_key_submit()
+ * @see d2d_form_choose_candidate_public_key_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id, $public_key_id) {
   $form = array();
   $form['id'] = array(
@@ -161,6 +221,9 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
   return $form;
 }
 
+/**
+ * Form submission handler for d2d_form_delete_or_choose_candidate_public_key().
+ */
 function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   $public_key_id = $form_state['values']['public_key_id'];
   $num_updated = d2d_api_public_key_delete($public_key_id);
@@ -172,11 +235,14 @@ function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Form submission handler for d2d_form_delete_or_choose_candidate_public_key().
+ */
 function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $public_key_id = $form_state['values']['public_key_id'];
-// TODO!!
-//  d2d_invalidate($id);
+  
+  // TODO: d2d_invalidate($id).
   $num_updated = d2d_api_instance_update($id, array('public_key_id' => $public_key_id));
   
   if ($num_updated > 0) {
@@ -189,6 +255,16 @@ function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
   d2d_incoming_requests_reevaluate_signatures($instance);
 }
 
+/**
+ * Form constructor to edit groups by intance.
+ *
+ * @param int $id
+ *   The id of the instance.
+ * 
+ * @see d2d_form_groups_by_instance_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_groups_by_instance($form, &$form_state, $id) {
   $rows = array();
   $default_value = array();
@@ -222,6 +298,9 @@ function d2d_form_groups_by_instance($form, &$form_state, $id) {
   return $form;
 }
 
+/**
+ * Form submission handler for d2d_form_groups_by_instance().
+ */
 function d2d_form_groups_by_instance_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $ids = _d2d_get_ids($form_state, 'groups_table', 2);
@@ -229,6 +308,19 @@ function d2d_form_groups_by_instance_submit($form, &$form_state) {
   drupal_set_message(t('The changes have been saved.'));
 }
 
+/**
+ * Form constructor to check a public key.
+ *
+ * @param int $id
+ *   The id of the instance.
+ *
+ * @param int $d2d_id
+ *   The d2d_id of the instance
+ * 
+ * @see d2d_form_check_public_keys_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
   $form = array();
   $form['id'] = array(
@@ -246,6 +338,9 @@ function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
   return $form;
 }
 
+/**
+ * Form submission handler for d2d_form_check_public_keys().
+ */
 function d2d_form_check_public_keys_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $d2d_id= $form_state['values']['d2d_id'];
@@ -278,6 +373,9 @@ function d2d_form_check_public_keys_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Creates the header part of the edit instance form.
+ */
 function _d2d_edit_instance_build_header($instance) {
   d2d_notify();
   $build = array();
@@ -302,24 +400,17 @@ function _d2d_edit_instance_build_header($instance) {
   return $build;
 }
 
-function d2d_form_remove_instance_submit($form, &$form_state) {
-
-  $id = $form_state['values']['id'];
-  $notify = !empty($form_state['values']['notify']);
-  $n_deleted = d2d_api_instance_delete($id, $notify);
-  drupal_set_message(t('Successfully removed instance from database.'));
-  if ($notify && !$n_deleted) {
-    drupal_set_message(t('Notification to instance could not be sent.'), 'warning');
-  }
-  drupal_goto('admin/d2d');
-}
-
-function d2d_form_remove_instance_validate($form, &$form_state) {
-  if (!$form_state['values']['remove']) {
-    form_set_error('remove', t('Mark the checkbox below to show that you understand the consequences of removing this instance.'));
-  }
-}
-
+/**
+ * Form constructor for removing an instance.
+ *
+ * @param array $id
+ *   An associative array representing the instance.
+ *
+ * @see d2d_form_remove_instance_validate()
+ * @see d2d_form_remove_instance_submit()
+ *
+ * @ingroup forms
+ */
 function d2d_form_remove_instance($form, &$form_state, $instance) {
   $form = array();
   $form['id'] = array(
@@ -350,6 +441,30 @@ function d2d_form_remove_instance($form, &$form_state, $instance) {
     '#value' => t('Remove instance'),
   );
   return $form;
+}
+
+/**
+ * Form submission handler for d2d_form_remove_instance().
+ */
+function d2d_form_remove_instance_submit($form, &$form_state) {
+
+  $id = $form_state['values']['id'];
+  $notify = !empty($form_state['values']['notify']);
+  $n_deleted = d2d_api_instance_delete($id, $notify);
+  drupal_set_message(t('Successfully removed instance from database.'));
+  if ($notify && !$n_deleted) {
+    drupal_set_message(t('Notification to instance could not be sent.'), 'warning');
+  }
+  drupal_goto('admin/d2d');
+}
+
+/**
+ * Form validation handler for d2d_form_remove_instance().
+ */
+function d2d_form_remove_instance_validate($form, &$form_state) {
+  if (!$form_state['values']['remove']) {
+    form_set_error('remove', t('Mark the checkbox below to show that you understand the consequences of removing this instance.'));
+  }
 }
 
 function d2d_edit_instance_details($instance) {
