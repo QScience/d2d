@@ -10,7 +10,7 @@
  *
  * @param int $id
  *   The id of the public key to delete
- * 
+ *
  * @see d2d_form_delete_public_key_submit()
  *
  * @ingroup forms
@@ -22,7 +22,7 @@ function d2d_form_delete_public_key($form, &$form_state, $id) {
     '#value' => $id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Remove public key'),
   );
   return $form;
@@ -49,7 +49,7 @@ function d2d_form_delete_public_key_submit($form, &$form_state) {
  *
  * @param int $id
  *   The id of the instance to whom requesting the public key.
- * 
+ *
  * @see d2d_form_receive_public_key_submit()
  *
  * @ingroup forms
@@ -61,7 +61,7 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
     '#value' => $id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Receive public key'),
   );
   return $form;
@@ -109,7 +109,7 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
  *
  * @param array $instance
  *   Associative array containing the values to update
- * 
+ *
  * @see d2d_form_edit_instance_validate()
  * @see d2d_form_edit_instance_submit()
  *
@@ -149,7 +149,7 @@ function d2d_form_edit_instance($form, &$form_state, $id, $instance) {
     '#value' => $id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Save',
   );
   return $form;
@@ -192,7 +192,7 @@ function d2d_form_edit_instance_submit($form, &$form_state) {
  *
  * @param int $public_key_id
  *   The id of the public key
- * 
+ *
  * @see d2d_form_delete_public_key_submit()
  * @see d2d_form_choose_candidate_public_key_submit()
  *
@@ -209,12 +209,12 @@ function d2d_form_delete_or_choose_candidate_public_key($form, &$form_state, $id
     '#value' => $public_key_id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Remove public key from database',
     '#submit' => array('d2d_form_delete_candidate_public_key_submit'),
   );
   $form['submit2'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Choose this public key',
     '#submit' => array('d2d_form_choose_candidate_public_key_submit'),
   );
@@ -241,10 +241,10 @@ function d2d_form_delete_candidate_public_key_submit($form, &$form_state) {
 function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $public_key_id = $form_state['values']['public_key_id'];
-  
+
   // TODO: d2d_invalidate($id).
   $num_updated = d2d_api_instance_update($id, array('public_key_id' => $public_key_id));
-  
+
   if ($num_updated > 0) {
     drupal_set_message(t('Chosen new public key.'));
   }
@@ -260,7 +260,7 @@ function d2d_form_choose_candidate_public_key_submit($form, &$form_state) {
  *
  * @param int $id
  *   The id of the instance.
- * 
+ *
  * @see d2d_form_groups_by_instance_submit()
  *
  * @ingroup forms
@@ -292,7 +292,7 @@ function d2d_form_groups_by_instance($form, &$form_state, $id) {
     '#default_value' => $default_value,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Save changes',
   );
   return $form;
@@ -316,7 +316,7 @@ function d2d_form_groups_by_instance_submit($form, &$form_state) {
  *
  * @param int $d2d_id
  *   The d2d_id of the instance
- * 
+ *
  * @see d2d_form_check_public_keys_submit()
  *
  * @ingroup forms
@@ -332,7 +332,7 @@ function d2d_form_check_public_keys($form, &$form_state, $id, $d2d_id) {
     '#value' => $d2d_id,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Check friends\' public keys'),
   );
   return $form;
@@ -437,7 +437,7 @@ function d2d_form_remove_instance($form, &$form_state, $instance) {
     );
   }
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Remove instance'),
   );
   return $form;
@@ -642,7 +642,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
     '#disabled' => !$has_public_key,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Send'),
   );
   return $form;
@@ -689,7 +689,7 @@ function d2d_form_force_friendship($form, &$form_state, $id, $old_friendship_sta
     '#required' => TRUE,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Force friendship state'),
   );
   return $form;
@@ -742,7 +742,7 @@ function d2d_edit_instance_permissions($instance) {
     foreach ($hks as $key => $value) {
       if (array_key_exists($key, $method_table)) {
         $col1 = array(
-          '#type' => 'item',  
+          '#type' => 'item',
           '#markup' => $key,
           '#description' => isset($value['description']) ? $value['description'] : '',
         );
@@ -798,7 +798,7 @@ function d2d_edit_instance_remote_permissions($instance) {
           if ($exploded_record) {
             if (d2d_check_array($exploded_record, array('method' => 'is_string', 'description' => 'is_string', 'arguments' => 'is_string'))) {
               $col1 = array(
-                '#type' => 'item',  
+                '#type' => 'item',
                 '#markup' => check_plain($exploded_record['method']),
                 '#description' => check_plain($exploded_record['description']),
               );
