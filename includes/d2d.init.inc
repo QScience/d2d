@@ -4,15 +4,21 @@
  * Functions for adjusting the settings of D2D.
  */
 
+/**
+ * Menu callback; shows the welcome page.
+ */
 function d2d_show_init() {
   $build['init'] = array(
     '#title' => t('Welcome to D2D'),
     '#type' => 'fieldset',
   );
   $build['init'][] = drupal_get_form('d2d_form_init');
-//  d2d_notify();
+  // d2d_notify();
   return $build;
 }
+/**
+ * Extracts a possible name for the instance based on its $base_url.
+ */
 function _d2d_suggest_instance_name($base_url) {
   $array = array_reverse(explode('/', $base_url));
   foreach ($array as $token) {
@@ -22,11 +28,15 @@ function _d2d_suggest_instance_name($base_url) {
   }
   return 'My D2D';
 }
-function d2d_form_init() {
-  $form = array();
 
+/**
+ * Form constructor for creating the own instance.
+ *
+ * @ingroup forms
+ */
+function d2d_form_init() {
   $form['introduction'] = array(
-      '#markup' => t('Before using D2D, please provide a @length characters long D2D identifier. This identifier should be unique among all installations of D2D. It is recommended to generate that identifier randomly (e.g. by using the button below). If you installed D2D before, you can reuse the identifier of your old installation.', array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)),
+    '#markup' => t('Before using D2D, please provide a @length characters long D2D identifier. This identifier should be unique among all installations of D2D. It is recommended to generate that identifier randomly (for example by using the button below). If you installed D2D before, you can reuse the identifier of your old installation.', array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)),
   );
   $form['name'] = array(
     '#type' => 'textfield',
@@ -40,16 +50,14 @@ function d2d_form_init() {
   $form['id'] = array(
     '#type' => 'textfield',
     '#title' => t('D2D Identifier'),
-    '#description' =>
-      t(
-        'Globally unique identifier consisting of exactly @length hexadecimal characters (A-F, 0-9).<br/>' . 
-        'Note: once you have saved the global identifier, it cannot be changed anymore.',
-        array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)
-      ),
+    '#description' => t('Globally unique identifier consisting of exactly @length hexadecimal characters (A-F, 0-9).<br/> Note: once you have saved the global identifier, it cannot be changed anymore.', array(
+      '@length' => D2D_INSTANCE_IDENTIFIER_LENGTH,
+    )),
     '#default_value' => d2d_random_d2d_id(),
     '#size' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#maxlength' => D2D_INSTANCE_IDENTIFIER_LENGTH,
-    '#required' => FALSE, // length is checked anyway, no error if 'generate'-button is pressed
+    // Length is checked anyway, no error if 'generate'-button is pressed.
+    '#required' => FALSE,
   );
   $form['address'] = array(
     '#type' => 'textfield',
@@ -64,35 +72,44 @@ function d2d_form_init() {
     '#type' => 'checkbox',
     '#default_value' => FALSE,
     '#title' => t('Automatically select public / private key pair and go online.'),
-    '#description' => t('If selected, a random public / private key pair is automatically chosen and the instance will be marked as online, i.e. other instances will be able to see this instance and to communicate with this instance. Do not select this option if you want to manually set your public / private key pair, e.g. to reuse keys you have used with an old installation or if you do not want your instance to be online immediatelly.'),
+    '#description' => t('If selected, a random public / private key pair is automatically chosen and the instance will be marked as online, i.e. other instances will be able to see this instance and to communicate with this instance. Do not select this option if you want to manually set your public / private key pair, for example to reuse keys you have used with an old installation or if you do not want your instance to be online immediatelly.'),
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Save and continue'),
   );
   $form['generate'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Generate different random identifier'),
     '#validate' => array('d2d_form_init_generate_validate'),
     '#submit' => array(),
   );
   return $form;
 }
+
+/**
+ * Form validation handler for d2d_form_init_validate().
+ */
 function d2d_form_init_validate($form, &$form_state) {
   $id = $form_state['values']['id'];
   if (!d2d_check_d2d_id_length($id)) {
-    form_set_error('id', t('Identifier must constist of exactly @length characters.', array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)));
+    form_set_error('id', t('Identifier must constist of exactly @length characters.', array(
+      '@length' => D2D_INSTANCE_IDENTIFIER_LENGTH,
+    )));
   }
   if (!d2d_is_hex_string($id)) {
     form_set_error('id', t('Identifier must consists only of hexadecimal characters (A-F, 0-9).'));
   }
   if (!d2d_check_url($form_state['values']['address'])) {
-    form_set_error('address', t('Address must start with \'http://\' or \'https://\'.'));
+    form_set_error('address', t("Address must start with 'http://' or 'https://'."));
   }
 }
+
+/**
+ * Form submission handler for d2d_form_init_validate().
+ */
 function d2d_form_init_submit($form, &$form_state) {
-  // we create the key pair first to return on error without mofifying
-  // the database
+  // Create the key pair and returns on error without mofifying the database.
   if ($form_state['values']['auto_keys_and_online']) {
     if (!d2d_create_keys($my_public_key, $my_private_key)) {
       drupal_set_message(t('Failed creating public / private key pair.'), 'error');
@@ -100,7 +117,7 @@ function d2d_form_init_submit($form, &$form_state) {
     }
   }
   $my_d2d_id = $form_state['values']['id'];
-  // add own instance to database
+  // Add own instance to database.
   $instance = array(
     'name' => $form_state['values']['name'],
     'url' => $form_state['values']['address'],
@@ -123,9 +140,16 @@ function d2d_form_init_submit($form, &$form_state) {
   menu_rebuild();
   drupal_set_message(t('Settings have been saved.'));
 }
+
+/**
+ * Form validation handler for d2d_form_init().
+ *
+ * Interrupts the form submission to allow autocomplete.
+ */
 function d2d_form_init_generate_validate($form, &$form_state) {
   $id = d2d_random_d2d_id();
   $form_state['complete form']['id']['#value'] = $id;
-  form_set_error(''); // TODO: this is basically a hack, better ways to do this?
-  drupal_set_message(t('Click \'Save & continue\' to proceed with this random identifier.'));
+  // TODO: this is basically a hack, better ways to do this?
+  form_set_error('');
+  drupal_set_message(t("Click 'Save & continue' to proceed with this random identifier."));
 }

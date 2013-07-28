@@ -5,6 +5,11 @@
  * Functions directly related to the list instances tab.
  */
 
+/**
+ * Form constructor for adding a new instance.
+ *
+ * @ingroup forms
+ */
 function d2d_form_add_instance() {
   $form = array();
   $default_d2d_id = '';
@@ -37,7 +42,8 @@ function d2d_form_add_instance() {
     '#default_value' => $default_d2d_id,
     '#size' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#maxlength' => D2D_INSTANCE_IDENTIFIER_LENGTH,
-    '#required' => FALSE, // length is checked anyway, no error if 'generate'-button is pressed
+    // Length is checked anyway, no error if 'generate'-button is pressed.
+    '#required' => FALSE,
   );
   $form['name'] = array(
     '#type' => 'textfield',
@@ -51,25 +57,29 @@ function d2d_form_add_instance() {
   $form['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Description of the instance'),
-    '#description' => t('An optional longer desciption of the newly added instance, no longer than @length characters.', array('@length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH)),
+    '#description' => t('An optional longer desciption of the newly added instance, no longer than @length characters.', array(
+      '@length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH,
+    )),
     '#rows' => 4,
     '#cols' => 60,
     '#default_value' => t('N/A'),
     '#required' => FALSE,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Add instance'),
     '#validate' => array('d2d_form_add_instance_submit_validate'),
     '#submit' => array('d2d_form_add_instance_submit_submit'),
   );
   $form['auto_complete'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Auto complete form'),
     '#validate' => array('d2d_form_add_instance_auto_complete_validate'),
   );
   return $form;
 }
+
+
 function d2d_form_add_instance_submit_validate($form, &$form_state) {
   d2d_form_add_instance_validate($form, $form_state);
   if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
@@ -90,6 +100,10 @@ function d2d_form_add_instance_submit_validate($form, &$form_state) {
     }
   }
 }
+
+/**
+ * Form validation handler for d2d_form_add_instance().
+ */
 function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
   if (d2d_form_add_instance_validate($form, $form_state)) {
     $url = $form_state['values']['url'];
@@ -170,7 +184,7 @@ function theme_d2d_table_instances($variables) {
     $rows[] = $row;
   }
   return theme('table', array(
-    'header' => $header, 
+    'header' => $header,
     'rows' => $rows,
   ));
 }
@@ -255,18 +269,6 @@ function d2d_list_instances() {
       l(t('edit'), 'admin/d2d/instances/' . $instance['id'] . '/details'),
     );
   }
-  $build = array();
-//  $build['instances'] = array(
-//    '#title' => 'Instances in the database',
-//    '#type' => 'fieldset',
-//    //'#description' => 'For showing and modifying details about an instance click on its ID.',
-//  );
-//  $build['instances'][] = array(
-//    '#theme' => 'table',
-//    '#header' => array('ID', 'Name', 'D2D ID', 'URL', 'Inserted', /*'Last Seen',*/ /*'Description',*/ 'Public Key', 'Friend', 'Operation'),
-//    '#rows' => $rows,
-//    '#empty' => t('No instance in database.'),
-//  );
   $build['instances2'] = array(
     '#title' => 'Instances in the database',
     '#type' => 'fieldset',

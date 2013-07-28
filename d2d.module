@@ -45,7 +45,6 @@ function d2d_id_load($id) {
  * Implements hook_menu().
  */
 function d2d_menu() {
-  $items = array();
   if (!d2d_api_initialization_is_completed()) {
     $items['admin/d2d'] = array(
       'title' => 'D2D',

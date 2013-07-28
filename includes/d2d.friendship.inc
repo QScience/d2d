@@ -4,6 +4,9 @@
  * Callback functions for establishing friendship.
  */
 
+/**
+ * Returns a human understandable text describing the current friendship state.
+ */
 function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $instance, &$persistent_state) {
   $comment = '';
   if (is_null($persistent_state)) {
@@ -22,21 +25,43 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
   return $return . ' ' . $comment;
 }
 
+/**
+ * D2D callback; decides whether to send or not a friendship request.
+ */
 function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $instance, &$persistent_state, &$arguments_send) {
+
   if (is_null($persistent_state)) {
     $persistent_state = TRUE;
   }
   else {
-    return NULL; // do not send and delete
+    // Do not send and delete.
+    return NULL;
   }
+
   switch ($instance['friendship_state']) {
-    case 0: $arguments_send = array('state' => 'FALSE'); return TRUE; // no friendship, send
-    case 1: $arguments_send = array('state' => 'TRUE'); return TRUE; // friendship, send
-    case 2: return NULL; // no friendship, do not send and delete
-    default: $arguments_send = array('state' => 'TRUE'); return TRUE;
+    case 0:
+      // No friendship, send.
+      $arguments_send = array('state' => 'FALSE');
+      return TRUE;
+
+    case 1:
+      // Friendship, send.
+      $arguments_send = array('state' => 'TRUE');
+      return TRUE;
+
+    case 2:
+      // No friendship, do not send and delete.
+      return NULL;
+
+    default:
+      $arguments_send = array('state' => 'TRUE');
+      return TRUE;
   }
 }
 
+/**
+ * D2D callback; processes an incoming friendship request.
+ */
 function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return) {
   $return = NULL;
   if ($arguments['state'] !== 'TRUE' && $arguments['state'] !== 'FALSE') {
@@ -51,15 +76,22 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
       else {
         $old_friendship_state = NULL;
       }
-      // ignore not validated request if it is already represented in the current friendship state
-      if ($arguments['state'] === 'TRUE' && ($old_friendship_state === 2 || $old_friendship_state === 3)) {
+      // Ignore not validated request if it is already
+      // represented in the current friendship state.
+      if ($arguments['state'] === 'TRUE'
+        && ($old_friendship_state === 2 || $old_friendship_state === 3)) {
         return FALSE;
       }
-      if ($arguments['state'] === 'FALSE' && ($old_friendship_state === 0 || is_null($old_friendship_state))) {
+      if ($arguments['state'] === 'FALSE'
+        && ($old_friendship_state === 0 || is_null($old_friendship_state))) {
         return FALSE;
       }
-      
-      $description = array('url' => $rpc_info['url'], 'ip' => $rpc_info['ip'], 'reason' => ($rpc_info['instance'] ? 'public_key' : 'instance'));
+
+      $description = array(
+        'url' => $rpc_info['url'],
+        'ip' => $rpc_info['ip'],
+        'reason' => ($rpc_info['instance'] ? 'public_key' : 'instance'),
+      );
       if ($arguments['state'] === 'TRUE') {
         $type = ($old_friendship_state === 1 ? 'unchecked_accept' : 'unchecked_request');
       }
@@ -70,7 +102,8 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
         elseif ($old_friendship_state === 2) {
           $type = 'unchecked_revoke';
         }
-        else { // $old_friendship_state === 3
+        else {
+          // $old_friendship_state === 3.
           $type = 'unchecked_remove';
         }
       }
@@ -82,17 +115,19 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
     }
   }
   $old_friendship_state = $rpc_info['instance']['friendship_state'];
-  // 0: no friendship
-  // 1: friendship request sent but not accepted
-  // 2: friendship request received but not accepted
-  // 3: friendship established
+
+  // Friendship states:
+  // 0: no friendship.
+  // 1: friendship request sent but not accepted.
+  // 2: friendship request received but not accepted.
+  // 3: friendship established.
   $friendship_map = array(
     'FALSE' => array(0 => 0, 1 => 0, 2 => 0, 3 => 0),
     'TRUE' => array(0 => 2, 1 => 3, 2 => 2, 3 => 3),
   );
   $types = array(
     'FALSE' => array(0 => '', 1 => 'reject', 2 => 'revoke', 3 => 'remove'),
-    'TRUE' => array(0 => 'request', 1 => 'accept', 2 => '', 3 => '')
+    'TRUE' => array(0 => 'request', 1 => 'accept', 2 => '', 3 => ''),
   );
   $new_friendship_state = $friendship_map[$arguments['state']][$old_friendship_state];
   if ($new_friendship_state != $old_friendship_state) {
@@ -110,8 +145,11 @@ function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return)
   return FALSE;
 }
 
+/**
+ * Inserts a friendship notification.
+ */
 function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
-  d2d_api_notification_insert('d2d_friendship', $d2d_id, 
+  d2d_api_notification_insert('d2d_friendship', $d2d_id,
     d2d_implode(
       array(
         'type' => $type,
@@ -121,10 +159,15 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
   );
 }
 
+/**
+ * D2D callback; replies to a friendship request.
+ */
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {
   if ($return === FALSE) {
+    // TODO: handle it.
   }
   elseif ($return === NULL) {
+    // TODO: handle it.
   }
   else {
     $old_friendship_state = $instance['friendship_state'];
@@ -138,12 +181,15 @@ function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $t
   }
 }
 
+/**
+ * Creates a human understandable string about the state of friendship requests.
+ */
 function d2d_get_friendship_simple($arguments, $attributes) {
   $type = $arguments['type'];
   $instance = d2d_api_instance_get($attributes['d2d_id']);
   if ($instance) {
     $instance_name = check_plain($instance['name']);
-    $instance_str = l(check_plain($instance_name), 'admin/d2d/instances/' . $instance['id'] . '/details');
+    $instance_str = l($instance_name, 'admin/d2d/instances/' . $instance['id'] . '/details');
   }
   else {
     $instance_str = '<i>' . $attributes['d2d_id'] . '</i>';
@@ -157,7 +203,9 @@ function d2d_get_friendship_simple($arguments, $attributes) {
   if ($type === 'request') {
     $return_str = $instance_str . ' ' . t('has sent you a friendship request.');
     if ($instance) {
-      $return_str .= ' ' . t('Click !link to reply.', array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/friendship')));
+      $return_str .= ' ' . t('Click !link to reply.', array(
+        '!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/friendship'),
+      ));
     }
     return $return_str;
   }
@@ -185,6 +233,9 @@ function d2d_get_friendship_simple($arguments, $attributes) {
   return 'unknown request';
 }
 
+/**
+ * Returns a detailed human understandable description of a friendship request.
+ */
 function d2d_get_friendship_detailed($arguments, $attributes) {
   $type = $arguments['type'];
   $instance = d2d_api_instance_get($attributes['d2d_id']);
@@ -194,12 +245,12 @@ function d2d_get_friendship_detailed($arguments, $attributes) {
     '#type' => 'fieldset',
     '#description' => d2d_get_friendship_simple($arguments, $attributes),
   );
-  //if ($type === 'unchecked_request' || $type === 'unchecked_remove') {
-  if (!strncmp($type, 'unchecked_', strlen('unchecked_'))) { // $type starts with 'unchecked_'
+  if (!strncmp($type, 'unchecked_', strlen('unchecked_'))) {
+    // $type starts with 'unchecked_'.
     $description = d2d_explode($arguments['description']);
     $build['notifications']['#description'] .= '<br/>';
     if ($description['reason'] === 'public_key') {
-      $build['notifications']['#description'] .= t('The reason why the signature could not be checked is that you don\'t have a public key associated with that instace.');
+      $build['notifications']['#description'] .= t("The reason why the signature could not be checked is that you don't have a public key associated with that instace.");
       $instance = d2d_api_instance_get($attributes['d2d_id']);
       if ($instance) {
         $build['notifications']['#description'] .= ' ' . t('Click !link to associate a public key with that instance.', array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/public_key')));
@@ -207,12 +258,19 @@ function d2d_get_friendship_detailed($arguments, $attributes) {
     }
     else {
       $build['notifications']['#description'] .= t('The reason why the signature could not be checked is that this instance is not in your database and hence no public key is available. Click !link to proceed with adding this instance.', array('!link' => l(t('here'), 'admin/d2d/prefill')));
-      $_SESSION['d2d_add_instance'] = array('url' => $description['url'], 'd2d_id' => $attributes['d2d_id'], 'prefill' => FALSE);
+      $_SESSION['d2d_add_instance'] = array(
+        'url' => $description['url'],
+        'd2d_id' => $attributes['d2d_id'],
+        'prefill' => FALSE,
+      );
     }
   }
   return $build;
 }
 
+/**
+ * Sets a $_SESSION variable to prefill the data and redirect to 'admin/d2d'.
+ */
 function d2d_add_instance_prefill() {
   if (isset($_SESSION['d2d_add_instance'])) {
     $_SESSION['d2d_add_instance']['prefill'] = TRUE;
