@@ -4,7 +4,9 @@
  * Functions for adjusting the settings of D2D.
  */
 
-
+/**
+ * Menu callback; displays the settings page.
+ */
 function d2d_show_settings_general() {
   $build['general_settings'] = array(
     '#title' => t('General Settings'),
@@ -14,8 +16,13 @@ function d2d_show_settings_general() {
   d2d_notify();
   return $build;
 }
+
+/**
+ * Form constructor for the settings page.
+ *
+ * @ingroup forms
+ */
 function d2d_form_settings_general() {
-  $form = array();
   $form['utc_offset'] = array(
     '#type' => 'textfield',
     '#title' => t('UTC offset'),
@@ -53,41 +60,60 @@ function d2d_form_settings_general() {
     '#required' => TRUE,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Save'),
   );
   return $form;
 }
+
+/**
+ * Form validation handler for d2d_form_settings_general().
+ */
 function d2d_form_settings_general_validate($form, &$form_state) {
   $utc_offset = $form_state['values']['utc_offset'];
   if (!d2d_check_convert_int($utc_offset)) {
     form_set_error('utc_offset', t('Offset must be an integer.'));
   }
   elseif ($utc_offset < D2D_UTC_OFFSET_MIN || $utc_offset > D2D_UTC_OFFSET_MAX) {
-    form_set_error('utc_offset', t('Offset must be between @min and @max.', array('@min' => D2D_UTC_OFFSET_MIN, '@max' => D2D_UTC_OFFSET_MAX)));
+    form_set_error('utc_offset', t('Offset must be between @min and @max.', array(
+      '@min' => D2D_UTC_OFFSET_MIN,
+      '@max' => D2D_UTC_OFFSET_MAX,
+    )));
   }
   $timeout = $form_state['values']['timeout'];
   if (!d2d_check_convert_int($timeout)) {
     form_set_error('timeout', t('Time until timeout must be an integer.'));
   }
   elseif ($timeout < D2D_TIMEOUT_MIN || $timeout > D2D_TIMEOUT_MAX) {
-    form_set_error('timeout', t('Time until timeout must be between @min and @max.', array('@min' => D2D_TIMEOUT_MIN, '@max' => D2D_TIMEOUT_MAX)));
+    form_set_error('timeout', t('Time until timeout must be between @min and @max.', array(
+      '@min' => D2D_TIMEOUT_MIN,
+      '@max' => D2D_TIMEOUT_MAX,
+    )));
   }
   $delta0 = $form_state['values']['delta0'];
   if (!d2d_check_convert_int($delta0)) {
     form_set_error('delta0', t('Incoming requests lower bound must be an integer.'));
   }
   elseif ($delta0 < D2D_DELTA_0_MIN|| $delta0 > D2D_DELTA_0_MAX) {
-    form_set_error('delta0', t('Incoming requests lower bound must be between @min and @max.', array('@min' => D2D_DELTA_0_MIN, '@max' => D2D_DELTA_0_MAX)));
+    form_set_error('delta0', t('Incoming requests lower bound must be between @min and @max.', array(
+      '@min' => D2D_DELTA_0_MIN,
+      '@max' => D2D_DELTA_0_MAX,
+    )));
   }
   $delta1 = $form_state['values']['delta1'];
   if (!d2d_check_convert_int($delta1)) {
     form_set_error('delta1', t('Incoming requests upper bound must be an integer.'));
   }
   elseif ($delta1 < D2D_DELTA_1_MIN|| $delta1 > D2D_DELTA_1_MAX) {
-    form_set_error('delta1', t('Incoming requests upper bound must be between @min and @max.', array('@min' => D2D_DELTA_1_MIN, '@max' => D2D_DELTA_1_MAX)));
+    form_set_error('delta1', t('Incoming requests upper bound must be between @min and @max.', array(
+      '@min' => D2D_DELTA_1_MIN,
+      '@max' => D2D_DELTA_1_MAX,
+    )));
   }
 }
+/**
+ * Form submission handler for d2d_form_settings_general().
+ */
 function d2d_form_settings_general_submit($form, &$form_state) {
   $utc_offset = $form_state['values']['utc_offset'];
   $timeout = $form_state['values']['timeout'];
@@ -103,6 +129,10 @@ function d2d_form_settings_general_submit($form, &$form_state) {
   variable_set('d2d_delta_1', $delta1);
   drupal_set_message(t('Settings have been saved.'));
 }
+
+/**
+ * Menu callback; displays the advanced settings page.
+ */
 function d2d_show_settings_advanced() {
   $build['advanced_settings'] = array(
     '#title' => t('Advanced Settings'),
@@ -112,6 +142,12 @@ function d2d_show_settings_advanced() {
   d2d_notify(array('offline'));
   return $build;
 }
+
+/**
+ * Form constructor for the advanced settings page.
+ *
+ * @ingroup forms
+ */
 function d2d_form_settings_advanced() {
   $form = array();
   $form['online'] = array(
@@ -121,23 +157,38 @@ function d2d_form_settings_advanced() {
     '#description' => t('If set, this instance is reachable for other instances and will periodically communicate with other instances. Note that a public / private key pair has to be associated with this instance for being online.'),
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Save'),
   );
   $public_key = d2d_api_own_public_key_get();
   $private_key = d2d_api_own_private_key_get();
   if (!variable_get('d2d_online', FALSE) && !d2d_check_key_pair($public_key, $private_key)) {
     $form['#disabled'] = TRUE;
-    drupal_set_message(t('You must !set a valid public / private key pair before going online.', array('!set' => l(t('set'), 'admin/d2d/settings/keys'))), 'warning');
+    drupal_set_message(t('You must !set a valid public / private key pair before going online.', array(
+      '!set' => l(t('set'), 'admin/d2d/settings/keys'),
+    )), 'warning');
   }
   return $form;
 }
+
+/**
+ * Form validation handler for d2d_form_settings_advanced().
+ */
 function d2d_form_settings_advanced_validate($form, &$form_state) {
+  // TODO: validation.
 }
+
+/**
+ * Form submission handler for d2d_form_settings_advanced().
+ */
 function d2d_form_settings_advanced_submit($form, &$form_state) {
   variable_set('d2d_online', $form_state['values']['online'] ? TRUE : FALSE);
   drupal_set_message(t('Settings have been saved.'));
 }
+
+/**
+ * Menu callback; displays own public / private keys page.
+ */
 function d2d_show_settings_keys() {
   $build['keys'] = array(
     '#title' => t('Public / Private Key Pair'),
@@ -147,9 +198,14 @@ function d2d_show_settings_keys() {
   d2d_notify();
   return $build;
 }
+
+/**
+ * Form constructor for the own keys page.
+ *
+ * @ingroup forms
+ */
 function d2d_form_settings_keys() {
 
-  $form = array();
   $form['public_key'] = array(
     '#type' => 'textarea',
     '#title' => t('Public key'),
@@ -167,13 +223,13 @@ function d2d_form_settings_keys() {
     '#default_value' => d2d_api_own_private_key_get(),
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Save'),
     '#validate' => array('d2d_form_settings_keys_validate'),
     '#submit' => array('d2d_form_settings_keys_submit'),
   );
   $form['generate_keys'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Generate keys'),
     '#validate' => array('d2d_form_settings_keys_generate_validate'),
     '#submit' => array(),
@@ -181,11 +237,16 @@ function d2d_form_settings_keys() {
   if (d2d_is_online()) {
     $form['submit']['#disabled'] = TRUE;
     $form['generate_keys']['#disabled'] = TRUE;
-    drupal_set_message(t('You must be in !link to change the public / private key pair.', array('!link' => l(t('offline mode'), 'admin/d2d/settings/advanced'))), 'warning');
+    drupal_set_message(t('You must be in !link to change the public / private key pair.', array(
+      '!link' => l(t('offline mode'), 'admin/d2d/settings/advanced'),
+    )), 'warning');
   }
   return $form;
 }
 
+/**
+ * Form validation handler for d2d_form_settings_keys().
+ */
 function d2d_form_settings_keys_validate($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
   $private_key = $form_state['values']['private_key'];
@@ -194,14 +255,24 @@ function d2d_form_settings_keys_validate($form, &$form_state) {
   }
 }
 
+/**
+ * Form submission handler for d2d_form_settings_keys().
+ */
 function d2d_form_settings_keys_submit($form, &$form_state) {
   $public_key = $form_state['values']['public_key'];
-  $private_key = $form_state['values']['private_key'];  
+  $private_key = $form_state['values']['private_key'];
   d2d_api_own_public_key_set($public_key);
   d2d_api_own_private_key_set($private_key);
   drupal_set_message(t('Settings have been saved.'));
 }
 
+/**
+ * Form validation handler for d2d_form_settings_keys_generate().
+ *
+ * Validation stops the form submission and adds the keys to the forms.
+ *
+ * @see d2d_form_settings_general()
+ */
 function d2d_form_settings_keys_generate_validate($form, &$form_state) {
   if (!d2d_create_keys($public_key, $private_key)) {
     form_set_error('', t('Failed creating public / private key pair.'));
@@ -209,6 +280,7 @@ function d2d_form_settings_keys_generate_validate($form, &$form_state) {
   }
   $form_state['complete form']['public_key']['#value'] = $public_key;
   $form_state['complete form']['private_key']['#value'] = $private_key;
-  form_set_error(''); // TODO: this is basically a hack.
+  // This stops the form submission.
+  form_set_error('');
   drupal_set_message(t('Public / private key pair has been generated. Click "Save" to proceed with that pair.'));
 }

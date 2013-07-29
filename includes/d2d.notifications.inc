@@ -7,9 +7,11 @@
  */
 
 /**
- * Notify about instance being offline etc.
+ * Adds a new entry into the notification system.
+ *
+ * Notifications are about instance being offline etc.
  */
-function d2d_notify($exclude=array()) {
+function d2d_notify($exclude = array()) {
   if (!in_array('offline', $exclude) && !d2d_is_online()) {
     drupal_set_message(t('D2D is currently in offline mode. In offline mode, no signed / encrypted queries will be sent and no queries are being answered. Click !link to change the settings.', array('!link' => l(t('here'), 'admin/d2d/settings/advanced'))), 'warning', FALSE);
   }
@@ -18,10 +20,13 @@ function d2d_notify($exclude=array()) {
     if (d2d_api_instance_without_public_key_exists()) {
       drupal_set_message($message, 'warning', FALSE);
     }
-    elseif (isset($_SESSION['messages']['warning']) && (FALSE !== ($key = array_search($message, $_SESSION['messages']['warning'])))) {
-      unset($_SESSION['messages']['warning'][$key]);
-      if (empty($_SESSION['messages']['warning'])) {
-        unset($_SESSION['messages']['warning']);
+    else {
+      $key = array_search($message, $_SESSION['messages']['warning']);
+      if (isset($_SESSION['messages']['warning']) && FALSE !== $key) {
+        unset($_SESSION['messages']['warning'][$key]);
+        if (empty($_SESSION['messages']['warning'])) {
+          unset($_SESSION['messages']['warning']);
+        }
       }
     }
   }
@@ -29,10 +34,16 @@ function d2d_notify($exclude=array()) {
     $n_unread = d2d_api_notification_count_unread();
     if ($n_unread > 0) {
       if ($n_unread == 1) {
-        drupal_set_message(t('You have @count unread notification. Click @link to read it.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
+        drupal_set_message(t('You have @count unread notification. Click @link to read it.', array(
+          '@count' => $n_unread,
+          '!link' => l(t('here'), 'admin/d2d/notifications'),
+        )), 'status', FALSE);
       }
       else {
-        drupal_set_message(t('You have @count unread notifications. Click @link to read them.', array('@count' => $n_unread, '!link' => l(t('here'), 'admin/d2d/notifications'))), 'status', FALSE);
+        drupal_set_message(t('You have @count unread notifications. Click @link to read them.', array(
+          '@count' => $n_unread,
+          '!link' => l(t('here'), 'admin/d2d/notifications'),
+        )), 'status', FALSE);
       }
     }
   }
@@ -79,7 +90,7 @@ function d2d_get_message_detailed($arguments, $attributes) {
 }
 
 /**
- * Builts a table with notifications of type specified in $types
+ * Builts a table with notifications of type specified in $types.
  *
  * If $types is an array, the type has to be contained in the array, otherwise
  * the table contains notifications of any type.
@@ -136,7 +147,13 @@ function d2d_built_notification_table($types) {
   }
   $table = array(
     '#theme' => 'table',
-    '#header' => array('ID', 'Type', 'Message', 'Time', array('data' => t('Operations'), 'colspan' => 3)),
+    '#header' => array(
+      'ID',
+      'Type',
+      'Message',
+      'Time',
+      array('data' => t('Operations'), 'colspan' => 3),
+    ),
     '#rows' => $rows,
     '#empty' => t('No notifications found.'),
   );
@@ -153,7 +170,7 @@ function d2d_show_notifications() {
     '#title' => t('Notifications'),
     '#type' => 'fieldset',
   );
-  $build['notifications'][] = d2d_built_notification_table(NULL); 
+  $build['notifications'][] = d2d_built_notification_table(NULL);
   return $build;
 }
 
@@ -161,29 +178,32 @@ function d2d_show_notifications() {
  * Shows details for the notification with id $id.
  */
 function d2d_show_notification_details($id) {
-  if (!d2d_check_convert_int($id) || is_null($notification = d2d_api_notification_get($id))) {
-    drupal_set_message(t('Notification not found'), 'error');
-    drupal_goto('admin/d2d/notifications');
-  }
-  else {
-    if (!$notification['seen']) {
-      d2d_api_notification_change_read($id, TRUE);
-    }
-    $hooks = module_invoke_all('d2d_handle_notification');  
-    $hook = $hooks[$notification['type']];
-    $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
-    $arguments = d2d_explode($notification['content']);
-    if (!d2d_check_array($arguments, $argument_checks)) {
-      drupal_set_message(t('Notification erroneous'), 'error');
+  if (!d2d_check_convert_int($id)) {
+    $notification = d2d_api_notification_get($id);
+    if (is_null($notification)) {
+      drupal_set_message(t('Notification not found'), 'error');
       drupal_goto('admin/d2d/notifications');
     }
-    $attributes = array(
-      'id' => $notification['id'],
-      'd2d_id' => $notification['d2d_id'],
-      'timestamp' => $notification['timestamp'],
-    );
-    $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
-    return $build;
+    else {
+      if (!$notification['seen']) {
+        d2d_api_notification_change_read($id, TRUE);
+      }
+      $hooks = module_invoke_all('d2d_handle_notification');
+      $hook = $hooks[$notification['type']];
+      $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
+      $arguments = d2d_explode($notification['content']);
+      if (!d2d_check_array($arguments, $argument_checks)) {
+        drupal_set_message(t('Notification erroneous'), 'error');
+        drupal_goto('admin/d2d/notifications');
+      }
+      $attributes = array(
+        'id' => $notification['id'],
+        'd2d_id' => $notification['d2d_id'],
+        'timestamp' => $notification['timestamp'],
+      );
+      $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
+      return $build;
+    }
   }
 }
 
@@ -208,7 +228,7 @@ function d2d_notification_mark_read_submit($form, &$form_state, $id) {
 }
 
 /**
- * Marks a notification as unread and redirects to the overview of notifications.
+ * Marks a notification as unread and redirects to the overview.
  */
 function d2d_notification_mark_unread_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {

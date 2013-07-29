@@ -21,11 +21,11 @@ function d2d_form_add_instance() {
     }
     unset($_SESSION['d2d_add_instance']);
   }
-  // receiver of the request
+  // Receiver of the request.
   $form['url'] = array(
     '#type' => 'textfield',
     '#title' => t('Address'),
-    '#description' => t('Address of the instance, e.g. http://www.example.com/xmlrpc.php'),
+    '#description' => t('Address of the instance, for example http://www.example.com/xmlrpc.php'),
     '#default_value' => $default_url,
     '#size' => 40,
     '#maxlength' => D2D_INSTANCE_URL_MAX_LENGTH,
@@ -35,10 +35,9 @@ function d2d_form_add_instance() {
     '#type' => 'textfield',
     '#title' => t('D2D identifier'),
     '#description' =>
-      t(
-        'Global unique identifier consisting of exactly @length hexadecimal characters (A-F, 0-9).<br/>',
-        array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)
-      ),
+    t('Global unique identifier consisting of exactly @length hexadecimal characters (A-F, 0-9).<br/>',
+      array('@length' => D2D_INSTANCE_IDENTIFIER_LENGTH)
+    ),
     '#default_value' => $default_d2d_id,
     '#size' => D2D_INSTANCE_IDENTIFIER_LENGTH,
     '#maxlength' => D2D_INSTANCE_IDENTIFIER_LENGTH,
@@ -80,29 +79,23 @@ function d2d_form_add_instance() {
 }
 
 
-function d2d_form_add_instance_submit_validate($form, &$form_state) {
-  d2d_form_add_instance_validate($form, $form_state);
-  if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
-    form_set_error('description', t('Provided description must be no longer than @max_length characters'), array('@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH));
+/**
+ * Form validation handler for d2d_form_add_instance().
+ */
+function d2d_form_add_instance_validate($form, &$form_state) {
+  $okay = TRUE;
+  if (!d2d_check_url($form_state['values']['url'])) {
+    form_set_error('url', t("Address must start with 'http://' or 'https://'."));
+    $okay = FALSE;
   }
-  if (!d2d_check_d2d_id($form_state['values']['d2d_id'])) {
-    form_set_error('d2d_id', t('D2D identifier not valid.'));
-  }
-  else {
-    if ($instance = d2d_api_instance_get($form_state['values']['d2d_id'])) {
-      form_set_error(
-        'd2d_id',
-        t(
-          'Instance with provided D2D identifier already exists in database, click !link to edit that instance.',
-          array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/details'))
-        )
-      );
-    }
-  }
+  return $okay;
 }
 
 /**
- * Form validation handler for d2d_form_add_instance().
+ * Form validation handler for d2d_form_add_instance_auto_complete_validate().
+ *
+ * This function is used to stop the execution of the form and pre-fill it with
+ * the data received by the instance.
  */
 function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
   if (d2d_form_add_instance_validate($form, $form_state)) {
@@ -113,7 +106,11 @@ function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
     }
     else {
       $exploded_res = d2d_explode($res);
-      if ($exploded_res === FALSE || !d2d_check_array($exploded_res, array('d2d_id' => 'd2d_check_d2d_id', 'name' => 'd2d_check_name', 'description' => 'd2d_check_description'))) {
+      if ($exploded_res === FALSE || !d2d_check_array($exploded_res, array(
+        'd2d_id' => 'd2d_check_d2d_id',
+        'name' => 'd2d_check_name',
+        'description' => 'd2d_check_description',
+      ))) {
         form_set_error('', t('Information received from other instance is invalid'));
       }
       else {
@@ -124,19 +121,42 @@ function d2d_form_add_instance_auto_complete_validate($form, &$form_state) {
         $form_state['complete form']['name']['#value'] = check_plain($exploded_res['name']);
         $form_state['complete form']['description']['#value'] = check_plain($exploded_res['description']);
         drupal_set_message(t('Successfully received information from other instance.'));
-        form_set_error(''); // TODO: this is basically a hack, again :)
+        // TODO: this is basically a hack, again :)
+        form_set_error('');
       }
     }
   }
 }
-function d2d_form_add_instance_validate($form, &$form_state) {
-  $okay = TRUE;
-  if (!d2d_check_url($form_state['values']['url'])) {
-    form_set_error('url', t('Address must start with \'http://\' or \'https://\'.'));
-    $okay = FALSE;
+
+/**
+ * Form validation handler for d2d_form_add_instance_submit().
+ */
+function d2d_form_add_instance_submit_validate($form, &$form_state) {
+  d2d_form_add_instance_validate($form, $form_state);
+  if (strlen($form_state['values']['description']) > D2D_INSTANCE_DESCRIPTION_MAX_LENGTH) {
+    form_set_error('description',
+      t('Provided description must be no longer than @max_length characters'), array(
+        '@max_length' => D2D_INSTANCE_DESCRIPTION_MAX_LENGTH,
+      ));
   }
-  return $okay;
+  if (!d2d_check_d2d_id($form_state['values']['d2d_id'])) {
+    form_set_error('d2d_id', t('D2D identifier not valid.'));
+  }
+  else {
+    $instance = d2d_api_instance_get($form_state['values']['d2d_id']);
+    if ($instance) {
+      form_set_error('d2d_id', t('Instance with provided D2D identifier already exists in database, click !link to edit that instance.',
+          array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/details'))
+        )
+      );
+    }
+  }
 }
+
+
+/**
+ * Form validation handler for d2d_form_add_instance_submit().
+ */
 function d2d_form_add_instance_submit_submit($form, &$form_state) {
   $instance = array(
     'd2d_id' => $form_state['values']['d2d_id'],
@@ -145,13 +165,20 @@ function d2d_form_add_instance_submit_submit($form, &$form_state) {
     'description' => $form_state['values']['description'],
   );
   $id = d2d_api_instance_add($instance);
+  $t_params = array(
+    '!link' => l(t('here'), 'admin/d2d/instances/' . $id . '/details'),
+    '!public_key_link' => l(t('public key'), 'admin/d2d/instances/' . $id . '/public_key'),
+  );
   drupal_set_message(
-    t(
-      'Instance inserted in database. Click !link to configure it, associate a !public_key_link with it and send a friendship request.',
-      array('!link' => l(t('here'), 'admin/d2d/instances/' . $id . '/details'), '!public_key_link' => l(t('public key'), 'admin/d2d/instances/' . $id . '/public_key'))
+    t('Instance inserted in database. Click !link to configure it, associate a !public_key_link with it and send a friendship request.',
+      $t_params
     )
   );
 }
+
+/**
+ * Theming function. Creates the rows of the instances table.
+ */
 function theme_d2d_table_instances($variables) {
   $form = $variables['form'];
   $header = array(
@@ -188,6 +215,12 @@ function theme_d2d_table_instances($variables) {
     'rows' => $rows,
   ));
 }
+
+/**
+ * Form constructor for displaying the list of instances table.
+ *
+ * @ingroup forms
+ */
 function d2d_table_instances($form, &$form_state) {
   $instances = d2d_api_instance_get_by_id();
   $form['instances'] = array(
@@ -244,15 +277,18 @@ function d2d_table_instances($form, &$form_state) {
     );
     $form['instances']['id' . $id]['operation2'] = array(
       '#type' => 'item',
-      // TODO
-      //'#markup' => $instance['is_me'] ? '' : t('delete'),
+      // TODO: display when the istance is me.
+      // '#markup' => $instance['is_me'] ? '' : t('delete'),
       '#markup' => '',
-      //l(t('configure'), 'admin/d2d/instances/' . $instance['id'] . '/details'),
+      // l(t('configure'), 'admin/d2d/instances/' . $instance['id'] . '/details'),
     );
   }
   return $form;
 }
 
+/**
+ * Menu callback; creates the page to list all the instances.
+ */
 function d2d_list_instances() {
   d2d_notify(array('public_key'));
   $instances = d2d_api_instance_get_by_id();

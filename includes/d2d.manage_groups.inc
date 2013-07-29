@@ -4,6 +4,12 @@
  * @file
  * Functions directly related to the manage groups tab.
  */
+
+/**
+ * Form constructor for displaying the list of groups.
+ *
+ * @ingroup forms
+ */
 function d2d_form_list_groups() {
   $rows = array();
   $groups = d2d_api_group_get();
@@ -23,11 +29,14 @@ function d2d_form_list_groups() {
     '#empty' => t('No groups in database.'),
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Delete',
   );
   return $form;
 }
+/**
+ * Returns the list of all group ids.
+ */
 function _d2d_get_ids(&$form_state, $table, $prefix_length) {
   $ids = array();
   foreach ($form_state['values'][$table] as $key => $value) {
@@ -37,6 +46,10 @@ function _d2d_get_ids(&$form_state, $table, $prefix_length) {
   }
   return $ids;
 }
+
+/**
+ * Form validation handler for d2d_form_list_groups().
+ */
 function d2d_form_list_groups_validate($form, &$form_state) {
   $ids = _d2d_get_ids($form_state, 'groups_table', 2);
   if (empty($ids)) {
@@ -44,6 +57,9 @@ function d2d_form_list_groups_validate($form, &$form_state) {
   }
 }
 
+/**
+ * Form submission handler for d2d_form_list_groups().
+ */
 function d2d_form_list_groups_submit($form, &$form_state) {
   $group_ids = _d2d_get_ids($form_state, 'groups_table', 2);
   d2d_api_group_delete($group_ids);
@@ -51,6 +67,9 @@ function d2d_form_list_groups_submit($form, &$form_state) {
   d2d_api_group_membership_delete($group_ids);
 }
 
+/**
+ * Theming callback; creates the rows of the permissions table.
+ */
 function theme_d2d_list_permissions($variables) {
   $form = $variables['form'];
   foreach (element_children($form['permission']) as $key) {
@@ -61,7 +80,10 @@ function theme_d2d_list_permissions($variables) {
     );
     if (array_key_exists('checkboxes', $form)) {
       foreach (element_children($form['checkboxes']) as $gid) {
-        $row[] = array('data' => drupal_render($form['checkboxes'][$gid][$key]), 'class' => array('checkbox'));
+        $row[] = array(
+          'data' => drupal_render($form['checkboxes'][$gid][$key]),
+          'class' => array('checkbox'),
+        );
       }
     }
     $rows[] = $row;
@@ -77,6 +99,11 @@ function theme_d2d_list_permissions($variables) {
   return $output;
 }
 
+/**
+ * Form constructor for displaying the permissions table.
+ *
+ * @ingroup forms
+ */
 function d2d_list_permissions($form, &$form_state) {
   $hks = module_invoke_all('d2d_secure_rpc');
   if (empty($hks)) {
@@ -93,7 +120,10 @@ function d2d_list_permissions($form, &$form_state) {
   $status = array();
   foreach ($hks as $key => $value) {
     if (strlen($key) > D2D_METHOD_NAME_MAX_LENGTH) {
-      drupal_set_message(t('Ignoring hook for method @method (corresponding key may be no longer than @length characters).', array('@method' => $key, '@length' => D2D_METHOD_NAME_MAX_LENGTH)), 'warning');
+      drupal_set_message(t('Ignoring hook for method @method (corresponding key may be no longer than @length characters).', array(
+        '@method' => $key,
+        '@length' => D2D_METHOD_NAME_MAX_LENGTH,
+      )), 'warning');
       continue;
     }
     $options[$key] = '';
@@ -120,6 +150,10 @@ function d2d_list_permissions($form, &$form_state) {
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save permissions'));
   return $form;
 }
+
+/**
+ * Form submission handler for d2d_list_permissions().
+ */
 function d2d_list_permissions_submit($form, &$form_state) {
   d2d_api_permission_clear();
   $methods = array();
@@ -137,8 +171,13 @@ function d2d_list_permissions_submit($form, &$form_state) {
   d2d_api_permission_add($permissions);
   drupal_set_message(t('The changes have been saved.'));
 }
+
+/**
+ * Form constructor for displaying the add to group table.
+ *
+ * @ingroup forms
+ */
 function d2d_form_add_group() {
-  $form = array();
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
@@ -164,20 +203,31 @@ function d2d_form_add_group() {
     '#required' => FALSE,
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => 'Create group',
   );
   return $form;
 }
+
+/**
+ * Form validation handler for d2d_form_add_group().
+ */
 function d2d_form_add_group_validate($form, &$form_state) {
   $group = d2d_api_group_get_by_name($form_state['values']['name']);
   if (!is_null($group)) {
     form_set_error('name', t('Provided name already exists in database'));
   }
   if (strlen($form_state['values']['description']) > D2D_GROUP_DESCRIPTION_MAX_LENGTH) {
-    form_set_error('description', t('Provided description must be no longer than @max_length characters'), array('@max_length' => D2D_GROUP_DESCRIPTION_MAX_LENGTH));
+    form_set_error('description',
+      t('Provided description must be no longer than @max_length characters'),
+      array('@max_length' => D2D_GROUP_DESCRIPTION_MAX_LENGTH)
+    );
   }
 }
+
+/**
+ * Form submission handler for d2d_form_add_group().
+ */
 function d2d_form_add_group_submit($form, &$form_state) {
   $name = $form_state['values']['name'];
   $description = $form_state['values']['description'];
@@ -190,6 +240,9 @@ function d2d_form_add_group_submit($form, &$form_state) {
     drupal_set_message(t('Successfully created a new group.'));
   }
 }
+/**
+ * Menu callback; displays the manage groups page.
+ */
 function d2d_manage_groups() {
   d2d_notify();
   $build = array();
@@ -207,6 +260,10 @@ function d2d_manage_groups() {
   $build['add_group'][] = drupal_get_form('d2d_form_add_group');
   return $build;
 }
+
+/**
+ * Menu callback; displays the manage permissions page.
+ */
 function d2d_manage_permissions() {
   d2d_notify();
   $build = array();
