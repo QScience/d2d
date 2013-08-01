@@ -5,40 +5,29 @@
  * A module to built a network of Drupal instances.
  */
 
-module_load_include('inc', 'd2d', 'includes/d2d.constants');
-module_load_include('inc', 'd2d', 'includes/d2d.crypto');
-module_load_include('inc', 'd2d', 'includes/d2d.api');
-module_load_include('inc', 'd2d', 'includes/d2d.misc');
-module_load_include('inc', 'd2d', 'includes/d2d.notifications');
-module_load_include('inc', 'd2d', 'includes/d2d.settings');
-module_load_include('inc', 'd2d', 'includes/d2d.util');
-module_load_include('inc', 'd2d', 'includes/d2d.init');
-module_load_include('inc', 'd2d', 'includes/d2d.list_instances');
-module_load_include('inc', 'd2d', 'includes/d2d.rpc');
-module_load_include('inc', 'd2d', 'includes/d2d.edit_instance');
-module_load_include('inc', 'd2d', 'includes/d2d.manage_groups');
-module_load_include('inc', 'd2d', 'includes/d2d.edit_group');
-module_load_include('inc', 'd2d', 'includes/d2d.srpc');
-module_load_include('inc', 'd2d', 'includes/d2d.secure_rpc');
-module_load_include('inc', 'd2d', 'includes/d2d.system');
-module_load_include('inc', 'd2d', 'includes/d2d.requests');
-module_load_include('inc', 'd2d', 'includes/d2d.friendship');
+require_once 'includes/d2d.constants.inc';
+require_once 'includes/d2d.crypto.inc';
+require_once 'includes/d2d.api.inc';
+require_once 'includes/d2d.misc.inc';
+require_once 'includes/d2d.notifications.inc';
+require_once 'includes/d2d.settings.inc';
+require_once 'includes/d2d.util.inc';
+require_once 'includes/d2d.init.inc';
+require_once 'includes/d2d.list_instances.inc';
+require_once 'includes/d2d.rpc.inc';
+require_once 'includes/d2d.edit_instance.inc';
+require_once 'includes/d2d.manage_groups.inc';
+require_once 'includes/d2d.edit_group.inc';
+require_once 'includes/d2d.srpc.inc';
+require_once 'includes/d2d.secure_rpc.inc';
+require_once 'includes/d2d.system.inc';
+require_once 'includes/d2d.requests.inc';
+require_once 'includes/d2d.friendship.inc';
 
 /**
  * D2D remote exception.
  */
 class D2DRemoteException extends Exception {
-}
-
-/**
- * Get information about instance with internal id $id.
- */
-function d2d_id_load($id) {
-  if (!d2d_check_convert_int($id)) {
-    return FALSE;
-  }
-  $instance = d2d_api_instance_get_by_id($id);
-  return $instance;
 }
 
 /**
