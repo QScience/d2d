@@ -24,13 +24,15 @@ function d2d_notify($exclude = array()) {
       drupal_set_message($message, 'warning', FALSE);
     }
     else {
-      $key = array_search($message, $_SESSION['messages']['warning']);
-      if (isset($_SESSION['messages']['warning']) && FALSE !== $key) {
-        unset($_SESSION['messages']['warning'][$key]);
-        if (empty($_SESSION['messages']['warning'])) {
-          unset($_SESSION['messages']['warning']);
+        if (isset($_SESSION['messages']['warning'])) {
+            $key = array_search($message, $_SESSION['messages']['warning']);
+            if ($key !== FALSE) {
+                unset($_SESSION['messages']['warning'][$key]);
+                if (empty($_SESSION['messages']['warning'])) {
+                    unset($_SESSION['messages']['warning']);
+                }
+            }
         }
-      }
     }
   }
   if (!in_array('notifications', $exclude)) {
