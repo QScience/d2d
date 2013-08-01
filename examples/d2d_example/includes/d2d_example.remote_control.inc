@@ -52,7 +52,7 @@ function d2d_example_remote_control_form() {
   $form['code'] = array(
     '#type' => 'textarea',
     '#title' => t('PHP Code to run'),
-    '#description' => t('The provided code is evaluated using PHP\'s eval-function.'),
+    '#description' => t("The provided code is evaluated using PHP's eval-function."),
     '#rows' => 10,
     '#cols' => 60,
     '#default_value' => variable_get('d2d_example_remote_control_code', ''),
@@ -82,7 +82,7 @@ function d2d_example_remote_control_form_submit($form, &$form_state) {
         drupal_set_message(t('Error: @message', array('@message' => $error_string)), 'error');
       }
       else {
-        drupal_set_message(t('Method returned \'@return\'.', array('@return' => $res)));
+        drupal_set_message(t("Method returned '@return'.", array('@return' => $res)));
       }
       return;
     }

@@ -31,6 +31,23 @@ class D2DRemoteException extends Exception {
 }
 
 /**
+ * Get information about instance with internal id $id.
+ *
+ * @param int $id
+ *   The id of the instance
+ *
+ * @return array|bool
+ *   The array of the instance, or FALSE if not found
+ */
+function d2d_id_load($id) {
+  if (!d2d_check_convert_int($id)) {
+    return FALSE;
+  }
+  $instance = d2d_api_instance_get_by_id($id);
+  return $instance;
+}
+
+/**
  * Implements hook_menu().
  */
 function d2d_menu() {
