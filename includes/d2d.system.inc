@@ -123,12 +123,10 @@ function d2d_show_system_tab() {
 }
 
 /**
- * Deletes outgoing request.
+ * Menu callback; deletes outgoing request.
  *
  * @param int $id
  *   The id of the outgoing request to delete
- *
- * ????? Is this a form submission handler of what? could not find it.
  */
 function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -138,12 +136,10 @@ function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
 }
 
 /**
- * Sends outgoing request.
+ * Menu callback; sends outgoing request.
  *
  * @param int $id
  *   The id of the outgoing request to send
- *
- * ????? Is this a form submission handler of what? could not find it.
  */
 function d2d_outgoing_requests_send_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {

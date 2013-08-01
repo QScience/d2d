@@ -31,7 +31,9 @@ class D2DRemoteException extends Exception {
 }
 
 /**
- * Get information about instance with internal id $id.
+ * Menu callback; gets information about instance with internal id $id.
+ *
+ * This function is used by the menu auto-loader.
  *
  * @param int $id
  *   The id of the instance
