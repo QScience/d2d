@@ -5,28 +5,32 @@
  */
 
 /**
- * Returns a human understandable text describing the current friendship state.
+ * Returns a human understandable text describing the friendship request.
  *
  * @param array $arguments
- *   ????????????????
+ *   Array further specifying the request. Ignored in case of friendship
+ *   requests.
  *
- * @param
- *   ????????????????
+ * @param int $time_insert
+ *   Timestamp the request was inserted.
  *
- * @param
- *   ????????????????
+ * @param int $time_next_send
+ *   Timestamp the request will be sent next. 
  *
- * @param
- *   ????????????????
+ * @param int $time_invalid
+ *   Timestamp from which on the request is invalid.
  *
- * @param
- *   ????????????????
+ * @param int $max_send_trials
+ *   Maximal number of trials the request is being sent.
  *
- * @param
- *   ????????????????
+ * @param array $instance
+ *   Array describing the instance to which the request is being sent.
  *
- * @param
- *   ????????????????
+ * @param mixed &$persistent_state
+ *   Reference to a variable which is used to memoize if an entry for a similar
+ *   request is present in the database. $persistent_state is persistant over
+ *   several successive calls to d2d_friendship_outgoing_describe() that operates
+ *   on the same $instance.
  *
  * @return string
  *   The human understandable text
@@ -53,31 +57,36 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
  * D2D callback; decides whether to send or not a friendship request.
  *
  * @param array $arguments
- *   ????????????????
+ *   Array further specifying the request. Ignored in case of friendship
+ *   requests.
  *
- * @param
- *   ????????????????
+ * @param int $time_insert
+ *   Timestamp the request was inserted.
  *
- * @param
- *   ????????????????
+ * @param int $time_next_send
+ *   Timestamp the request will be sent next. 
  *
- * @param
- *   ????????????????
+ * @param int $time_invalid
+ *   Timestamp from which on the request is invalid.
  *
- * @param
- *   ????????????????
+ * @param int $max_send_trials
+ *   Maximal number of trials the request is being sent.
  *
- * @param
- *   ????????????????
+ * @param array $instance
+ *   Array describing the instance to which the request is being sent.
  *
- * @param
- *   ????????????????
+ * @param mixed &$persistent_state
+ *   Reference to a variable which is used to memoize if an entry for a similar
+ *   request is present in the database. $persistent_state is persistant over
+ *   several successive calls to d2d_friendship_outgoing_process() that operates
+ *   on the same $instance.
  *
- * @param
- *   ????????????????
+ * @param &$arguments_send
+ *   Ignored for d2d_friendship_outgoing_process().
  *
- * @return bool|NULL
- *   ????????????????
+ * @return bool|null
+ *   Returns TRUE if the friendship request should be sent, FALSE if the reqeust
+ *   should be ignored and FALSE, if it should be deleted.
  */
 function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $instance, &$persistent_state, &$arguments_send) {
 
@@ -111,19 +120,23 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
 }
 
 /**
- * D2D callback; processes an incoming friendship request.
+ * D2D callback; processes a request to change the friendship state.
  *
  * @param array $arguments
- *   ????????????????
+ *   Associative array specifying the desired new friendship state.
+ *   $arguments['state'] is TRUE if and only if the other instance
+ *   wants to be friends and FALSE otherwise.
  *
  * @param array $rpc_info
- *   ????????????????
+ *   Associative array 
  *
  * @param bool $live
- *   ????????????????
+ *   TRUE if and only if function called as part of a RPC call from the
+ *   caller (i.e. we can send a reply with the new friendship state
+ *   immediately), FALSE otherwise.
  *
- * @param
- *   ????????????????
+ * @param &$return
+ *   Ignored.
  *
  * @return bool|NULL
  *
@@ -269,8 +282,6 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
  * @param
  *   ????????????????
  *
- * @return bool|NULL
- *   ????????????????
  */
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {
   if ($return === FALSE) {
