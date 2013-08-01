@@ -12,7 +12,7 @@
  * Notifications are about instance being offline etc.
  *
  * @param array $exclude
- *   ?????????????
+ *   an array specifying which notifications are not shown
  */
 function d2d_notify($exclude = array()) {
   if (!in_array('offline', $exclude) && !d2d_is_online()) {
@@ -208,32 +208,39 @@ function d2d_show_notifications() {
  *   ??????????
  */
 function d2d_show_notification_details($id) {
+  $error_flag = FALSE;
   if (!d2d_check_convert_int($id)) {
+    $error_flag = TRUE;
+  }
+  else {
     $notification = d2d_api_notification_get($id);
     if (is_null($notification)) {
-      drupal_set_message(t('Notification not found'), 'error');
+      $error_flag = TRUE;
+    }
+  }
+  if ($error_flag) {
+    drupal_set_message(t('Notification not found'), 'error');
+    drupal_goto('admin/d2d/notifications');
+  }
+  else {
+    if (!$notification['seen']) {
+      d2d_api_notification_change_read($id, TRUE);
+    }
+    $hooks = module_invoke_all('d2d_handle_notification');
+    $hook = $hooks[$notification['type']];
+    $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
+    $arguments = d2d_explode($notification['content']);
+    if (!d2d_check_array($arguments, $argument_checks)) {
+      drupal_set_message(t('Notification erroneous'), 'error');
       drupal_goto('admin/d2d/notifications');
     }
-    else {
-      if (!$notification['seen']) {
-        d2d_api_notification_change_read($id, TRUE);
-      }
-      $hooks = module_invoke_all('d2d_handle_notification');
-      $hook = $hooks[$notification['type']];
-      $argument_checks = (array_key_exists('arguments', $hook) ? $hook['arguments'] : array());
-      $arguments = d2d_explode($notification['content']);
-      if (!d2d_check_array($arguments, $argument_checks)) {
-        drupal_set_message(t('Notification erroneous'), 'error');
-        drupal_goto('admin/d2d/notifications');
-      }
-      $attributes = array(
-        'id' => $notification['id'],
-        'd2d_id' => $notification['d2d_id'],
-        'timestamp' => $notification['timestamp'],
-      );
-      $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
-      return $build;
-    }
+    $attributes = array(
+      'id' => $notification['id'],
+      'd2d_id' => $notification['d2d_id'],
+      'timestamp' => $notification['timestamp'],
+    );
+    $build = call_user_func($hook['callback_detailed'], $arguments, $attributes);
+    return $build;
   }
 }
 
