@@ -11,7 +11,7 @@ require_once 'includes/d2d_example.remote_control.inc';
 /**
  * Implements hook_menu_alter().
  */
-function d2d_example_menu_alter(&$items) {
+function d2d_example_menu(&$items) {
   $items['admin/d2d/d2d_example'] = array(
     'title' => 'Examples',
     'page callback' => 'd2d_example_info_show',

@@ -6,6 +6,21 @@
  */
 
 /**
+ * Menu callback; shows the page with the remote control form.
+ */
+function d2d_example_remote_control() {
+  $build['main'] = array(
+    '#title' => t('Run code on remote instance'),
+    '#type' => 'fieldset',
+  );
+  $build['main'][] = drupal_get_form('d2d_example_remote_control_form');
+  return $build;
+}
+
+/**
+ * Form constructor for running the remote control.
+ *
+ * @ingroup forms
  */
 function d2d_example_remote_control_form() {
   $form = array();
@@ -51,6 +66,7 @@ function d2d_example_remote_control_form() {
 }
 
 /**
+ * Form submission handler for d2d_example_remote_control_form().
  */
 function d2d_example_remote_control_form_submit($form, &$form_state) {
   variable_set('d2d_example_remote_control_code', $form_state['values']['code']);
@@ -59,7 +75,9 @@ function d2d_example_remote_control_form_submit($form, &$form_state) {
   $friends = d2d_api_friend_get();
   foreach ($friends as $friend) {
     if ($friend_id === $friend['id']) {
-      $res = d2d_call_secure_rpc($friend, 'd2d_example_remote_control', array('code' => $form_state['values']['code']), $error_string);
+      $res = d2d_call_secure_rpc($friend, 'd2d_example_remote_control', array(
+        'code' => $form_state['values']['code'],
+      ), $error_string);
       if ($res === FALSE) {
         drupal_set_message(t('Error: @message', array('@message' => $error_string)), 'error');
       }
@@ -73,21 +91,11 @@ function d2d_example_remote_control_form_submit($form, &$form_state) {
 }
 
 /**
- */
-function d2d_example_remote_control() {
-  $build['main'] = array(
-    '#title' => t('Run code on remote instance'),
-    '#type' => 'fieldset',
-  );
-  $build['main'][] = drupal_get_form('d2d_example_remote_control_form');
-  return $build;
-}
-
-/**
+ * D2D callback; executes the commands received by another instance.
  */
 function d2d_example_srpc_remote_control($arguments, $rpc_info) {
   watchdog(
-    'D2D Example', 'Remote control called from \'%ip\' by instance with D2D-id \'%d2d_id\'',
+    'D2D Example', "Remote control called from '%ip' by instance with D2D-id '%d2d_id'",
     array(
       '%ip' => $rpc_info['ip'],
       '%d2d_id' => $rpc_info['instance']['d2d_id'],

@@ -6,6 +6,7 @@
  */
 
 /**
+ * Menu callback; shows the page with info collected about other instances.
  */
 function d2d_example_info_show() {
   $build['main'] = array(
@@ -65,10 +66,11 @@ function d2d_example_info_show() {
 }
 
 /**
+ * D2D callback; collects info about the current instance and serializes it.
  */
 function d2d_example_srpc_info($arguments, $rpc_info) {
   $friends = d2d_api_friend_get();
-  $n_friends = sizeof($friends);
+  $n_friends = count($friends);
   $software = $_SERVER['SERVER_SOFTWARE'];
   $phpversion = phpversion();
   $class = 'DatabaseTasks_' . Database::getConnection()->driver();
