@@ -81,7 +81,19 @@ function d2d_get_time() {
 }
 
 /**
- * Formats a unit.
+ * Formats a unit. ?????????
+ *
+ * @param
+ *   ?????????
+ *
+ * @param
+ *   ?????????
+ *
+ * @param bool $skip
+ *   ?????????
+ *
+ * @return string
+ *   ?????????
  *
  * TODO: use t().
  */
@@ -96,6 +108,12 @@ function d2d_format_unit($v, $unit, $skip = FALSE) {
 
 /**
  * Returns the current time.
+ *
+ * @param
+ *   ???????????
+ *
+ * @return
+ *   ???????????
  */
 function d2d_get_absolute_time($t) {
   // TODO: localization.
@@ -104,6 +122,12 @@ function d2d_get_absolute_time($t) {
 
 /**
  * Checks if an URL is valid.
+ *
+ * @param string $url
+ *   The url
+ *
+ * @return bool
+ *   TRUE, if the url is valid
  */
 function d2d_check_url($url) {
   if (!is_string($url)) {
@@ -117,6 +141,12 @@ function d2d_check_url($url) {
 
 /**
  * Get string describing time relative to current time.
+ *
+ * @param
+ *   ??????????
+ *
+ * @return string
+ *   The relative time
  *
  * TODO: localization.
  */
@@ -158,10 +188,16 @@ function d2d_get_relative_time($t) {
 
 /**
  * Converts a bool to a string.
+ *
+ * @param bool $b
+ *   A boolean value
+ *
+ * @param string
+ *   A string representing the boolean value
  */
 function d2d_bool_to_str($b) {
   if (is_null($b)) {
-    return t('may be');
+    return t('maybe');
   }
   else {
     return $b ? t('true') : t('false');
@@ -189,6 +225,7 @@ function _d2d_decorate_instance_array(&$instance) {
  *
  * @param array $result_set
  *   Array consisting of stdClass objects
+ *
  * @param bool $d2d_id
  *   If TRUE, sets the associative keys of each instance to their d2d_id.
  *   Defaults, FALSE (keys are set to their instance id)
@@ -218,6 +255,9 @@ function _d2d_process_result_set_instance($result_set, $d2d_id = FALSE) {
 
 /**
  * Include instance specified by id in all groups that are marked as default.
+ *
+ * @param int $id
+ *   The id of the instance
  */
 function d2d_set_default_group_memberships($id) {
   db_delete('d2d_group_memberships')
@@ -234,6 +274,15 @@ function d2d_set_default_group_memberships($id) {
 
 /**
  * Checks if a timestamp is not too far off from a specified time.
+ *
+ * @param
+ *   ????????????
+ *
+ * @param
+ *   ????????????
+ *
+ * @return bool
+ *   TRUE, if the timestamp is not beyond the a certain treshold
  */
 function d2d_verify_timestamp($current_time, $timestamp) {
   return $timestamp >= $current_time - variable_get('d2d_delta_0', D2D_DELTA_0_DEFAULT) && $timestamp <= $current_time + variable_get('d2d_delta_1', D2D_DELTA_1_DEFAULT);
@@ -241,6 +290,15 @@ function d2d_verify_timestamp($current_time, $timestamp) {
 
 /**
  * Checks if a nonce has been seen before.
+ *
+ * @param
+ *   ?????????????
+ *
+ * @param string $nonce
+ *   The nonce string
+ *
+ * @retrn bool
+ *   TRUE, if the nonce is new
  */
 function d2d_verify_nonce($timestamp, $nonce) {
   try {
@@ -257,8 +315,14 @@ function d2d_verify_nonce($timestamp, $nonce) {
 
 /**
  * Converts a d2d-id to an internal id.
+ *
+ * @param string $d2d_id
+ *   The d2d id of an instance
+ *
+ * @return int|bool
+ *   The id of the instance, or FALSE if no instance is found
  */
-function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
+function d2d_convert_d2d_id_to_id($d2d_id) {
   if (empty($d2d_id)) {
     return FALSE;
   }
@@ -268,8 +332,14 @@ function d2d_convert_d2d_id_to_id($d2d_id = NULL) {
 
 /**
  * Converts an internal id to a d2d-id.
+ *
+ * @param int $id
+ *   The id of an instance
+ *
+ * @return string|bool
+ *   The d2d id of the instance, or FALSE if no instance is found
  */
-function d2d_convert_id_to_d2d_id($id = NULL) {
+function d2d_convert_id_to_d2d_id($id) {
   if (empty($id)) {
     return FALSE;
   }

@@ -84,9 +84,8 @@ function d2d_patterns($data = NULL) {
   return $tags;
 }
 
-/////////////
-// SETTINGS !
-/////////////
+
+/* SETTINGS */
 
 /**
  * Patterns export callback; exports current settings.
@@ -137,9 +136,8 @@ function d2d_patterns_import_settings($form_id, $form_state) {
   return patterns_results();
 }
 
-////////////////
-// PERMISSIONS !
-////////////////
+
+/* PERMISSIONS. */
 
 /**
  * Patterns export callback; exports all permissions.
@@ -181,9 +179,8 @@ function d2d_patterns_add_permission($form_id, $form_state) {
 }
 
 
-///////////
-// GROUPS !
-///////////
+/* GROUPS. */
+
 
 /**
  * Patterns export callback; exports all groups.
@@ -227,9 +224,9 @@ function d2d_patterns_delete_group($form_id, $form_state) {
   return patterns_results();
 }
 
-////////////////
-// PRIVATE KEY !
-////////////////
+
+/* PRIVATE KEY. */
+
 
 /**
  * Patterns export callback; exports the private key.
@@ -255,12 +252,24 @@ function d2d_patterns_insert_private_key($form_id, $form_state) {
   return patterns_results();
 }
 
-/////////////////
-// OWN INSTANCE !
-/////////////////
+
+/* OWN INSTANCE. */
+
 
 /**
  * Exports the own instance with different options.
+ *
+ * @param string $action_type
+ *   The Patterns action type
+ *
+ * @param bool $public
+ *   Optional. Includes the public key
+ *
+ * @param bool $private
+ *   Optional. Includes the private key
+ *
+ * @return array
+ *   The array of exported instances
  */
 function _d2d_patterns_export_own_instance($action_type, $public = FALSE, $private = FALSE) {
 
@@ -368,9 +377,9 @@ function d2d_patterns_modify_own_instance($form_id, &$form_state) {
   return _d2d_patterns_import_own_instance(PATTERNS_MODIFY, $form_state);
 }
 
-////////////////
-// FRIENDSHIPS !
-////////////////
+
+/* FRIENDSHIPS. */
+
 
 /**
  * Patterns export callback; exports all friendships.
@@ -406,12 +415,26 @@ function d2d_patterns_friendship_send($form_id, &$form_state) {
 }
 
 
-//////////////
-// INSTANCES !
-//////////////
+/* INSTANCES. */
+
 
 /**
  * Exports instances with different options.
+ *
+ * @param array $args
+ *   Array of options as from Patterns export callback
+ *
+ * @param array &$result
+ *   Results array as from Patterns export callback
+ *
+ * @param bool $public_key
+ *   If TRUE, exports also the public key
+ *
+ * @param bool $friends_only
+ *   If TRUE, exports only friend instances
+ *
+ * @return array
+ *   The array of exported instances
  */
 function _d2d_patterns_export_instances($args, &$result, $public_key, $friends_only) {
   $action_type = isset($args['type']) ? $args['type'] : PATTERNS_CREATE;
@@ -543,6 +566,12 @@ function d2d_patterns_delete_instance($form_id, &$form_state) {
  * Somehow Spyc duplicates the | character at the beginning of the string
  * This methods looks for |\n at and removes it. White spaces at every ne line
  * must be eliminated too, but a new line at the end is needed.
+ *
+ * @param string $key
+ *   The plain text key
+ *
+ * @return string
+ *   The fixed key
  */
 function _d2d_patterns_fix_imported_key($key) {
 
@@ -595,6 +624,15 @@ function _d2d_patterns_insert_private_key($key) {
 
 /**
  * Exports the public keys with different options.
+ *
+ * @param $string $action_type
+ *   The Patterns action type
+ *
+ * @param bool $selected_only
+ *   If TRUE, only currently selected public keys will be exported
+ *
+ * @return array
+ *   The array of exported public keys
  */
 function _d2d_patterns_export_public_keys($action_type, $selected_only = FALSE) {
   $actions = array();
@@ -703,9 +741,9 @@ function d2d_patterns_delete_public_keys($form_id, $form_state) {
   return patterns_results();
 }
 
-///////////////////
-// PATTERNS HOOKS !
-///////////////////
+
+/* PATTERNS HOOKS. */
+
 
 /**
  * Implements hook_patterns_prepare().

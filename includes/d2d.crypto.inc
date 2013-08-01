@@ -6,6 +6,15 @@
 
 /**
  * Generate public / private key pair.
+ *
+ * @param string &$public_key
+ *   The plan text public key
+ *
+ * @param string &$private_key
+ *   The plan text private key
+ *
+ * @return bool
+ *   TRUE, if the generation of the keys is successful
  */
 function d2d_create_keys(&$public_key, &$private_key) {
   $res = @openssl_pkey_new();
@@ -22,6 +31,15 @@ function d2d_create_keys(&$public_key, &$private_key) {
 
 /**
  * Check if a public / private key pair match.
+ *
+ * @param string $public_key
+ *   The plan text public key
+ *
+ * @param string $private_key
+ *   The plan text private key
+ *
+ * @return bool
+ *   TRUE, if the encryption/decryption of a test-text is successful
  */
 function d2d_check_key_pair($public_key, $private_key) {
   $data = 'just a simple encryption / decryption test.';
@@ -35,7 +53,7 @@ function d2d_check_key_pair($public_key, $private_key) {
 }
 
 /**
- * Sign data.
+ * Signs data.
  */
 function d2d_sign($data, $private_key, $signer) {
   if (@openssl_sign($data, $signature, $private_key) === FALSE) {
@@ -77,7 +95,9 @@ function d2d_verify($signature_string, $public_key, &$signature_array) {
     'signer' => 'is_string',
   );
   $array = d2d_explode($signature_string);
-  if ($array === FALSE || !d2d_check_array($array, $signature_format) || (@openssl_verify($array['data'], $array['signature'], $public_key) !== 1)) {
+  if ($array === FALSE
+      || !d2d_check_array($array, $signature_format)
+      || (@openssl_verify($array['data'], $array['signature'], $public_key) !== 1)) {
     return FALSE;
   }
   $signature_array = $array;

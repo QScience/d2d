@@ -37,6 +37,12 @@ function d2d_xmlrpc() {
 }
 /**
  * Provide public key.
+ *
+ * @param string $d2d_id
+ *   The d2d id of the own instance
+ *
+ * @return string|bool
+ *   The public key of the own instance, or FALSE if the d2d id does not match
  */
 function d2d_get_public_key($d2d_id) {
   if (!d2d_is_online()) {
@@ -48,11 +54,15 @@ function d2d_get_public_key($d2d_id) {
   }
   return $my_instance['public_key'];
 }
+
 /**
  * Get information about this instance.
  *
  * In particular this information is used for remote auto-completion
- *  of the add instance form.
+ * of the add instance form.
+ *
+ * @return string
+ *   The imploded array containing the information
  */
 function d2d_get_instance_information() {
   if (!d2d_is_online()) {

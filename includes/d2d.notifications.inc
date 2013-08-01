@@ -10,6 +10,9 @@
  * Adds a new entry into the notification system.
  *
  * Notifications are about instance being offline etc.
+ *
+ * @param array $exclude
+ *   ?????????????
  */
 function d2d_notify($exclude = array()) {
   if (!in_array('offline', $exclude) && !d2d_is_online()) {
@@ -53,7 +56,6 @@ function d2d_notify($exclude = array()) {
  * Implements hook_d2d_handle_notification().
  */
 function d2d_d2d_handle_notification() {
-  $types = array();
   $types['d2d_message'] = array(
     'arguments' => array('subject' => 'is_string', 'text' => 'is_string'),
     'callback_simple' => 'd2d_get_message_simple',
@@ -71,6 +73,15 @@ function d2d_d2d_handle_notification() {
 
 /**
  * Callback for getting a short description of a general message.
+ *
+ * @param array $arguments
+ *   ?????????
+ *
+ * @param
+ *   ????????
+ *
+ * @return string
+ *   The short description of a general message
  */
 function d2d_get_message_simple($arguments, $attributes) {
   return $arguments['subject'];
@@ -78,9 +89,17 @@ function d2d_get_message_simple($arguments, $attributes) {
 
 /**
  * Callback for getting a detailed description of a message.
+ *
+ * @param array $arguments
+ *   ?????????
+ *
+ * @param
+ *   ????????
+ *
+ * @return array
+ *   A form ready to be built with the description of a notification
  */
 function d2d_get_message_detailed($arguments, $attributes) {
-  $build = array();
   $build['notifications'] = array(
     '#title' => t('Notification') . ' #' . $attributes['id'],
     '#type' => 'fieldset',
@@ -92,11 +111,16 @@ function d2d_get_message_detailed($arguments, $attributes) {
 /**
  * Builts a table with notifications of type specified in $types.
  *
- * If $types is an array, the type has to be contained in the array, otherwise
- * the table contains notifications of any type.
+ * @param array $types
+ *   If not empty, only of notifications of the type contained in the array
+ *   will be displayed
+ *
+ * @return array $table
+ *   The notification table
+ *
+ * @see d2d_api_notification_get_by_type()
  */
 function d2d_built_notification_table($types) {
-  $build = array();
   $build['notifications'] = array(
     '#title' => t('Notifications'),
     '#type' => 'fieldset',
@@ -176,6 +200,12 @@ function d2d_show_notifications() {
 
 /**
  * Shows details for the notification with id $id.
+ *
+ * @param int $id
+ *   The id of a notification
+ *
+ * @return
+ *   ??????????
  */
 function d2d_show_notification_details($id) {
   if (!d2d_check_convert_int($id)) {
@@ -209,6 +239,11 @@ function d2d_show_notification_details($id) {
 
 /**
  * Deletes a notification and redirects to the overview of notifications.
+ *
+ * @param int $id
+ *   The id of the notification
+ *
+ * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -219,6 +254,11 @@ function d2d_notification_delete_submit($form, &$form_state, $id) {
 
 /**
  * Marks a notification as read and redirects to the overview of notifications.
+ *
+ * @param int $id
+ *   The id of the notification
+ *
+ * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_mark_read_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -229,6 +269,11 @@ function d2d_notification_mark_read_submit($form, &$form_state, $id) {
 
 /**
  * Marks a notification as unread and redirects to the overview.
+ *
+ * @param int $id
+ *   The id of the notification
+ *
+ * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_mark_unread_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {

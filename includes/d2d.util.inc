@@ -260,6 +260,12 @@ function d2d_substr_public_key($key, $n = -10) {
 
 /**
  * Strips comments from a public/private key.
+ *
+ * @param string $key
+ *   The plain text key
+ *
+ * @return string
+ *   The cleaned key
  */
 function d2d_strip_comments_from_key($key) {
   return preg_replace('!\-\-\-\-\-[^\-]+\-\-\-\-\-!s', '', $key);
@@ -308,6 +314,12 @@ function d2d_public_key_equal($key1, $key2) {
 
 /**
  * Checks if argument contains an integer and converts its type.
+ *
+ * @param mixed &$x
+ *   The argument to check and convert
+ *
+ * @return bool
+ *   TRUE, if conversion was successful
  */
 function d2d_check_convert_int(&$x) {
   $y = intval($x);
@@ -322,6 +334,12 @@ function d2d_check_convert_int(&$x) {
 
 /**
  * Converts bool to int.
+ *
+ * @param mixed &$b
+ *   The argument to check and convert
+ *
+ * @return bool
+ *   TRUE, if conversion was successful
  */
 function d2d_bool_to_int($b) {
   if ($b) {
@@ -332,6 +350,12 @@ function d2d_bool_to_int($b) {
 
 /**
  * Generates a random hexadecimal string.
+ *
+ * @param int $len
+ *   The length of the string
+ *
+ * @return string
+ *   The random hexadecimal string
  */
 function d2d_random_hex_string($len) {
   $ret = '';
@@ -349,6 +373,9 @@ function d2d_random_hex_string($len) {
 
 /**
  * Generates a random d2d-id.
+ *
+ * @return string
+ *   A valid, random d2d id
  */
 function d2d_random_d2d_id() {
   return d2d_random_hex_string(D2D_INSTANCE_IDENTIFIER_LENGTH);
@@ -356,6 +383,12 @@ function d2d_random_d2d_id() {
 
 /**
  * Checks if a string consists only of hexadecimal characters.
+ *
+ * @param string $string
+ *   The string to check
+ *
+ * @return bool
+ *   TRUE, if the string contains only hexadecimal characters
  */
 function d2d_is_hex_string($string) {
   return preg_match('/^[A-F0-9]*$/', $string) ? TRUE : FALSE;
@@ -363,6 +396,12 @@ function d2d_is_hex_string($string) {
 
 /**
  * Verifies if the length of a d2d-id is correct.
+ *
+ * @param string $id
+ *   The d2d id to check
+ *
+ * @return bool
+ *   TRUE, if the length is equal to D2D_INSTANCE_IDENTIFIER_LENGTH
  */
 function d2d_check_d2d_id_length($id) {
   return strlen($id) == D2D_INSTANCE_IDENTIFIER_LENGTH;
@@ -370,6 +409,12 @@ function d2d_check_d2d_id_length($id) {
 
 /**
  * Check if a string is a valid d2d-id.
+ *
+ * @param string $id
+ *   The string to check
+ *
+ * @return bool
+ *   TRUE, if the string is a valid d2d-id
  */
 function d2d_check_d2d_id($id) {
   return is_string($id) && d2d_check_d2d_id_length($id) && d2d_is_hex_string($id);
@@ -377,6 +422,12 @@ function d2d_check_d2d_id($id) {
 
 /**
  * Check if a variable is a valid instance description.
+ *
+ * @param string $str
+ *   The string to check
+ *
+ * @return bool
+ *   TRUE, if the string is a valid instance description
  */
 function d2d_check_description($str) {
   return is_string($str) && strlen($str) <= D2D_INSTANCE_DESCRIPTION_MAX_LENGTH;
@@ -384,6 +435,12 @@ function d2d_check_description($str) {
 
 /**
  * Check if a variable is a valide name for a d2d instance.
+ *
+ * @param string $str
+ *   The string to check
+ *
+ * @return bool
+ *   TRUE, if the string is a valid name for a d2d instance
  */
 function d2d_check_name($str) {
   return is_string($str) && strlen($str) <= D2D_INSTANCE_NAME_MAX_LENGTH;
@@ -391,6 +448,12 @@ function d2d_check_name($str) {
 
 /**
  * Check if a variable is a valid nonce.
+ *
+ * @param string $nonce
+ *   The variable to check
+ *
+ * @return bool
+ *   TRUE, if the string is a valid nonce
  */
 function d2d_check_nonce($nonce) {
   return is_string($nonce) && (strlen($nonce) == D2D_NONCE_LENGTH) && d2d_is_hex_string($nonce);
@@ -398,6 +461,9 @@ function d2d_check_nonce($nonce) {
 
 /**
  * Generates a random nonce.
+ *
+ * @return string
+ *   A random nonce
  */
 function d2d_random_nonce() {
   return d2d_random_hex_string(D2D_NONCE_LENGTH);

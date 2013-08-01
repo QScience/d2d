@@ -27,8 +27,12 @@ function d2d_form_send_requests_submit($form, &$form_state) {
 /**
  * Builds a table with outgoing requests of type specified in $types.
  *
- * If $types is an array, the type has to be contained in the array, otherwise
- * the table contains notifications of any type.
+ * @param array $types
+ *   If not empty, only of notifications of the type contained in the array
+ *   will be displayed
+ *
+ * @return array
+ *   The table of outgoing requests ready to be built
  */
 function d2d_built_outgoing_requests_table($types) {
   $instances = d2d_api_instance_get_by_id();
@@ -105,11 +109,10 @@ function d2d_built_outgoing_requests_table($types) {
 }
 
 /**
- * System tab.
+ * Menu callback; creats the System page.
  */
 function d2d_show_system_tab() {
   d2d_notify();
-  $build = array();
   $build['system'] = array(
     '#title' => t('System and advanced functionality'),
     '#type' => 'fieldset',
@@ -121,6 +124,11 @@ function d2d_show_system_tab() {
 
 /**
  * Deletes outgoing request.
+ *
+ * @param int $id
+ *   The id of the outgoing request to delete
+ *
+ * ????? Is this a form submission handler of what? could not find it.
  */
 function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -131,6 +139,11 @@ function d2d_outgoing_requests_delete_submit($form, &$form_state, $id) {
 
 /**
  * Sends outgoing request.
+ *
+ * @param int $id
+ *   The id of the outgoing request to send
+ *
+ * ????? Is this a form submission handler of what? could not find it.
  */
 function d2d_outgoing_requests_send_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {

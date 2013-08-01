@@ -400,6 +400,12 @@ function d2d_form_check_public_keys_submit($form, &$form_state) {
 
 /**
  * Creates the header part of the edit instance form.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
+ *
+ * @return array
+ *   The header of the form ready to be built
  */
 function _d2d_edit_instance_build_header($instance) {
   d2d_notify();
@@ -494,6 +500,9 @@ function d2d_form_remove_instance_validate($form, &$form_state) {
 
 /**
  * Menu callback; builds the show instance details form.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
  */
 function d2d_edit_instance_details($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -518,6 +527,14 @@ function d2d_edit_instance_details($instance) {
 
 /**
  * Menu callback; selects a public key for an instance.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
+ *
+ * @param int $public_key_id
+ *   The id of the public key
+ *
+ * @see d2d_unselect_public_key()
  */
 function d2d_select_public_key($instance, $public_key_id) {
   $num_updated = 0;
@@ -542,6 +559,14 @@ function d2d_select_public_key($instance, $public_key_id) {
 
 /**
  * Menu callback; unselects a public key for an instance.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
+ *
+ * @param int $public_key_id
+ *   The id of the public key
+ *
+ * @see d2d_select_public_key()
  */
 function d2d_unselect_public_key($instance, $public_key_id) {
   $num_updated = 0;
@@ -564,6 +589,13 @@ function d2d_unselect_public_key($instance, $public_key_id) {
 
 /**
  * Menu callback; deletes a public key for an instance.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
+ *
+ * @param int $public_key_id
+ *   The id of the public key
+ *
  */
 function d2d_delete_public_key($instance, $public_key_id) {
   $num_updated = 0;
@@ -583,6 +615,10 @@ function d2d_delete_public_key($instance, $public_key_id) {
 
 /**
  * Menu callback; edits a public key for a instance.
+ *
+ * @param array $instance
+ *   The associative array representing the instance
+ *
  */
 function d2d_edit_instance_public_key($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -634,6 +670,9 @@ function d2d_edit_instance_public_key($instance) {
 
 /**
  * Form constructor for updating the friendship's status.
+ *
+ * @param int $id
+ *   The id of the instance
  *
  * @param int $old_friendship_state
  *   The current status of the friendship
@@ -719,7 +758,6 @@ function d2d_form_change_friendship_submit($form, &$form_state) {
 /**
  * Form constructor for forcing a friendship's state in the database.
  *
- *
  * @param int $id
  *   The id of the instance
  *
@@ -780,6 +818,9 @@ function d2d_form_force_friendship_submit($form, &$form_state) {
 
 /**
  * Menu callback; edits the friendship state for an instance.
+ *
+ * @param int $instance
+ *   The associative array representing the instance
  */
 function d2d_edit_instance_friendship($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -813,6 +854,9 @@ function d2d_edit_instance_friendship($instance) {
 
 /**
  * Menu callback; edits group memberships for an instance.
+ *
+ * @param int $instance
+ *   The associative array representing the instance
  */
 function d2d_edit_instance_groups($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -829,6 +873,9 @@ function d2d_edit_instance_groups($instance) {
 
 /**
  * Menu callback; edits the permissions for an instance.
+ *
+ * @param int $instance
+ *   The associative array representing the instance
  */
 function d2d_edit_instance_permissions($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -870,6 +917,9 @@ function d2d_edit_instance_permissions($instance) {
 
 /**
  * Menu callback; edits the remote permissions for an instance.
+ *
+ * @param int $instance
+ *   The associative array representing the instance
  */
 function d2d_edit_instance_remote_permissions($instance) {
   $build = _d2d_edit_instance_build_header($instance);

@@ -8,7 +8,6 @@
  * Implements hook_d2d_handle_outgoing_request().
  */
 function d2d_d2d_handle_outgoing_request() {
-  $types = array();
   $types['d2d_friendship'] = array(
     'arguments_save' => array(),
     'arguments_send' => array('state' => 'is_string'),
@@ -24,7 +23,6 @@ function d2d_d2d_handle_outgoing_request() {
  * Implements hook_d2d_handle_incoming_request().
  */
 function d2d_d2d_handle_incoming_request() {
-  $types = array();
   $types['d2d_friendship'] = array(
     'arguments' => array('state' => 'is_string'),
     'arguments_return' => array('value' => 'is_string'),
@@ -35,6 +33,24 @@ function d2d_d2d_handle_incoming_request() {
 
 /**
  * Adds an outgoing request to the database.
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param bool $verbose
+ *   If TRUE, results will be displayed using drupal_set_message
+ *
+ * @return int|NULL
+ *   The id of the new request, or NULL if an error occurs
  */
 function d2d_add_request($receiver_id, $type, $data, $max_resend_trials, $verbose = FALSE) {
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
@@ -94,6 +110,30 @@ function d2d_remove_outdated_outgoing_requests() {
 
 /**
  * Sends a single outgoing request.
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @param
+ *   ????????
+ *
+ * @return
+ *   ????????
  */
 function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_instance, $my_private_key, $return_check, &$error_string) {
   $t = d2d_get_time();
@@ -271,6 +311,9 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
 
 /**
  * Reevaluates the signatures of the incoming request of specified instance.
+ *
+ * @param array $instance
+ *   The associative array of the instance
  */
 function d2d_incoming_requests_reevaluate_signatures($instance) {
   $ids = array();
@@ -347,6 +390,15 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
 
 /**
  * Handles secure request.
+ *
+ * @param
+ *   ????????
+ *
+ * @param string $version
+ *   ???????
+ *
+ * @return
+ *   ????????
  */
 function d2d_secure_request($request64, $version) {
   $t = d2d_get_time();
@@ -574,6 +626,15 @@ function d2d_secure_request($request64, $version) {
 
 /**
  * Send outgoing requests specified by their ids.
+ *
+ * @param array $ids
+ *    ??????????
+ *
+ * @param bool $verbose
+ *    ?????????
+ *
+ * @return
+ *    ????????
  */
 function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
   // Check if instance is online.

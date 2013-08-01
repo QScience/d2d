@@ -187,7 +187,7 @@ function d2d_api_public_key_return_id($d2d_id, $public_key) {
 /**
  * Checks if specified public key for an instance already exists.
  *
- * @param int $d2d_id
+ * @param string $d2d_id
  *   The d2d_id of the instance
  *
  * @param string $public_key
@@ -482,7 +482,7 @@ function _d2d_api_instance_get($id, $id_as_d2d_id = FALSE) {
  * If an id is set, only the instance with d2d_id equal to id
  * is returned.
  *
- * @param int $d2d_id
+ * @param string $d2d_id
  *   Optional. The d2d_id of the instance
  *
  * @return array|bool

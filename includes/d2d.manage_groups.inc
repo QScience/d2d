@@ -34,8 +34,23 @@ function d2d_form_list_groups() {
   );
   return $form;
 }
+
 /**
  * Returns the list of all group ids.
+ *
+ * @param array &$form_state
+ *   The form state ???????
+ *
+ * @param string $table
+ *   ?????????????
+ *
+ * @param int $prefix_length
+ *   ?????????????
+ *
+ * @return array $ids
+ *   The array of ids of groups
+ *
+ * @see d2d_form_list_groups_validate()
  */
 function _d2d_get_ids(&$form_state, $table, $prefix_length) {
   $ids = array();

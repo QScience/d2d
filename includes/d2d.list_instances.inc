@@ -177,7 +177,7 @@ function d2d_form_add_instance_submit_submit($form, &$form_state) {
 }
 
 /**
- * Theming function. Creates the rows of the instances table.
+ * Theming callback; creates the rows of the instances table.
  */
 function theme_d2d_table_instances($variables) {
   $form = $variables['form'];

@@ -6,11 +6,25 @@
  */
 
 /**
- * Creates edit group form.
+ * Form constructor for editing a group.
+ *
+ * @param int $id
+ *   The id of the group
+ *
+ * @param string $name
+ *   The name of the group
+ *
+ * @param string $description
+ *   The description of the group
+ *
+ * @param int $default
+ *   If 1, new instances will be automatically added to the group.
+ *   Otherwise, set to 0.
+ *
+ * @ingroup forms
  */
 function d2d_form_edit_group($form, &$form_state, $id, $name, $description, $default) {
   d2d_notify();
-  $form = array();
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
@@ -47,7 +61,7 @@ function d2d_form_edit_group($form, &$form_state, $id, $name, $description, $def
 }
 
 /**
- * Validates edit group form.
+ * Form validation handler for d2d_form_edit_group().
  */
 function d2d_form_edit_group_validate($form, &$form_state) {
   $id = $form_state['values']['id'];
@@ -63,7 +77,7 @@ function d2d_form_edit_group_validate($form, &$form_state) {
 }
 
 /**
- * Process edit group form.
+ * Form submission handler for d2d_form_edit_group().
  */
 function d2d_form_edit_group_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
@@ -77,10 +91,12 @@ function d2d_form_edit_group_submit($form, &$form_state) {
 }
 
 /**
- * Displays edit group form.
+ * Menu callback; displays edit group form.
+ *
+ * @param int $id
+ *   The id of the grouo to edit
  */
 function d2d_edit_group($id) {
-  $build = array();
   $group = d2d_api_group_get($id);
   if (is_null($group)) {
     drupal_set_message(t('Group not found in database.'), 'error');

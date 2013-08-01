@@ -18,6 +18,9 @@ function d2d_show_init() {
 }
 /**
  * Extracts a possible name for the instance based on its $base_url.
+ *
+ * @param string $base_url
+ *   The base url of the instance
  */
 function _d2d_suggest_instance_name($base_url) {
   $array = array_reverse(explode('/', $base_url));

@@ -26,6 +26,15 @@ function d2d_d2d_secure_rpc() {
 
 /**
  * Returns public key for specified instance.
+ *
+ * @param array $arguments
+ *   ??????????
+ *
+ * @param
+ *   ?????????
+ *
+ * @return string
+ *   The public key for the requested instance
  */
 function d2d_srpc_get_public_key($arguments, $rpc_info) {
   $d2d_id = $arguments['d2d_id'];
@@ -35,6 +44,15 @@ function d2d_srpc_get_public_key($arguments, $rpc_info) {
 
 /**
  * Returns an imploded array of permissions for the remote instance.
+ *
+ * @param array $arguments
+ *   ??????????
+ *
+ * @param
+ *   ?????????
+ *
+ * @return string
+ *   The imploded list of permissions for the remote instance
  */
 function d2d_srpc_list_permissions($arguments, $rpc_info) {
   $id = $rpc_info['instance']['id'];
