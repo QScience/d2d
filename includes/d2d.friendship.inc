@@ -44,11 +44,16 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
     $comment = t('(duplicate)');
   }
   $return = '';
-  switch ($instance['friendship_state']) {
-    case 0: $return = t('delete friendship / undo friendship request'); break;
-    case 1: $return = t('accept / ask friendship'); break;
-    case 2: $return = t('this message will not be sent'); break;
-    default: $return = t('accept / ask for friendship'); break;
+  if (!isset($instance['friendship_state'])) {
+    $return = t('An error occurred');
+  }
+  else {
+    switch ($instance['friendship_state']) {
+      case 0: $return = t('delete friendship / undo friendship request'); break;
+      case 1: $return = t('accept / ask friendship'); break;
+      case 2: $return = t('this message will not be sent'); break;
+      default: $return = t('accept / ask for friendship'); break;
+    }
   }
   return $return . ' ' . $comment;
 }
@@ -94,6 +99,11 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
     $persistent_state = TRUE;
   }
   else {
+    // Do not send and delete.
+    return NULL;
+  }
+
+  if (!isset($instance['friendship_state'])) {
     // Do not send and delete.
     return NULL;
   }
