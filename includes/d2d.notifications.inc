@@ -24,15 +24,15 @@ function d2d_notify($exclude = array()) {
       drupal_set_message($message, 'warning', FALSE);
     }
     else {
-        if (isset($_SESSION['messages']['warning'])) {
-            $key = array_search($message, $_SESSION['messages']['warning']);
-            if ($key !== FALSE) {
-                unset($_SESSION['messages']['warning'][$key]);
-                if (empty($_SESSION['messages']['warning'])) {
-                    unset($_SESSION['messages']['warning']);
-                }
-            }
+      if (isset($_SESSION['messages']['warning'])) {
+        $key = array_search($message, $_SESSION['messages']['warning']);
+        if ($key !== FALSE) {
+          unset($_SESSION['messages']['warning'][$key]);
+          if (empty($_SESSION['messages']['warning'])) {
+            unset($_SESSION['messages']['warning']);
+          }
         }
+      }
     }
   }
   if (!in_array('notifications', $exclude)) {
@@ -247,7 +247,7 @@ function d2d_show_notification_details($id) {
 }
 
 /**
- * Menu callback; deletes a notification and redirects to the overview of notifications.
+ * Menu callback; deletes a notification and redirects to the overview.
  *
  * @param int $id
  *   The id of the notification
@@ -260,7 +260,7 @@ function d2d_notification_delete_submit($form, &$form_state, $id) {
 }
 
 /**
- * Menu callback; marks a notification as read and redirects to the overview of notifications.
+ * Menu callback; marks a notification as read and redirects to the overview.
  *
  * @param int $id
  *   The id of the notification

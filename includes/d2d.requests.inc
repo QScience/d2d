@@ -133,8 +133,9 @@ function d2d_remove_outdated_outgoing_requests() {
  *   A string containing an error message, in case of failure
  *
  * @return NULL|bool|array
- *   NULL if the other instance received the request, but could not send a reply. 
- *   FALSE, on failure, array containing the checked returned values on success.
+ *   NULL if the other instance received the request, but could
+ *   not send a reply. FALSE, on failure, array containing
+ *   the checked returned values on success.
  *
  * @see d2d_check_array()
  */
@@ -399,7 +400,7 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
  *
  * Requests are put in the database, then processed.
  *
- * If the public key is initially missing, and then added, the 
+ * If the public key is initially missing, and then added, the
  * requests are later re-evaluated.
  *
  * @param string $request64
@@ -641,13 +642,13 @@ function d2d_secure_request($request64, $version) {
  * Send outgoing requests specified by their ids.
  *
  * @param array $ids
- *    The ids of the requests
+ *   The ids of the requests
  *
  * @param bool $verbose
- *    If TRUE, uses drupal_set_message to display the results on screen
+ *   If TRUE, uses drupal_set_message to display the results on screen
  *
  * @return int
- *    The number of requests successfully sent
+ *   The number of requests successfully sent
  */
 function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
   // Check if instance is online.

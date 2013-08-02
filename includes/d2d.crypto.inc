@@ -67,7 +67,7 @@ function d2d_check_key_pair($public_key, $private_key) {
  * @return string
  *   The signed data
  *
- * @see d2d_sign2
+ * @see d2d_sign2()
  */
 function d2d_sign($data, $private_key, $signer) {
   if (@openssl_sign($data, $signature, $private_key) === FALSE) {
@@ -98,7 +98,7 @@ function d2d_sign($data, $private_key, $signer) {
  * @return string
  *   The signed data
  *
- * @see d2d_sign
+ * @see d2d_sign()
  */
 function d2d_sign2($data, $private_key, $signer) {
   if (@openssl_sign($data, $signature, $private_key) === FALSE) {
@@ -116,7 +116,7 @@ function d2d_sign2($data, $private_key, $signer) {
 /**
  * Explodes and verifies signature string.
  *
- * @param string &$signature_string
+ * @param string $signature_string
  *   The return value of d2d_sign()
  *
  * @param string $public_key

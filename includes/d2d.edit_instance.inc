@@ -595,7 +595,6 @@ function d2d_unselect_public_key($instance, $public_key_id) {
  *
  * @param int $public_key_id
  *   The id of the public key
- *
  */
 function d2d_delete_public_key($instance, $public_key_id) {
   $num_updated = 0;
@@ -618,7 +617,6 @@ function d2d_delete_public_key($instance, $public_key_id) {
  *
  * @param array $instance
  *   The associative array representing the instance
- *
  */
 function d2d_edit_instance_public_key($instance) {
   $build = _d2d_edit_instance_build_header($instance);
@@ -660,7 +658,10 @@ function d2d_edit_instance_public_key($instance) {
     }
     $build['pk_manage'][] = array(
       '#theme' => 'table',
-      '#header' => array(t('ID'), t('Public key'), array('data' => t('Operations'), 'colspan' => 2)),
+      '#header' => array(t('ID'), t('Public key'), array(
+          'data' => t('Operations'),
+          'colspan' => 2,
+      )),
       '#rows' => $rows,
       '#empty' => t('No candidate public keys available.'),
     );

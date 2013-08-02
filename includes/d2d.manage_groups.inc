@@ -38,14 +38,15 @@ function d2d_form_list_groups() {
 /**
  * Returns the list of ids without the prefix from a form state array.
  *
- * @param array &$form_state 
- *   The form state array, e.g. form d2d_form_list_groups()
+ * @param array &$form_state
+ *   The form state array, for example. form d2d_form_list_groups()
  *
  * @param string $table
  *   The name of form to look into
  *
  * @param int $prefix_length
- *   Length of the prefix to be removed from name of the group, eg id4 -> 4
+ *   Length of the prefix to be removed from name of the group,
+ *   for example id4 -> 4
  *
  * @return array $ids
  *   The array of ids of groups

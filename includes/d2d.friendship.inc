@@ -15,7 +15,7 @@
  *   Timestamp the request was inserted.
  *
  * @param int $time_next_send
- *   Timestamp the request will be sent next. 
+ *   Timestamp the request will be sent next.
  *
  * @param int $time_invalid
  *   Timestamp from which on the request is invalid.
@@ -29,8 +29,8 @@
  * @param mixed &$persistent_state
  *   Reference to a variable which is used to memorize if an entry for a similar
  *   request is present in the database. $persistent_state is persistant over
- *   several successive calls to d2d_friendship_outgoing_describe() that operates
- *   on the same $instance.
+ *   several successive calls to d2d_friendship_outgoing_describe() that
+ *   operates on the same $instance.
  *
  * @return string
  *   The human understandable text
@@ -64,7 +64,7 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
  *   Timestamp the request was inserted.
  *
  * @param int $time_next_send
- *   Timestamp the request will be sent next. 
+ *   Timestamp the request will be sent next.
  *
  * @param int $time_invalid
  *   Timestamp from which on the request is invalid.
@@ -81,7 +81,7 @@ function d2d_friendship_outgoing_describe($arguments, $time_insert, $time_next_s
  *   several successive calls to d2d_friendship_outgoing_process() that operates
  *   on the same $instance.
  *
- * @param &$arguments_send
+ * @param array &$arguments_send
  *   Ignored for d2d_friendship_outgoing_process().
  *
  * @return bool|null
@@ -128,7 +128,7 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  *   wants to be friends and FALSE otherwise.
  *
  * @param array $rpc_info
- *   Associative array 
+ *   Associative array
  *
  * @param bool $live
  *   TRUE if and only if function called as part of a RPC call from the
@@ -136,10 +136,10 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  *   immediately), FALSE otherwise.
  *
  * @param NULL|array &$return
- *   If not NULL, this value is sent back to the caller 
+ *   If not NULL, this value is sent back to the caller
  *
- * @return bool|NULL
- *
+ * @return bool
+ *   TRUE on success
  */
 function d2d_friendship_incoming_process($arguments, $rpc_info, $live, &$return) {
   $return = NULL;
@@ -253,7 +253,8 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
  * D2D return callback; replies to a friendship request.
  *
  * @param mixed $return
- *   return value from  d2d_friendship_incoming_process. Accepts the friendship request if set to array auto_accept
+ *   return value from  d2d_friendship_incoming_process.
+ *   Accepts the friendship request if set to array auto_accept
  *
  * @param array $arguments
  *   Array of arguments of request
@@ -265,7 +266,7 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
  *   Timestamp the request was inserted.
  *
  * @param int $time_next_send
- *   Timestamp the request will be sent next. 
+ *   Timestamp the request will be sent next.
  *
  * @param int $time_invalid
  *   Timestamp from which on the request is invalid.
@@ -279,9 +280,8 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
  * @param array &$instance
  *   Array describing the instance
  *
- * @param mixed &$persistant 
+ * @param mixed &$persistant
  *   Represents the state of request. Not used here
- *
  */
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {
   if ($return === FALSE) {

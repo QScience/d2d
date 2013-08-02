@@ -335,7 +335,7 @@ function d2d_check_convert_int(&$x) {
 /**
  * Converts bool to int.
  *
- * @param mixed &$b
+ * @param mixed $b
  *   The argument to check and convert
  *
  * @return bool

@@ -81,12 +81,12 @@ function d2d_get_time() {
 }
 
 /**
- * Formats a an enumerable quantity in English language. 
+ * Formats a an enumerable quantity in English language.
  *
  * @param mixed $v
  *   The numeric-like value to format
  *
- * @param string $unit 
+ * @param string $unit
  *   The name of the unit of measure
  *
  * @param bool $skip
@@ -190,8 +190,8 @@ function d2d_get_relative_time($t) {
  * @param bool $b
  *   A boolean value
  *
- * @param string
- *   A string representing the boolean value
+ * @return string
+ *   The converted boolean
  */
 function d2d_bool_to_str($b) {
   if (is_null($b)) {
