@@ -27,7 +27,7 @@
  *   Array describing the instance to which the request is being sent.
  *
  * @param mixed &$persistent_state
- *   Reference to a variable which is used to memoize if an entry for a similar
+ *   Reference to a variable which is used to memorize if an entry for a similar
  *   request is present in the database. $persistent_state is persistant over
  *   several successive calls to d2d_friendship_outgoing_describe() that operates
  *   on the same $instance.
@@ -135,8 +135,8 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  *   caller (i.e. we can send a reply with the new friendship state
  *   immediately), FALSE otherwise.
  *
- * @param &$return
- *   Ignored.
+ * @param NULL|array &$return
+ *   If not NULL, this value is sent back to the caller 
  *
  * @return bool|NULL
  *
@@ -250,37 +250,37 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
 }
 
 /**
- * D2D callback; replies to a friendship request.
+ * D2D return callback; replies to a friendship request.
  *
- * @param
- *   ????????????????
+ * @param mixed $return
+ *   return value from  d2d_friendship_incoming_process. Accepts the friendship request if set to array auto_accept
  *
- * @param
- *   ????????????????
+ * @param array $arguments
+ *   Array of arguments of request
  *
- * @param
- *   ????????????????
+ * @param mixed $arguments_send
+ *   Not used
  *
- * @param
- *   ????????????????
+ * @param int $time_insert
+ *   Timestamp the request was inserted.
  *
- * @param
- *   ????????????????
+ * @param int $time_next_send
+ *   Timestamp the request will be sent next. 
  *
- * @param
- *   ????????????????
+ * @param int $time_invalid
+ *   Timestamp from which on the request is invalid.
  *
- * @param
- *   ????????????????
+ * @param int $max_send_trials
+ *   Maximal number of trials the request is being sent.
  *
- * @param
- *   ????????????????
+ * @param string $error_string
+ *   Not used
  *
- * @param
- *   ????????????????
+ * @param array &$instance
+ *   Array describing the instance
  *
- * @param
- *   ????????????????
+ * @param mixed &$persistant 
+ *   Represents the state of request. Not used here
  *
  */
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {
@@ -306,10 +306,10 @@ function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $t
  * Creates a human understandable string about the state of friendship requests.
  *
  * @param array $arguments
- *   ????????????????
+ *   Array of arguments of request
  *
- * @param
- *   ????????????????
+ * @param array $attributes
+ *   Array describing the request
  *
  * @return string
  *   A text describing the state of the friendship request
@@ -367,10 +367,10 @@ function d2d_get_friendship_simple($arguments, $attributes) {
  * Returns a form with the description of the state of a friendship request.
  *
  * @param array $arguments
- *   ????????????????
+ *   Array of arguments of the request
  *
- * @param
- *   ????????????????
+ * @param array $attributes
+ *   Array describing the request
  *
  * @return array
  *   A form containing the description of the state of a friendship to be built
