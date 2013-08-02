@@ -34,17 +34,17 @@ function d2d_d2d_handle_incoming_request() {
 /**
  * Adds an outgoing request to the database.
  *
- * @param
- *   ????????
+ * @param int $receiver_id
+ *   Instance id of the receiver
  *
- * @param
- *   ????????
+ * @param string $type
+ *   The type of the request, for example 'd2d_friendship'
  *
- * @param
- *   ????????
+ * @param string $data
+ *   The data to be sent
  *
- * @param
- *   ????????
+ * @param int $max_resend_trials
+ *   The maximum number of attempts to send the request
  *
  * @param bool $verbose
  *   If TRUE, results will be displayed using drupal_set_message
@@ -111,29 +111,32 @@ function d2d_remove_outdated_outgoing_requests() {
 /**
  * Sends a single outgoing request.
  *
- * @param
- *   ????????
+ * @param string $type
+ *   The type of the request, for example 'd2d_friendship'
  *
- * @param
- *   ????????
+ * @param array $arguments
+ *   The array of arguments of the request
  *
- * @param
- *   ????????
+ * @param array $instance
+ *   The array of the instance
  *
- * @param
- *   ????????
+ * @param array $my_instance
+ *   Array describing the own instance
  *
- * @param
- *   ????????
+ * @param string $my_private_key
+ *   The private_key
  *
- * @param
- *   ????????
+ * @param array $return_check
+ *   An array of checks to be performed on the return array
  *
- * @param
- *   ????????
+ * @param string &$error_string
+ *   A string containing an error message, in case of failure
  *
- * @return
- *   ????????
+ * @return NULL|bool|array
+ *   NULL if the other instance received the request, but could not send a reply. 
+ *   FALSE, on failure, array containing the checked returned values on success.
+ *
+ * @see d2d_check_array()
  */
 function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_instance, $my_private_key, $return_check, &$error_string) {
   $t = d2d_get_time();
@@ -310,7 +313,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
 }
 
 /**
- * Reevaluates the signatures of the incoming request of specified instance.
+ * Re-evaluates the signatures of the incoming request of specified instance.
  *
  * @param array $instance
  *   The associative array of the instance
@@ -389,16 +392,26 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
 }
 
 /**
- * Handles secure request.
+ * D2D RPC callback; handles secure request.
  *
- * @param
- *   ????????
+ * Requests are special rpc, requests can be done by any instance,
+ * even without permissions, friendship, or public key.
+ *
+ * Requests are put in the database, then processed.
+ *
+ * If the public key is initially missing, and then added, the 
+ * requests are later re-evaluated.
+ *
+ * @param string $request64
+ *   Specially MIME base64 encoded string
  *
  * @param string $version
- *   ???????
+ *   The D2D version of the caller
  *
- * @return
- *   ????????
+ * @return StdClass|string
+ *   An xmlrpc_error on error, an encrypted and signed string on success
+ *
+ * @see d2d_secure_rpc()
  */
 function d2d_secure_request($request64, $version) {
   $t = d2d_get_time();
@@ -628,13 +641,13 @@ function d2d_secure_request($request64, $version) {
  * Send outgoing requests specified by their ids.
  *
  * @param array $ids
- *    ??????????
+ *    The ids of the requests
  *
  * @param bool $verbose
- *    ?????????
+ *    If TRUE, uses drupal_set_message to display the results on screen
  *
- * @return
- *    ????????
+ * @return int
+ *    The number of requests successfully sent
  */
 function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
   // Check if instance is online.

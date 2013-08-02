@@ -81,21 +81,19 @@ function d2d_get_time() {
 }
 
 /**
- * Formats a unit. ?????????
+ * Formats a an enumerable quantity in English language. 
  *
- * @param
- *   ?????????
+ * @param mixed $v
+ *   The numeric-like value to format
  *
- * @param
- *   ?????????
+ * @param string $unit 
+ *   The name of the unit of measure
  *
  * @param bool $skip
- *   ?????????
+ *   If TRUE, skip the formatting
  *
  * @return string
- *   ?????????
- *
- * TODO: use t().
+ *   The formatted string
  */
 function d2d_format_unit($v, $unit, $skip = FALSE) {
   if (!$v && $skip) {
@@ -109,11 +107,11 @@ function d2d_format_unit($v, $unit, $skip = FALSE) {
 /**
  * Returns the current time.
  *
- * @param
- *   ???????????
+ * @param int $t
+ *   The timestamp
  *
- * @return
- *   ???????????
+ * @return string
+ *   The formatted timestamp
  */
 function d2d_get_absolute_time($t) {
   // TODO: localization.
@@ -142,8 +140,8 @@ function d2d_check_url($url) {
 /**
  * Get string describing time relative to current time.
  *
- * @param
- *   ??????????
+ * @param int $t
+ *   The timestamp
  *
  * @return string
  *   The relative time
@@ -275,14 +273,16 @@ function d2d_set_default_group_memberships($id) {
 /**
  * Checks if a timestamp is not too far off from a specified time.
  *
- * @param
- *   ????????????
+ * @param int $current_time
+ *   The current timestamp
  *
- * @param
- *   ????????????
+ * @param int $timestamp
+ *   Another timestamp to compare
  *
  * @return bool
  *   TRUE, if the timestamp is not beyond the a certain treshold
+ *
+ * @see d2d_get_time()
  */
 function d2d_verify_timestamp($current_time, $timestamp) {
   return $timestamp >= $current_time - variable_get('d2d_delta_0', D2D_DELTA_0_DEFAULT) && $timestamp <= $current_time + variable_get('d2d_delta_1', D2D_DELTA_1_DEFAULT);
@@ -291,14 +291,16 @@ function d2d_verify_timestamp($current_time, $timestamp) {
 /**
  * Checks if a nonce has been seen before.
  *
- * @param
- *   ?????????????
+ * @param int $timestamp
+ *   The timestamp
  *
  * @param string $nonce
  *   The nonce string
  *
  * @retrn bool
  *   TRUE, if the nonce is new
+ *
+ * @see d2d_check_nonce()
  */
 function d2d_verify_nonce($timestamp, $nonce) {
   try {

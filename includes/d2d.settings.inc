@@ -172,18 +172,17 @@ function d2d_form_settings_advanced() {
 }
 
 /**
- * Form validation handler for d2d_form_settings_advanced().
- */
-function d2d_form_settings_advanced_validate($form, &$form_state) {
-  // TODO: validation.
-}
-
-/**
  * Form submission handler for d2d_form_settings_advanced().
  */
 function d2d_form_settings_advanced_submit($form, &$form_state) {
-  variable_set('d2d_online', $form_state['values']['online'] ? TRUE : FALSE);
-  drupal_set_message(t('Settings have been saved.'));
+  $online = $form_state['values']['online'] ? TRUE : FALSE;
+  $res = d2d_change_online_state($online);
+  if ($res === $online) {
+    drupal_set_message(t('Settings have been saved.'));
+  }
+  else {
+    drupal_set_message(t('An error just occurred. Changed might not be saved. Check your private key'));
+  }
 }
 
 /**

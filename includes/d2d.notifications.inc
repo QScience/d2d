@@ -39,13 +39,13 @@ function d2d_notify($exclude = array()) {
     $n_unread = d2d_api_notification_count_unread();
     if ($n_unread > 0) {
       if ($n_unread == 1) {
-        drupal_set_message(t('You have @count unread notification. Click @link to read it.', array(
+        drupal_set_message(t('You have @count unread notification. Click !link to read it.', array(
           '@count' => $n_unread,
           '!link' => l(t('here'), 'admin/d2d/notifications'),
         )), 'status', FALSE);
       }
       else {
-        drupal_set_message(t('You have @count unread notifications. Click @link to read them.', array(
+        drupal_set_message(t('You have @count unread notifications. Click !link to read them.', array(
           '@count' => $n_unread,
           '!link' => l(t('here'), 'admin/d2d/notifications'),
         )), 'status', FALSE);
@@ -77,10 +77,10 @@ function d2d_d2d_handle_notification() {
  * Callback for getting a short description of a general message.
  *
  * @param array $arguments
- *   ?????????
+ *   The array of arguments of the request
  *
- * @param
- *   ????????
+ * @param array $attributes
+ *   Not used
  *
  * @return string
  *   The short description of a general message
@@ -93,10 +93,10 @@ function d2d_get_message_simple($arguments, $attributes) {
  * Callback for getting a detailed description of a message.
  *
  * @param array $arguments
- *   ?????????
+ *   The array of arguments of the request
  *
- * @param
- *   ????????
+ * @param array $attributes
+ *   Array describing the notification
  *
  * @return array
  *   A form ready to be built with the description of a notification
@@ -206,8 +206,8 @@ function d2d_show_notifications() {
  * @param int $id
  *   The id of a notification
  *
- * @return
- *   ??????????
+ * @return array $build
+ *   The array containing the form with the details of a notification
  */
 function d2d_show_notification_details($id) {
   $error_flag = FALSE;
@@ -247,12 +247,10 @@ function d2d_show_notification_details($id) {
 }
 
 /**
- * Deletes a notification and redirects to the overview of notifications.
+ * Menu callback; deletes a notification and redirects to the overview of notifications.
  *
  * @param int $id
  *   The id of the notification
- *
- * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_delete_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -262,12 +260,10 @@ function d2d_notification_delete_submit($form, &$form_state, $id) {
 }
 
 /**
- * Marks a notification as read and redirects to the overview of notifications.
+ * Menu callback; marks a notification as read and redirects to the overview of notifications.
  *
  * @param int $id
  *   The id of the notification
- *
- * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_mark_read_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {
@@ -277,12 +273,10 @@ function d2d_notification_mark_read_submit($form, &$form_state, $id) {
 }
 
 /**
- * Marks a notification as unread and redirects to the overview.
+ * Menu callback; marks a notification as unread and redirects to the overview.
  *
  * @param int $id
  *   The id of the notification
- *
- * ?????? Is this a submission handler of which form? In case, say it.
  */
 function d2d_notification_mark_unread_submit($form, &$form_state, $id) {
   if (d2d_check_convert_int($id)) {

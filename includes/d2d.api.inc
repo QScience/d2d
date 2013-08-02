@@ -638,7 +638,7 @@ function d2d_api_friend_get_by_url($url) {
  *   Optional. The new friendship state
  *
  * @param int $sender_id
- *   Optional. ????????????????????
+ *   Optional. The instance initiating the change in the friendship state
  */
 function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state = NULL, $sender_id = NULL) {
   db_update('d2d_instances')
@@ -650,10 +650,10 @@ function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendshi
 }
 
 /**
- * Sends out a friendship request.
+ * Adds and optionally sends out a friendship request.
  *
  * @param int $id
- *   ?????????????
+ *   The id of the receiving instance
  *
  * @param int $send_now
  *   If TRUE, the request is immediately sent
@@ -667,6 +667,8 @@ function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendshi
  *
  * @return int|NULL
  *   The id of the outgoing request, or NULL if $send_now is set FALSE
+ *
+ * @see d2d_add_request()
  */
 function d2d_api_friendship_send($id, $send_now, $max_number_of_resends = D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose = FALSE) {
   $request_id = d2d_add_request($id, 'd2d_friendship', array(), $max_number_of_resends, TRUE);

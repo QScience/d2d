@@ -7,20 +7,20 @@
 /**
  * Call secure RPC on remote instance.
  *
- * @param
- *   ?????????
+ * @param array $friend
+ *   The friend instance to which the request is sent
  *
- * @param
- *   ?????????
+ * @param string $method_name
+ *   The name of the remote procedure
  *
- * @param
- *   ?????????
+ * @param array $arguments
+ *   The array of arguments to remote procedure
  *
- * @param
- *   ?????????
+ * @param string &$error_string
+ *   A string containing a message in case of failure
  *
- * @return
- *   ????????
+ * @return bool|string
+ *   The result of the execution of the remote procedure, or FALSE on failure
  */
 function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) {
   $t = d2d_get_time();
@@ -169,16 +169,21 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
 }
 
 /**
- * Handles a secure RPC request.
+ * D2D RPC callback; handles a secure RPC.
  *
- * @param
- *   ???????
+ * Only friends with the right privileges can use this method.
  *
- * @param
- *   ???????
+ * @param string $request64
+ *   Specially MIME base64 encoded string
  *
- * @return
- *   ???????
+ * @param string $version
+ *   The D2D version of the caller
+ *
+ * @return StdClass|string
+ *   An xmlrpc_error on error, or encrypted and signed string
+ *   containing the result of the remote procedure on success
+ *
+ * @see d2d_secure_request()
  */
 function d2d_secure_rpc($request64, $version) {
   $t = d2d_get_time();

@@ -36,27 +36,28 @@ function d2d_form_list_groups() {
 }
 
 /**
- * Returns the list of all group ids.
+ * Returns the list of ids without the prefix from a form state array.
  *
- * @param array &$form_state
- *   The form state ???????
+ * @param array &$form_state 
+ *   The form state array, e.g. form d2d_form_list_groups()
  *
  * @param string $table
- *   ?????????????
+ *   The name of form to look into
  *
  * @param int $prefix_length
- *   ?????????????
+ *   Length of the prefix to be removed from name of the group, eg id4 -> 4
  *
  * @return array $ids
  *   The array of ids of groups
  *
  * @see d2d_form_list_groups_validate()
+ * @see d2d_form_list_groups_submit()
  */
 function _d2d_get_ids(&$form_state, $table, $prefix_length) {
   $ids = array();
   foreach ($form_state['values'][$table] as $key => $value) {
     if ($value && strlen($value) > $prefix_length) {
-      $ids[] = substr($key, $prefix_length);
+      $ids[] = substr($value, $prefix_length);
     }
   }
   return $ids;
