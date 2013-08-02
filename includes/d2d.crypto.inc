@@ -5,7 +5,7 @@
  */
 
 /**
- * Generate public / private key pair.
+ * Generates public / private key pair.
  *
  * @param string &$public_key
  *   The plan text public key
@@ -30,7 +30,7 @@ function d2d_create_keys(&$public_key, &$private_key) {
 }
 
 /**
- * Check if a public / private key pair match.
+ * Checks if a public / private key pair match.
  *
  * @param string $public_key
  *   The plan text public key
@@ -55,11 +55,19 @@ function d2d_check_key_pair($public_key, $private_key) {
 /**
  * Signs data.
  *
- * data string to be signed
- * 
-  string plain text private key of the signer
-
-  signer string describing the signer (probably d2d id) 
+ * @param string $data
+ *   The data to be signed
+ *
+ * @param string $private_key
+ *   The  plain text private key of the signer
+ *
+ * @param string $signer
+ *   A string describing the signer
+ *
+ * @return string
+ *   The signed data
+ *
+ * @see d2d_sign2
  */
 function d2d_sign($data, $private_key, $signer) {
   if (@openssl_sign($data, $signature, $private_key) === FALSE) {
@@ -77,6 +85,20 @@ function d2d_sign($data, $private_key, $signer) {
 
 /**
  * Signs data but does not include data in return.
+ *
+ * @param string $data
+ *   The data to be signed
+ *
+ * @param string $private_key
+ *   The  plain text private key of the signer
+ *
+ * @param string $signer
+ *   A string describing the signer
+ *
+ * @return string
+ *   The signed data
+ *
+ * @see d2d_sign
  */
 function d2d_sign2($data, $private_key, $signer) {
   if (@openssl_sign($data, $signature, $private_key) === FALSE) {
@@ -93,10 +115,18 @@ function d2d_sign2($data, $private_key, $signer) {
 
 /**
  * Explodes and verifies signature string.
-
-  string &$signature_string the return value of d2d_sign()
-
- signature_array exploded array on success
+ *
+ * @param string &$signature_string
+ *   The return value of d2d_sign()
+ *
+ * @param string $public_key
+ *   The plain text public key
+ *
+ * @param array &$signature_array
+ *   The exploded array on success
+ *
+ * @return bool
+ *   TRUE on success
  */
 function d2d_verify($signature_string, $public_key, &$signature_array) {
   $signature_format = array(
@@ -115,13 +145,21 @@ function d2d_verify($signature_string, $public_key, &$signature_array) {
 }
 
 /**
- * Enrypt data.
-
-  data string to be encrypted
-
- 
- &$encrypted_data data encrypted
-
+ * Enrypts data.
+ *
+ * @param string $data
+ *   The data to be encrypted
+ *
+ * @param string &$encrypted_data
+ *   The encrypted data
+ *
+ * @param string $public_key
+ *   The plain text public key
+ *
+ * @return bool
+ *   TRUE on success
+ *
+ * @see d2d_decrypt()
  */
 function d2d_encrypt($data, &$encrypted_data, $public_key) {
   if (@openssl_seal($data, $sealed_data, $env_keys, array($public_key)) === FALSE) {
@@ -139,7 +177,21 @@ function d2d_encrypt($data, &$encrypted_data, $public_key) {
 }
 
 /**
- * Decrypt data.
+ * Decrypts data.
+ *
+ * @param string $encrypted_data
+ *   The data to be decrypted
+ *
+ * @param string &$data
+ *   The decrypted data
+ *
+ * @param string $private_key
+ *   The plain text private key
+ *
+ * @return bool
+ *   TRUE on success
+ *
+ * @see d2d_encrypt()
  */
 function d2d_decrypt($encrypted_data, &$data, $private_key) {
   // Explode $encrypted_data.
