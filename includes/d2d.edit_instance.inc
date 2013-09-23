@@ -658,8 +658,8 @@ function d2d_edit_instance_public_key($instance) {
     $build['pk_manage'][] = array(
       '#theme' => 'table',
       '#header' => array(t('ID'), t('Public key'), array(
-          'data' => t('Operations'),
-          'colspan' => 2,
+        'data' => t('Operations'),
+        'colspan' => 2,
       )),
       '#rows' => $rows,
       '#empty' => t('No candidate public keys available.'),
