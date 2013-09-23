@@ -32,9 +32,10 @@ class D2DStaticTestCase extends DrupalWebTestCase {
     }
     return $str;
   }
-/**
- * Some static tests for the functions in includes/d2d.util.inc.
- */
+
+  /**
+   * Some static tests for the functions in includes/d2d.util.inc.
+   */
   public function testUtil() {
     // d2d_replace
     $this->assertIdentical(
@@ -134,9 +135,9 @@ class D2DStaticTestCase extends DrupalWebTestCase {
     }
   }
 
-/**
- * Some static tests for the functions in includes/d2d.util.inc.
- */
+  /**
+   * Some static tests for the functions in includes/d2d.util.inc.
+   */
   public function testCrypto() {
     // d2d_create_keys.
     $res = d2d_create_keys($public_key, $private_key);
