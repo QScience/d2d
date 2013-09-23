@@ -85,7 +85,7 @@ function d2d_patterns($data = NULL) {
 }
 
 
-/* SETTINGS */
+/* SETTINGS. */
 
 /**
  * Patterns export callback; exports current settings.
@@ -556,9 +556,9 @@ function d2d_patterns_delete_instance($form_id, &$form_state) {
   return patterns_results();
 }
 
-////////////////
-// PUBLIC KEYS !
-////////////////
+
+/* PUBLIC KEYS. */
+
 
 /**
  * Verifies and fixes a key to be imported.
@@ -625,7 +625,7 @@ function _d2d_patterns_insert_private_key($key) {
 /**
  * Exports the public keys with different options.
  *
- * @param $string $action_type
+ * @param string $action_type
  *   The Patterns action type
  *
  * @param bool $selected_only

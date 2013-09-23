@@ -11,7 +11,7 @@
  * The array is passed as referenced, and the result is ready to be
  * rendered by the Drupal Form API.
  *
- * @param Array $form
+ * @param array $form
  *   Optional. The reference to the array. Defaults, array().
  *
  * @param mixed $value

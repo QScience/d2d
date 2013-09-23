@@ -342,7 +342,8 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
     }
     if (!$delete) {
       $hk = $hks[$type];
-      $argument_checks = (array_key_exists('arguments', $hk) ? $hk['arguments'] : array());
+      // TODO: check if we need variable: $argument_checks.
+      //$argument_checks = (array_key_exists('arguments', $hk) ? $hk['arguments'] : array());
       $callback = $hk['callback'];
       $exploded_arguments = d2d_explode($request['arguments']);
       $signature_valid_old = ($request['signature_valid'] != 0);
@@ -501,8 +502,6 @@ function d2d_secure_request($request64, $version) {
   if ($exploded_data['version'] !== $version) {
     return xmlrpc_error(0, 'version in exploded data mismatch');
   }
-  $request_type = $exploded_data['request_type'];
-  $arguments = $exploded_data['arguments'];
   if ($exploded_data['receiver'] !== $my_instance['d2d_id']) {
     return xmlrpc_error(0, 'receiver in exploded data mismatch');
   }
@@ -672,8 +671,7 @@ function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
     $ids = array();
     // Select all outgoing requests, invalid ones have been removed earlier.
     $result = db_query('SELECT id FROM {d2d_outgoing_requests}' .
-      ' ORDER BY id DESC',
-      array(':t' => $t)
+      ' ORDER BY id DESC'
     );
     foreach ($result as $record) {
       $ids[] = $record->id;

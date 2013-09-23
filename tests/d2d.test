@@ -17,7 +17,7 @@ class D2DTestCase extends DrupalWebTestCase {
     parent::setUp(
       'd2d'
     );
-//    $this->adm_user = $this->drupalCreateUser(array('administer site configuration'));
+//  $this->adm_user = $this->drupalCreateUser(array('administer site configuration'));
     $this->d2d_user = $this->drupalCreateUser(array('administer d2d'));
     $this->std_user = $this->drupalCreateUser(array());
   }
@@ -40,7 +40,7 @@ class D2DTestCase extends DrupalWebTestCase {
    *
    * @param integer $response HTTP response code.
    */
-  private function verifyAccess($response = 200) {
+  protected function verifyAccess($response = 200) {
     // View config.
     $this->drupalGet('admin/d2d');
     $this->assertResponse($response);
@@ -49,7 +49,7 @@ class D2DTestCase extends DrupalWebTestCase {
     }
   }
 
-  private function checkPage() {
+  protected function checkPage() {
     $this->assertNoText(t('Error'), t('There should be no errors.'));
     /*
     $this->assertNoText(t('Warning'), t('There should be no warnings.'));

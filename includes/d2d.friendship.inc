@@ -290,7 +290,7 @@ function _d2d_insert_friendship_notification($d2d_id, $type, $description) {
  * @param array &$instance
  *   Array describing the instance
  *
- * @param mixed &$persistant
+ * @param mixed &$persistent_state
  *   Represents the state of request. Not used here
  */
 function d2d_friendship_outgoing_return($return, $arguments, $arguments_send, $time_insert, $time_next_send, $time_invalid, $max_send_trials, $error_string, &$instance, &$persistent_state) {

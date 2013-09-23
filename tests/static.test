@@ -13,7 +13,7 @@ class D2DStaticTestCase extends DrupalWebTestCase {
       'group' => 'D2D',
     );
   }
-  private function generateEvilString($length) {
+  protected function generateEvilString($length) {
     $str = '';
     for ($i = 0; $i < $length; $i++) {
       switch (mt_rand(0, 3)) {
@@ -33,7 +33,7 @@ class D2DStaticTestCase extends DrupalWebTestCase {
     return $str;
   }
 /**
- * Some static tests for the functions defined in includes/d2d.util.inc
+ * Some static tests for the functions in includes/d2d.util.inc.
  */
   public function testUtil() {
     // d2d_replace
@@ -48,7 +48,7 @@ class D2DStaticTestCase extends DrupalWebTestCase {
     $this->assertFalse(d2d_replace('foo', 'bar', 1.0));
     $this->assertFalse(d2d_replace('foo', 'bar', FALSE));
 
-    // d2d_implode, d2d_explode
+    // d2d_implode, d2d_explode.
     for ($i = 0; $i < 1024; $i++) {
       $length = mt_rand(1, 16);
       $array = array();
@@ -104,12 +104,12 @@ class D2DStaticTestCase extends DrupalWebTestCase {
       }
     }
 
-    // d2d_bool_to_int
+    // d2d_bool_to_int.
     $this->assertIdentical(d2d_bool_to_int(NULL), NULL);
     $this->assertIdentical(d2d_bool_to_int(FALSE), 0);
     $this->assertIdentical(d2d_bool_to_int(TRUE), 1);
 
-    // d2d_check_convert_int
+    // d2d_check_convert_int.
     $array = array(
       '0' => array('res' => TRUE, 'value' => 0),
       '1' => array('res' => TRUE, 'value' => 1),
@@ -133,15 +133,16 @@ class D2DStaticTestCase extends DrupalWebTestCase {
       $this->assertTrue(d2d_check_d2d_id($id));
     }
   }
+
 /**
- * Some static tests for the functions defined in includes/d2d.util.inc
+ * Some static tests for the functions in includes/d2d.util.inc.
  */
   public function testCrypto() {
-    // d2d_create_keys
+    // d2d_create_keys.
     $res = d2d_create_keys($public_key, $private_key);
     $this->assertTrue($res, t('Failed creating public / private key pair.'));
     if ($res) {
-      // d2d_check_key_pair
+      // d2d_check_key_pair.
       $this->assertTrue(d2d_check_key_pair($public_key, $private_key));
       $this->assertTrue(d2d_check_key_pair($public_key, $private_key . '   '));
       $this->assertTrue(d2d_check_key_pair($public_key . ' ', $private_key . '   '));
@@ -153,8 +154,8 @@ class D2DStaticTestCase extends DrupalWebTestCase {
       $this->assertFalse(d2d_check_key_pair('abc ' . $public_key, $private_key));
       $this->assertFalse(d2d_check_key_pair('', ''));
       $this->assertFalse(d2d_check_key_pair($private_key, $public_key));
-    
-      // d2d_sign
+
+      // d2d_sign.
       $data = 'The quick brown fox jumps over the lazy dog.';
       $signer = 'John Doe';
       $res = d2d_sign($data, $private_key, $signer);
@@ -165,9 +166,9 @@ class D2DStaticTestCase extends DrupalWebTestCase {
         $this->assertIdentical($array['signer'], $signer);
       }
 
-      // d2d_encrypt
+      // d2d_encrypt.
       $this->assertTrue(d2d_encrypt($data, $encrypted_data, $public_key));
-      // d2d_decrypt
+      // d2d_decrypt.
       $this->assertTrue(d2d_decrypt($encrypted_data, $decrypted_data, $private_key));
       $this->assertIdentical($decrypted_data, $data);
     }

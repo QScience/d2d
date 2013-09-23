@@ -23,7 +23,6 @@
  *   The result of the execution of the remote procedure, or FALSE on failure
  */
 function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) {
-  $t = d2d_get_time();
   if (!d2d_is_online()) {
     $error_string = t('cannot call secure rpc if instance is not online');
     return FALSE;

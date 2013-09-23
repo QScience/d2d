@@ -273,7 +273,6 @@ function d2d_manage_groups() {
     '#title' => t('Create group'),
     '#type' => 'fieldset',
   );
-  $form_state = array();
   $build['add_group'][] = drupal_get_form('d2d_form_add_group');
   return $build;
 }
