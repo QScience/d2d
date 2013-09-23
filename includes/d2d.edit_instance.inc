@@ -632,7 +632,6 @@ function d2d_edit_instance_public_key($instance) {
     $form_state['build_info']['args'] = array($instance['id']);
     $build['pk_manage'][] = drupal_build_form("d2d_form_receive_public_key", $form_state);
     $result = d2d_api_public_key_get($instance['d2d_id']);
-    $n_public_keys = 0;
     $rows = array();
     foreach ($result as $record) {
       if ($record->id == $instance['public_key_id']) {
@@ -691,7 +690,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
     '#type' => 'hidden',
     '#value' => $id,
   );
-  if (empty($form_state['input']['old_friendship_state'])) {
+  if (empty($form_state['values']['old_friendship_state'])) {
     $form['old_friendship_state'] = array(
       '#type' => 'hidden',
       '#value' => $old_friendship_state,
@@ -738,7 +737,7 @@ function d2d_form_change_friendship($form, &$form_state, $id, $old_friendship_st
  */
 function d2d_form_change_friendship_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
-  $old_friendship_state = $form_state['input']['old_friendship_state'];
+  $old_friendship_state = $form_state['values']['old_friendship_state'];
   $instance = d2d_api_instance_get_by_id($id);
   if ($instance === FALSE) {
     drupal_set_message(t('Instance does not exist anymore'), 'error');

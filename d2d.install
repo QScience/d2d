@@ -22,7 +22,7 @@ function d2d_install() {
       'auto_member' => 1,
     ))->execute();
   foreach (array('d2d_get_public_key', 'd2d_list_permissions') as $method_name) {
-    $m_id = db_insert('d2d_permissions')->fields(array(
+    db_insert('d2d_permissions')->fields(array(
       'group_id' => $group_id,
       'method' => $method_name,
     ))->execute();
@@ -41,7 +41,6 @@ function d2d_uninstall() {
   variable_del('d2d_delta_0');
   variable_del('d2d_delta_1');
   variable_del('d2d_private_key');
-  drupal_uninstall_schema('d2d');
 }
 
 /**

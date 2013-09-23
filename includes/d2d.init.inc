@@ -131,7 +131,7 @@ function d2d_form_init_submit($form, &$form_state) {
   d2d_api_own_instance_id_set($my_id);
   d2d_api_own_d2d_id_set($my_d2d_id);
   if ($form_state['values']['auto_keys_and_online']) {
-    $my_public_key_id = d2d_api_own_public_key_set($my_public_key);
+    d2d_api_own_public_key_set($my_public_key);
     d2d_api_own_private_key_set($my_private_key);
     variable_set('d2d_online', TRUE);
   }

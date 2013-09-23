@@ -73,6 +73,7 @@ function d2d_example_remote_control_form_submit($form, &$form_state) {
   $friend_id = $form_state['values']['friend'];
   variable_set('d2d_example_remote_control_last_id', $friend_id);
   $friends = d2d_api_friend_get();
+  $error_string = '';
   foreach ($friends as $friend) {
     if ($friend_id === $friend['id']) {
       $res = d2d_call_secure_rpc($friend, 'd2d_example_remote_control', array(

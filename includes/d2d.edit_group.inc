@@ -100,7 +100,7 @@ function d2d_edit_group($id) {
   $group = d2d_api_group_get($id);
   if (is_null($group)) {
     drupal_set_message(t('Group not found in database.'), 'error');
-    return $build;
+    return array();
   }
   $build['main'] = array(
     '#title' => 'Group #' . $id,

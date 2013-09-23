@@ -386,20 +386,18 @@ function d2d_get_friendship_simple($arguments, $attributes) {
  *   A form containing the description of the state of a friendship to be built
  */
 function d2d_get_friendship_detailed($arguments, $attributes) {
-  $type = $arguments['type'];
-  $instance = d2d_api_instance_get($attributes['d2d_id']);
-  $instance_str = check_plain($instance['name']);
   $build['notifications'] = array(
     '#title' => t('Notification') . ' #' . $attributes['id'],
     '#type' => 'fieldset',
     '#description' => d2d_get_friendship_simple($arguments, $attributes),
   );
+  $type = $arguments['type'];
   if (!strncmp($type, 'unchecked_', strlen('unchecked_'))) {
     // $type starts with 'unchecked_'.
     $description = d2d_explode($arguments['description']);
     $build['notifications']['#description'] .= '<br/>';
     if ($description['reason'] === 'public_key') {
-      $build['notifications']['#description'] .= t("The reason why the signature could not be checked is that you don't have a public key associated with that instace.");
+      $build['notifications']['#description'] .= t("The reason why the signature could not be checked is that you don't have a public key associated with that instance.");
       $instance = d2d_api_instance_get($attributes['d2d_id']);
       if ($instance) {
         $build['notifications']['#description'] .= ' ' . t('Click !link to associate a public key with that instance.', array('!link' => l(t('here'), 'admin/d2d/instances/' . $instance['id'] . '/public_key')));

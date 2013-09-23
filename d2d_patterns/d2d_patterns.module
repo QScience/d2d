@@ -721,7 +721,7 @@ function d2d_patterns_update_public_keys($form_id, $form_state) {
       d2d_api_public_key_unselect($instance_id);
     }
     else {
-      d2d_api_public_key_select($instance_id, $id_pk);
+      d2d_api_public_key_select($instance_id, $pk_id);
     }
   }
   return patterns_results();
@@ -1214,7 +1214,6 @@ function d2d_patterns_validate($action, $tag, &$data) {
 
   elseif ($tag == 'd2d_friendship') {
     $d2d_id = @$data['d2d_id'];
-    $instance_id = FALSE;
 
     if ($data['instance_id'] == FALSE) {
 
