@@ -281,14 +281,14 @@ function d2d_secure_rpc($request64, $version) {
   // Check if method name is properly mapped.
   $hks = module_invoke_all('d2d_secure_rpc');
   if (!array_key_exists($method_name, $hks)) {
-    return xmlrpc_error(0, 'method does not exist');
+    return xmlrpc_error(0, 'method does not exist: ' . $method_name);
   }
   $hk = $hks[$method_name];
   if (!is_array($hk)) {
     return xmlrpc_error(0, 'method exists but is not properly implemented');
   }
   if (!d2d_api_method_permission_exists($friend['id'], $method_name)) {
-    return xmlrpc_error(0, 'permission denied');
+    return xmlrpc_error(0, 'permission denied for method: ' . $method_name);
   }
   $argument_checks = (array_key_exists('arguments', $hk) ? $hk['arguments'] : array());
   $callback = $hk['callback'];
