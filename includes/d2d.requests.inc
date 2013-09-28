@@ -172,7 +172,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
   }
   $result64 = xmlrpc($instance['url'], array('d2d.secureRequest' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
   if ($result64 === FALSE) {
-    $error_string = t('remote error:') . ' ' . xmlrpc_error_msg();
+    $error_string = t('remote error on !instance:', array('!instance' => $instance['url'])) . ' ' . xmlrpc_error_msg();
     return FALSE;
   }
   // Convert $result64 in MIME base64.
