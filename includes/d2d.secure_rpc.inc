@@ -62,7 +62,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
   }
   $result64 = xmlrpc($friend['url'], array('d2d.secureRPC' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
   if ($result64 === FALSE) {
-    $error_string = t('remote error:') . ' ' . xmlrpc_error_msg();
+    $error_string = t('remote error on !friend:', array('!friend' => $friend['url'])) . ' ' . xmlrpc_error_msg();
     return FALSE;
   }
   // Convert $result64 in MIME base64.
