@@ -19,7 +19,7 @@ function d2d_d2d_secure_rpc() {
   $methods['d2d_list_permissions'] = array(
     'arguments' => array(),
     'callback' => 'd2d_srpc_list_permissions',
-    'description' => 'returns the methods the invocing friend may call',
+    'description' => 'returns the list of methods that a friend instance can invoke',
   );
   return $methods;
 }
