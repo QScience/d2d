@@ -170,6 +170,13 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     $error_string = t('failed signing');
     return FALSE;
   }
+  
+  // If d2d_passport is enabled notify it.
+  if (function_exists('d2d_passport_notify') 
+      && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
+      d2d_passport_notify($my_instance, $instance, $type, strlen($imploded_arguments));
+  }
+
   $result64 = xmlrpc($instance['url'], array('d2d.secureRequest' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
   if ($result64 === FALSE) {
     $error_string = t('remote error on !instance:', array('!instance' => $instance['url'])) . ' ' . xmlrpc_error_msg();
