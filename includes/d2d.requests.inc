@@ -170,7 +170,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     $error_string = t('failed signing');
     return FALSE;
   }
-  
+
   // If d2d_passport is enabled notify it.
   if (function_exists('d2d_passport_notify') 
       && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {

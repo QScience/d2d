@@ -60,6 +60,13 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
     $error_string = t('failed signing');
     return FALSE;
   }
+
+  // If d2d_passport is enabled notify it.
+  if (function_exists('d2d_passport_notify') 
+      && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
+      d2d_passport_notify($my_instance, $friend, $method_name, strlen($imploded_arguments));
+  }
+
   $result64 = xmlrpc($friend['url'], array('d2d.secureRPC' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
   if ($result64 === FALSE) {
     $error_string = t('remote error on !friend:', array('!friend' => $friend['url'])) . ' ' . xmlrpc_error_msg();
