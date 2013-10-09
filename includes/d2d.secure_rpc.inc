@@ -7,6 +7,8 @@
 /**
  * Call secure RPC on remote instance.
  *
+ * It optionally notifies a D2D Server as specified by the module d2d_passport.
+ *
  * @param array $friend
  *   The friend instance to which the request is sent
  *
@@ -19,10 +21,15 @@
  * @param string &$error_string
  *   A string containing a message in case of failure
  *
+ * @param bool $notify
+ *   If TRUE, and d2d_passport module is enabled, and D2D_PASSPORT_NOTIFY 
+ *   is TRUE, then the specified D2D server is notified of the request.
+ *   Defaults, TRUE
+ *
  * @return bool|string
  *   The result of the execution of the remote procedure, or FALSE on failure
  */
-function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) {
+function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string, $notify = TRUE) {
   if (!d2d_is_online()) {
     $error_string = t('cannot call secure rpc if instance is not online');
     return FALSE;
@@ -62,7 +69,7 @@ function d2d_call_secure_rpc($friend, $method_name, $arguments, &$error_string) 
   }
 
   // If d2d_passport is enabled notify it.
-  if (function_exists('d2d_passport_notify') 
+  if ($notify && function_exists('d2d_passport_notify') 
       && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
       d2d_passport_notify($my_instance, $friend, $method_name, strlen($imploded_arguments));
   }

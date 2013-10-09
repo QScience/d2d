@@ -111,6 +111,8 @@ function d2d_remove_outdated_outgoing_requests() {
 /**
  * Sends a single outgoing request.
  *
+ * It optionally notifies a D2D Server as specified by the module d2d_passport.
+ *
  * @param string $type
  *   The type of the request, for example 'd2d_friendship'
  *
@@ -132,6 +134,11 @@ function d2d_remove_outdated_outgoing_requests() {
  * @param string &$error_string
  *   A string containing an error message, in case of failure
  *
+ * @param bool $notify
+ *   If TRUE, and d2d_passport module is enabled, and D2D_PASSPORT_NOTIFY 
+ *   is TRUE, then the specified D2D server is notified of the request.
+ *   Defaults, TRUE
+ *
  * @return NULL|bool|array
  *   NULL if the other instance received the request, but could
  *   not send a reply. FALSE, on failure, array containing
@@ -139,7 +146,7 @@ function d2d_remove_outdated_outgoing_requests() {
  *
  * @see d2d_check_array()
  */
-function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_instance, $my_private_key, $return_check, &$error_string) {
+function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_instance, $my_private_key, $return_check, &$error_string, $notify = TRUE) {
   $t = d2d_get_time();
   $imploded_arguments = d2d_implode($arguments);
   $nonce = d2d_random_nonce();
@@ -172,7 +179,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
   }
 
   // If d2d_passport is enabled notify it.
-  if (function_exists('d2d_passport_notify') 
+  if ($notify && function_exists('d2d_passport_notify')
       && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
       d2d_passport_notify($my_instance, $instance, $type, strlen($imploded_arguments));
   }
