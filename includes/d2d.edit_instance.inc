@@ -79,8 +79,12 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
     drupal_set_message(t('Instance not found.'), 'error');
     return;
   }
-  // Second param means $verbose.
+  // Verbose call.
   $res = d2d_api_public_key_request($instance, TRUE);
+
+  if ($res === FALSE) {
+    return;
+  }
 
   // TODO: check length / format of received string.
   $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $res);
@@ -745,6 +749,7 @@ function d2d_form_change_friendship_submit($form, &$form_state) {
       d2d_api_friendship_update($id, $new_friendship_state, $old_friendship_state, d2d_api_own_instance_id_get());
     }
     d2d_api_friendship_send($id, $form_state['values']['send_now'], 1, TRUE);
+    drupal_set_message(t('Friendship request sent.'));
   }
 }
 

@@ -161,7 +161,7 @@ function d2d_form_settings_advanced() {
     '#type' => 'checkbox',
     '#default_value' => variable_get('d2d_friendship_autoaccept', FALSE),
     '#title' => t('Auto accept friendship'),
-    '#description' => t('If set, every incoming friendship request will be automatically accepted.'),
+    '#description' => t('If set, every incoming friendship request will be automatically accepted. Requesting instances will be added to the database, if not found.'),
   );
   $form['submit'] = array(
     '#type' => 'submit',

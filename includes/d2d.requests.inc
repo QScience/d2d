@@ -32,6 +32,18 @@ function d2d_d2d_handle_incoming_request() {
 }
 
 /**
+ * Implements hook_d2d_handle_incoming_preprocess().
+ */
+function d2d_d2d_handle_incoming_request_preprocess() {
+  $types['d2d_friendship'] = array(
+    'arguments' => array('state' => 'is_string'),
+    'arguments_return' => array('value' => 'is_string'),
+    'callback' => 'd2d_friendship_incoming_preprocess',
+  );
+  return $types;
+}
+
+/**
  * Adds an outgoing request to the database.
  *
  * @param int $receiver_id
@@ -547,26 +559,7 @@ function d2d_secure_request($request64, $version) {
     return xmlrpc_error(0, 'arguments failed check');
   }
 
-  $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
-  if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
-    // add code here
-  }
-
-//
-//arguments:
-//&$instance <- the instance as returned by the according api function
-//&$signature_valid <- re-check $encrypted_data using the public key
-//$encrypted_data
-//$d2d_id and $url of the calling instance
-//
-//what the hook should do:
-//- check the auto-friendship flag
-//- check if public key is present
-//- if not, get the public key
-//- determine $signature_valid, if FALSE return
-//- insert the instance, set the instance's friendship state to "request sent"
-
-
+  // Create request info array.
   $ip = ip_address();
   $rpc_info = array(
     'd2d_id' => $signer,
@@ -576,6 +569,37 @@ function d2d_secure_request($request64, $version) {
     'timestamp' => $exploded_data['timestamp'],
     'ip' => $ip,
   );
+  
+
+  // Pre-process requests (e.g. if AUTO_ACCEPT flag is on, add instance and
+  // set friendship status accordingly.
+  $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
+  if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
+      $preprocess_cb = $hks_preprocess['callback'];
+      $success = FALSE;
+      $error_string = '';
+      try {
+          $success = call_user_func_array($preprocess_cb, array(
+              $rpc_info,
+              $encrypted_data,
+              $signature,
+              $error_string,
+          ));
+      }
+      catch (D2DRemoteException $e) {
+          return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
+      }
+      if ($success !== TRUE) {
+          if ($error_string !== '') {
+              return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
+          }
+          else {
+              return xmlrpc_error(0, 'Error on pre-processing.');
+          }
+      }
+  }
+  
+  // Finally process the request.
   try {
     $request_return = NULL;
     $keep = call_user_func_array(
