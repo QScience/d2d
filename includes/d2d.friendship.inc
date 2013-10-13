@@ -160,7 +160,6 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
     // Nothing to do.
     return TRUE;
   }
-
   $instance = $rpc_info['instance'];
 
   // Instance previously not found in db.
@@ -168,11 +167,16 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
     $instance = array(
       'd2d_id' => $rpc_info['d2d_id'],
       'url' => $rpc_info['url'],
+      'name' => 'No name',
+      'description' => 'No description.',
     );
   }
 
+  // TODO: do not add instances that are from localhost.
+
   // New instance.
   if (!isset($instance['id'])) {
+    watchdog('d2d', 'newist');
     $instance_id = d2d_api_instance_add($instance);
     if ($instance_id === FALSE) {
       $error_string = 'An error occurred while adding the instance.';
@@ -184,7 +188,8 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
   }
 
   // Instance already added to db, but without public key: request one.
-  if (is_null($instance['public_key'])) {
+  if (!isset($instance['public_key']) || is_null($instance['public_key'])) {
+    watchdog('d2d', 'getpk');
     $pkey = d2d_api_public_key_request($instance);
     if ($pkey !== FALSE) {
       // Requested public key must be new.
@@ -194,7 +199,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
         return FALSE;
       }
 
-      $public_key_id = d2d_api_public_key_set($instance_id, $pkey);
+      $public_key_id = d2d_api_public_key_set($instance['id'], $pkey);
       $instance['public_key'] = $pkey;
       $instance['public_key_id'] = $public_key_id;
 
@@ -206,15 +211,24 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       else {
         $rpc_info['signature_valid'] = TRUE;
       }
+
+      // At this point  we have modified the instance (either created from
+      // scratch, or added a public key to it).
+      $rpc_info['instance'] = $instance;
+
+    }
+    if (isset($instance['is_friend']) && $instance['is_friend']) {
+      // Already friends: nothing to do.
+      return TRUE;
     }
 
-    $rpc_info['instance'] = $instance;
-
-    // Setting friendship state to 2 = 'friendship request received but not
+    watchdog('d2d', 'setting fr');
+    // Setting friendship state to 2 = 'friendship request sent but not
     // accepted'. This way, when the friendship request will be processed
     // the instance will respond notifying the sender.
-    d2d_api_friendship_update($instance_id, 2);
-
+    d2d_api_friendship_update($instance_id, 1);
+    $rpc_info['instance']['friendship_state'] = 1;
+    watchdog('d2d', print_r($rpc_info, TRUE));
     return TRUE;
   }
 }

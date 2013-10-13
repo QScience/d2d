@@ -36,8 +36,6 @@ function d2d_d2d_handle_incoming_request() {
  */
 function d2d_d2d_handle_incoming_request_preprocess() {
   $types['d2d_friendship'] = array(
-    'arguments' => array('state' => 'is_string'),
-    'arguments_return' => array('value' => 'is_string'),
     'callback' => 'd2d_friendship_incoming_preprocess',
   );
   return $types;
@@ -570,33 +568,45 @@ function d2d_secure_request($request64, $version) {
     'ip' => $ip,
   );
 
-
   // Pre-process requests (e.g. if AUTO_ACCEPT flag is on, add instance and
   // set friendship status accordingly.
   $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
   if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
-      $preprocess_cb = $hks_preprocess['callback'];
-      $success = FALSE;
-      $error_string = '';
-      try {
-          $success = call_user_func_array($preprocess_cb, array(
-              $exploded_arguments,
-              $rpc_info,
-              $encrypted_data,
-              $signature,
-              $error_string,
-          ));
-      }
-      catch (D2DRemoteException $e) {
-          return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
-      }
-      if ($success !== TRUE) {
-          if ($error_string !== '') {
-              return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
+      $hk_preprocess = $hks_preprocess[$exploded_data['request_type']];
+      $preprocess_cb = $hk_preprocess['callback'];
+      if (function_exists($preprocess_cb)) {
+          $success = FALSE;
+          $error_string = '';
+          try {
+              // Cannot use call_user_func_array because it does not pass
+              // args by reference.
+              $success = $preprocess_cb($exploded_arguments,
+                                        $rpc_info,
+                                        $encrypted_data,
+                                        $signature,
+                                        $error_string);
           }
-          else {
-              return xmlrpc_error(0, 'Error on pre-processing.');
+          catch (D2DRemoteException $e) {
+              return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
           }
+          if ($success !== TRUE) {
+              if ($error_string !== '') {
+                  return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
+              }
+              else {
+                  return xmlrpc_error(0, 'Error on pre-processing.');
+              }
+          }
+          // Some infor could have been modified by the pre-process hook.
+          $instance = $rpc_info['instance'];
+          $signature_valid = $rpc_info['signature_valid'];
+      }
+      else {
+          watchdog('d2d', 'Preprocess callback !cb for request %r does not exist.',
+                   array(
+                       '%r' => $exploded_data['request_type'],
+                       '!cb' => $preprocess_cb,
+                   ));
       }
   }
 
