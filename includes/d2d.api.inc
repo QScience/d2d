@@ -200,6 +200,41 @@ function d2d_api_public_key_exist($d2d_id, $public_key) {
   return d2d_api_public_key_return_id($d2d_id, $public_key) !== FALSE;
 }
 
+/**
+ * Checks if specified public key for an instance already exists.
+ *
+ * @param array $instance
+ *   The associative array of the instance containing keys 'd2d_id' and 'url'.
+ *
+ * @param bool $verbose
+ *   Optional. If TRUE, uses drupal_set_message to display the results
+ *   of the operation, Defaults, FALSE
+ *
+ * @return string|bool
+ *   The plain text public key for the requested instance, or FALSE
+ *   if an error occurs.
+ */
+function d2d_api_public_key_request($instance, $verbose = FALSE) {
+
+  $res = xmlrpc($instance['url'], array('d2d.getPublicKey' => array($instance['d2d_id'])));
+  if ($verbose) {
+    if ($res === FALSE) {
+      $xmlrpc_error = xmlrpc_error();
+      if ($xmlrpc_error != NULL) {
+        drupal_set_message(t('Error retrieving public key.<br/>Error code @code<br/>"@message"',
+            array('@code' => $xmlrpc_error->code, '@message' => $xmlrpc_error->message)), 'error');
+      }
+      else {
+        drupal_set_message(t('Error retrieving public key.'), 'error');
+      }
+    }
+    else {
+      drupal_set_message(t('Public key has been received.'));
+    }
+  }
+  return $res;
+}
+
 /* INSTANCES. */
 
 /**

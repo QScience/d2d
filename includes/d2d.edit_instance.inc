@@ -69,6 +69,8 @@ function d2d_form_receive_public_key($form, &$form_state, $id) {
 
 /**
  * Form submission handler for d2d_form_receive_public_key().
+ *
+ * @see d2d_api_public_key_request()
  */
 function d2d_form_receive_public_key_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
@@ -77,27 +79,18 @@ function d2d_form_receive_public_key_submit($form, &$form_state) {
     drupal_set_message(t('Instance not found.'), 'error');
     return;
   }
-  $res = xmlrpc($instance['url'], array('d2d.getPublicKey' => array($instance['d2d_id'])));
-  if ($res === FALSE) {
-    $xmlrpc_error = xmlrpc_error();
-    if ($xmlrpc_error != NULL) {
-      drupal_set_message(t('Error retrieving public key.<br/>Error code @code<br/>"@message"', array('@code' => $xmlrpc_error->code, '@message' => $xmlrpc_error->message)), 'error');
-    }
-    else {
-      drupal_set_message(t('Error retrieving public key.'), 'error');
-    }
+  // Second param means $verbose.
+  $res = d2d_api_public_key_request($instance, TRUE);
+
+  // TODO: check length / format of received string.
+  $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $res);
+  if ($public_key_id !== FALSE) {
+    drupal_set_message(t('Public key with id @id is already available in database.',
+        array('@id' => $public_key_id)), 'error');
   }
   else {
-    drupal_set_message(t('Public key has been received.'));
-    // TODO: check length / format of received string.
-    $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $res);
-    if ($public_key_id !== FALSE) {
-      drupal_set_message(t('Public key with id @id is already available in database.', array('@id' => $public_key_id)), 'error');
-    }
-    else {
-      d2d_api_public_key_set($id, $res);
-      drupal_set_message(t("Public key has been inserted into database. Click on 'select' to associate the newly inserted public key with this instance."));
-    }
+    d2d_api_public_key_set($id, $res);
+    drupal_set_message(t("Public key has been inserted into database. Click on 'select' to associate the newly inserted public key with this instance."));
   }
 }
 

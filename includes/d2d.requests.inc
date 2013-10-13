@@ -135,7 +135,7 @@ function d2d_remove_outdated_outgoing_requests() {
  *   A string containing an error message, in case of failure
  *
  * @param bool $notify
- *   If TRUE, and d2d_passport module is enabled, and D2D_PASSPORT_NOTIFY 
+ *   If TRUE, and d2d_passport module is enabled, and D2D_PASSPORT_NOTIFY
  *   is TRUE, then the specified D2D server is notified of the request.
  *   Defaults, TRUE
  *
