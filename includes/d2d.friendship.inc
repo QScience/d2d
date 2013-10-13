@@ -132,21 +132,22 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
 /**
  * D2D callback; processes a request to change the friendship state.
  *
- * @param array $arguments
+ * @param array $exploded_arguments
  *   Associative array specifying the desired new friendship state.
  *   $arguments['state'] is TRUE if and only if the other instance
  *   wants to be friends and FALSE otherwise.
  *
- * @param array $rpc_info
- *   Associative array
+ * @param array &$rpc_info
+ *   Associative array containing general information about the request.
  *
- * @param bool $live
- *   TRUE if and only if function called as part of a RPC call from the
- *   caller (i.e. we can send a reply with the new friendship state
- *   immediately), FALSE otherwise.
+ * @param string $encrypted_data
+ *   The original encrypted data
  *
- * @param NULL|array &$return
- *   If not NULL, this value is sent back to the caller
+ * @param string $signature
+ *   The signature attached to the message.
+ *
+ * @param string &$error_string
+ *   A string to be filled with the error, in case there is one.
  *
  * @return bool
  *   TRUE on success
