@@ -569,7 +569,7 @@ function d2d_secure_request($request64, $version) {
     'timestamp' => $exploded_data['timestamp'],
     'ip' => $ip,
   );
-  
+
 
   // Pre-process requests (e.g. if AUTO_ACCEPT flag is on, add instance and
   // set friendship status accordingly.
@@ -580,6 +580,7 @@ function d2d_secure_request($request64, $version) {
       $error_string = '';
       try {
           $success = call_user_func_array($preprocess_cb, array(
+              $exploded_arguments,
               $rpc_info,
               $encrypted_data,
               $signature,
@@ -598,7 +599,7 @@ function d2d_secure_request($request64, $version) {
           }
       }
   }
-  
+
   // Finally process the request.
   try {
     $request_return = NULL;

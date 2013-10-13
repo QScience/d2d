@@ -151,8 +151,12 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  * @return bool
  *   TRUE on success
  */
-function d2d_friendship_incoming_preprocess(&$rpc_info, $encrypted_data, $signature, &$error_string) {
+function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $encrypted_data, $signature, &$error_string) {
   if (variable_get('d2d_friendship_autoaccept') !== TRUE) {
+    // Nothing to do.
+    return TRUE;
+  }
+  if ($exploded_arguments['state'] === 0) {
     // Nothing to do.
     return TRUE;
   }
@@ -213,6 +217,8 @@ function d2d_friendship_incoming_preprocess(&$rpc_info, $encrypted_data, $signat
 
     return TRUE;
   }
+}
+
 /**
  * D2D callback; processes a request to change the friendship state.
  *
