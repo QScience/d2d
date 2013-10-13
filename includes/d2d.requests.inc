@@ -546,6 +546,27 @@ function d2d_secure_request($request64, $version) {
   if (!d2d_check_array($exploded_arguments, $argument_checks)) {
     return xmlrpc_error(0, 'arguments failed check');
   }
+
+  $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
+  if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
+    // add code here
+  }
+
+//
+//arguments:
+//&$instance <- the instance as returned by the according api function
+//&$signature_valid <- re-check $encrypted_data using the public key
+//$encrypted_data
+//$d2d_id and $url of the calling instance
+//
+//what the hook should do:
+//- check the auto-friendship flag
+//- check if public key is present
+//- if not, get the public key
+//- determine $signature_valid, if FALSE return
+//- insert the instance, set the instance's friendship state to "request sent"
+
+
   $ip = ip_address();
   $rpc_info = array(
     'd2d_id' => $signer,

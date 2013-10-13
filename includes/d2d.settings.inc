@@ -139,6 +139,7 @@ function d2d_show_settings_advanced() {
     '#type' => 'fieldset',
   );
   $build['advanced_settings'][] = drupal_get_form('d2d_form_settings_advanced');
+  // Does not show notifications about offline/online settings.
   d2d_notify(array('offline'));
   return $build;
 }
@@ -155,6 +156,12 @@ function d2d_form_settings_advanced() {
     '#default_value' => variable_get('d2d_online', FALSE),
     '#title' => t('D2D instance online'),
     '#description' => t('If set, this instance is reachable for other instances and will periodically communicate with other instances. Note that a public / private key pair has to be associated with this instance for being online.'),
+  );
+  $form['friendship_autoaccept'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('d2d_friendship_autoaccept', FALSE),
+    '#title' => t('Auto accept friendship'),
+    '#description' => t('If set, every incoming friendship request will be automatically accepted.'),
   );
   $form['submit'] = array(
     '#type' => 'submit',
@@ -178,11 +185,18 @@ function d2d_form_settings_advanced_submit($form, &$form_state) {
   $online = $form_state['values']['online'] ? TRUE : FALSE;
   $res = d2d_change_online_state($online);
   if ($res === $online) {
-    drupal_set_message(t('Settings have been saved.'));
+    drupal_set_message(t('Online status: !status', array(
+      '!status' => $online ? 'Online' : 'Offline',
+    )));
   }
   else {
-    drupal_set_message(t('An error just occurred. Changed might not be saved. Check your private key'));
+    drupal_set_message(t('An error just occurred while updating your online status. Please verify your status, and  check your private key.'));
   }
+  $auto_f = $form_state['values']['friendship_autoaccept'] ? TRUE : FALSE;
+  variable_set('d2d_friendship_autoaccept', $auto_f);
+  drupal_set_message(t('Friendship auto-accept status: !status', array(
+      '!status' => $auto_f ? 'TRUE' : 'FALSE',
+  )));
 }
 
 /**
