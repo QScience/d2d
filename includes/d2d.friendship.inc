@@ -163,6 +163,14 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
   }
   $instance = $rpc_info['instance'];
 
+  // Are friendship from localhost permitted?
+  if (variable_get('d2d_friendship_autoaccept_localhost') === FALSE) {
+    if (!preg_match('^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$', $rpc_info['url'])) {
+      $error_string = 'Friendship from localhost are not allowed.';
+      return FALSE;
+    }
+  }
+
   // Instance previously not found in db.
   if ($instance === FALSE) {
     $instance = array(
@@ -173,11 +181,8 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
     );
   }
 
-  // TODO: do not add instances that are from localhost.
-
   // New instance.
   if (!isset($instance['id'])) {
-    watchdog('d2d', 'newist');
     $instance_id = d2d_api_instance_add($instance);
     if ($instance_id === FALSE) {
       $error_string = 'An error occurred while adding the instance.';
@@ -190,17 +195,22 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
 
   // Instance already added to db, but without public key: request one.
   if (!isset($instance['public_key']) || is_null($instance['public_key'])) {
-    watchdog('d2d', 'getpk');
     $pkey = d2d_api_public_key_request($instance);
-    if ($pkey !== FALSE) {
-      // Requested public key must be new.
+    if (!empty($pkey)) {
+      // Requested public key must be new or belonging to the same instance
+      // and previously not selected.
       $public_key_id = d2d_api_public_key_return_id($instance['d2d_id'], $pkey);
-      if ($public_key_id !== FALSE) {
-        $error_string = 'Cannot automatic accept friendship: public key is not unique.';
-        return FALSE;
+      if ($public_key_id === FALSE) {
+        $public_key_id = d2d_api_public_key_set($instance['id'], $pkey);
       }
 
-      $public_key_id = d2d_api_public_key_set($instance['id'], $pkey);
+      $key_selected = d2d_api_public_key_select($instance['id'], $public_key_id);
+
+      if (!$key_selected) {
+        $error_string = 'Could not select public key for instance.';
+        return;
+      }
+
       $instance['public_key'] = $pkey;
       $instance['public_key_id'] = $public_key_id;
 
@@ -218,6 +228,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       $rpc_info['instance'] = $instance;
 
     }
+
     if (isset($instance['is_friend']) && $instance['is_friend']) {
       // Already friends: nothing to do.
       return TRUE;

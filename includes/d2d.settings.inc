@@ -163,6 +163,12 @@ function d2d_form_settings_advanced() {
     '#title' => t('Auto accept friendship'),
     '#description' => t('If set, every incoming friendship request will be automatically accepted. Requesting instances will be added to the database, if not found.'),
   );
+  $form['friendship_autoaccept_localhost'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('d2d_friendship_autoaccept_localhost', FALSE),
+    '#title' => t('Auto accept friendship also from localhost (DEBUG).'),
+    '#description' => t('A remote instance with own address set to "localhost" can send you requests, but you will not able to respond (unless it is really on your localhost).'),
+  );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -182,6 +188,7 @@ function d2d_form_settings_advanced() {
  * Form submission handler for d2d_form_settings_advanced().
  */
 function d2d_form_settings_advanced_submit($form, &$form_state) {
+  // Instance Online.
   $online = $form_state['values']['online'] ? TRUE : FALSE;
   $res = d2d_change_online_state($online);
   if ($res === $online) {
@@ -192,10 +199,17 @@ function d2d_form_settings_advanced_submit($form, &$form_state) {
   else {
     drupal_set_message(t('An error just occurred while updating your online status. Please verify your status, and  check your private key.'));
   }
+  // Autoaccept Friendship.
   $auto_f = $form_state['values']['friendship_autoaccept'] ? TRUE : FALSE;
   variable_set('d2d_friendship_autoaccept', $auto_f);
   drupal_set_message(t('Friendship auto-accept status: !status', array(
       '!status' => $auto_f ? 'TRUE' : 'FALSE',
+  )));
+  // Autoaccept Friendship from localhost.
+  $auto_f_lh = $form_state['values']['friendship_autoaccept_localhost'] ? TRUE : FALSE;
+  variable_set('d2d_friendship_autoaccept_localhost', $auto_f_lh);
+  drupal_set_message(t('Friendship auto-accept from localhost status: !status', array(
+      '!status' => $auto_f_lh ? 'TRUE' : 'FALSE',
   )));
 }
 
