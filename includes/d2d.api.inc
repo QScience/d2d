@@ -674,14 +674,18 @@ function d2d_api_friend_get_by_url($url) {
  *
  * @param int $sender_id
  *   Optional. The instance initiating the change in the friendship state
+ *
+ * @param array $friend_instance
+ *   Optional. The full array of the friend instance. If given, it will be
+ *   to the hook d2d_friendship_update. Defaults, NULL.
  */
-function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state = NULL, $sender_id = NULL) {
+function d2d_api_friendship_update($friend_id, $friendship_state, $old_friendship_state = NULL, $sender_id = NULL, $friend_instance = NULL) {
   db_update('d2d_instances')
     ->fields(array('friendship_state' => $friendship_state))
     ->condition('id', $friend_id)
     ->execute();
   // Call hook.
-  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state, $old_friendship_state, $sender_id);
+  module_invoke_all('d2d_friendship_update', $friend_id, $friendship_state, $old_friendship_state, $sender_id, $friend_instance);
 }
 
 /**

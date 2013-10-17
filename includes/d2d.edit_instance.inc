@@ -810,8 +810,10 @@ function d2d_form_force_friendship_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   $instance = d2d_api_instance_get_by_id($id);
   $new_friendship_state = $form_state['values']['new_friendship_state'];
-  d2d_api_friendship_update($id, $new_friendship_state, $instance['friendship_state'], d2d_api_own_instance_id_get());
-  drupal_set_message(t('Manually changed the friendship state.'));
+  d2d_api_friendship_update($id, $new_friendship_state,
+                            $instance['friendship_state'],
+                            d2d_api_own_instance_id_get(), $instance);
+  drupal_set_message(t('Friendship state manually changed.'));
 }
 
 /**

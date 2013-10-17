@@ -336,8 +336,14 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
     );
     $new_friendship_state = $friendship_map[$arguments['state']][$old_friendship_state];
     if ($new_friendship_state != $old_friendship_state) {
-      d2d_api_friendship_update($rpc_info['instance']['id'], $new_friendship_state, $old_friendship_state, $rpc_info['instance']['id']);
-      _d2d_insert_friendship_notification($rpc_info['instance']['d2d_id'], $types[$arguments['state']][$old_friendship_state], array());
+      d2d_api_friendship_update($rpc_info['instance']['id'],
+                                $new_friendship_state,
+                                $old_friendship_state,
+                                $rpc_info['instance']['id'],
+                                $rpc_info['instance']);
+      _d2d_insert_friendship_notification($rpc_info['instance']['d2d_id'],
+                                          $types[$arguments['state']][$old_friendship_state],
+                                          array());
     }
     if ($live) {
       if ($new_friendship_state == 3) {
@@ -422,7 +428,9 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
         $new_friendship_state = 3;
         $instance['friendship_state'] = $new_friendship_state;
         $instance['is_friend'] = TRUE;
-        d2d_api_friendship_update($instance['id'], $new_friendship_state, $old_friendship_state, $instance['id']);
+        d2d_api_friendship_update($instance['id'], $new_friendship_state,
+                                  $old_friendship_state, $instance['id'],
+                                  $instance);
         _d2d_insert_friendship_notification($instance['d2d_id'], 'accept', array());
       }
     }
