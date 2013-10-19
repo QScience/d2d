@@ -87,14 +87,14 @@ function d2d_add_request($receiver_id, $type, $data, $max_resend_trials, $verbos
   }
   $t = d2d_get_time();
   $id = db_insert('d2d_outgoing_requests')->fields(array(
-      'receiver_id' => $receiver_id,
-      'type' => $type,
-      'data' => $data,
-      'time_insert' => $t,
-      'time_next_send' => $t,
-      'time_invalid' => $t + D2D_REQUEST_VALIDITY,
-      'max_send_trials' => D2D_REQUEST_MAX_NUMBER_OF_RESENDS,
-    ))->execute();
+    'receiver_id' => $receiver_id,
+    'type' => $type,
+    'data' => $data,
+    'time_insert' => $t,
+    'time_next_send' => $t,
+    'time_invalid' => $t + D2D_REQUEST_VALIDITY,
+    'max_send_trials' => D2D_REQUEST_MAX_NUMBER_OF_RESENDS,
+  ))->execute();
   return $id;
 }
 
@@ -190,8 +190,8 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
 
   // If d2d_passport is enabled notify it.
   if ($notify && function_exists('d2d_passport_notify')
-      && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
-      d2d_passport_notify($my_instance, $instance, $type, strlen($imploded_arguments));
+    && variable_get('D2D_PASSPORT_NOTIFY', FALSE)) {
+    d2d_passport_notify($my_instance, $instance, $type, strlen($imploded_arguments));
   }
 
   $result64 = xmlrpc($instance['url'], array('d2d.secureRequest' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
@@ -346,8 +346,8 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
 function d2d_incoming_requests_reevaluate_signatures($instance) {
   $ids = array();
   $result = db_query('SELECT id FROM {d2d_incoming_requests}' .
-    ' WHERE sender_d2d_id <= :d2d_id ORDER BY id ASC',
-    array(':d2d_id' => $instance['d2d_id'])
+            ' WHERE sender_d2d_id <= :d2d_id ORDER BY id ASC',
+            array(':d2d_id' => $instance['d2d_id'])
   );
   foreach ($result as $record) {
     $ids[] = $record->id;
@@ -438,6 +438,7 @@ function d2d_incoming_requests_reevaluate_signatures($instance) {
  *   An xmlrpc_error on error, an encrypted and signed string on success
  *
  * @see d2d_secure_rpc()
+ * @see _d2d_execute_preprocess_request_cb()
  */
 function d2d_secure_request($request64, $version) {
   $t = d2d_get_time();
@@ -572,43 +573,25 @@ function d2d_secure_request($request64, $version) {
   // set friendship status accordingly.
   $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
   if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
-      $hk_preprocess = $hks_preprocess[$exploded_data['request_type']];
-      $preprocess_cb = $hk_preprocess['callback'];
-      if (function_exists($preprocess_cb)) {
-          $success = FALSE;
-          $error_string = '';
-          try {
-              // Cannot use call_user_func_array because it does not pass
-              // args by reference.
-              $success = $preprocess_cb($exploded_arguments,
-                                        $rpc_info,
-                                        $encrypted_data,
-                                        $signature,
-                                        $error_string);
-          }
-          catch (D2DRemoteException $e) {
-              return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
-          }
-          if ($success !== TRUE) {
-              if ($error_string !== '') {
-                  return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
-              }
-              else {
-                  return xmlrpc_error(0, 'Error on pre-processing.');
-              }
-          }
-          // Some infor could have been modified by the pre-process hook.
-          $instance = $rpc_info['instance'];
-          $signature_valid = $rpc_info['signature_valid'];
+    $hk_preprocess = $hks_preprocess[$exploded_data['request_type']];
+    $preprocess_cb = $hk_preprocess['callback'];
+
+    // In case the callback returns FALSE, return. No need to do more,
+    // because everything is handled inside _d2d_execute_preprocess_request_cb.
+    if (!is_array($preprocess_cb)) {
+      if (!_d2d_execute_preprocess_request_cb($preprocess_cb,
+          $exploded_arguments,$rpc_info, $encrypted_data, $signature)) return;
+    }
+    else {
+      foreach ($preprocess_cb as $cb) {
+        if (!_d2d_execute_preprocess_request_cb($cb, $exploded_arguments,
+            $rpc_info, $encrypted_data, $signature)) return;
       }
-      else {
-          watchdog('d2d', 'Preprocess callback !cb for request %r does not exist.',
-                   array(
-                       '%r' => $exploded_data['request_type'],
-                       '!cb' => $preprocess_cb,
-                   ));
-      }
+    }
   }
+  // Some infor could have been modified by the pre-process hook.
+  $instance = $rpc_info['instance'];
+  $signature_valid = $rpc_info['signature_valid'];
 
   // Finally process the request.
   try {
@@ -708,6 +691,61 @@ function d2d_secure_request($request64, $version) {
 }
 
 /**
+ * Executes a preprocess callback, and notify the instance in case of error.
+ *
+ * @param string $preprocess_cb
+ *   The name of the callback.
+ *
+ * @param array &$rpc_info
+ *   The associative array of info about the request.
+ *
+ * @param string $encrypted_data
+ *   The original encrypted data.
+ *
+ * @param string $signature
+ *   The signature attached to the message.
+ *
+ * @return bool
+ *   TRUE on success.
+ */
+function _d2d_execute_preprocess_request_cb($preprocess_cb, $exploded_arguments, &$rpc_info, $encrypted_data, $signature) {
+  $success = FALSE;
+  if (function_exists($preprocess_cb)) {
+    $error_string = '';
+    try {
+      // Cannot use call_user_func_array because it does not pass
+      // args by reference.
+      $success = $preprocess_cb($exploded_arguments,
+                 $rpc_info,
+                 $encrypted_data,
+                 $signature,
+                 $error_string);
+    }
+    catch (D2DRemoteException $e) {
+      return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
+    }
+    if ($success !== TRUE) {
+      if ($error_string !== '') {
+        return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
+      }
+      else {
+        return xmlrpc_error(0, 'Error on pre-processing.');
+      }
+    }
+  }
+  else {
+    watchdog('d2d', 'Preprocess callback !cb for request %r does not exist.',
+      array(
+        '%r' => $exploded_data['request_type'],
+        '!cb' => $preprocess_cb,
+      ));
+  }
+
+  return $success;
+}
+
+
+/**
  * Send outgoing requests specified by their ids.
  *
  * @param array $ids
@@ -741,7 +779,7 @@ function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
     $ids = array();
     // Select all outgoing requests, invalid ones have been removed earlier.
     $result = db_query('SELECT id FROM {d2d_outgoing_requests}' .
-      ' ORDER BY id DESC'
+              ' ORDER BY id DESC'
     );
     foreach ($result as $record) {
       $ids[] = $record->id;

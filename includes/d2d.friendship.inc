@@ -171,7 +171,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
     }
   }
 
-  // Instance previously not found in db.
+  // Instance previously not found in db, create instance array.
   if ($instance === FALSE) {
     $instance = array(
       'd2d_id' => $rpc_info['d2d_id'],
@@ -234,7 +234,6 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       return TRUE;
     }
 
-    watchdog('d2d', 'setting fr');
     // Setting friendship state to 2 = 'friendship request sent but not
     // accepted'. This way, when the friendship request will be processed
     // the instance will respond notifying the sender.
