@@ -173,18 +173,18 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
   );
   $imploded_request = d2d_implode($request);
   if ($imploded_request === FALSE) {
-    $error_string = t('error imploding request');
+    $error_string = t('Error imploding request.');
     return FALSE;
   }
   // Encrypt request.
   if (!d2d_encrypt($imploded_request, $encrypted_request, $instance['public_key'])) {
-    $error_string = t('failed encryption');
+    $error_string = t('Failed encryption.');
     return FALSE;
   }
   // Sign encrypted request.
   $signed_request = d2d_sign($encrypted_request, $my_private_key, $my_instance['d2d_id']);
   if ($signed_request === FALSE) {
-    $error_string = t('failed signing');
+    $error_string = t('Failed signing.');
     return FALSE;
   }
 
@@ -196,7 +196,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
 
   $result64 = xmlrpc($instance['url'], array('d2d.secureRequest' => array(base64_encode($signed_request), d2d_get_version())), d2d_xmlrpc_options());
   if ($result64 === FALSE) {
-    $error_string = t('remote error on !instance:', array('!instance' => $instance['url'])) . ' ' . xmlrpc_error_msg();
+    $error_string = t('Remote error on !instance:', array('!instance' => $instance['url'])) . ' ' . xmlrpc_error_msg();
     return FALSE;
   }
   // Convert $result64 in MIME base64.
@@ -273,35 +273,35 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
       return FALSE;
     }
     if ($exploded_data['version'] !== d2d_get_version()) {
-      $error_string = t('version in exploded data mismatch');
+      $error_string = t('Version in exploded data mismatch.');
       return FALSE;
     }
     if ($exploded_data['request_type'] !== $type) {
-      $error_string = t('request_type mismatch');
+      $error_string = t('Request_type mismatch.');
     }
     if ($exploded_data['receiver'] !== $instance['d2d_id']) {
-      $error_string = t('reiver in exploded data mismatch');
+      $error_string = t('Reiver in exploded data mismatch.');
       return FALSE;
     }
     if ($exploded_data['sender'] !== $my_instance['d2d_id']) {
-      $error_string = t('sender in exploded data mismatch');
+      $error_string = t('Sender in exploded data mismatch.');
       return FALSE;
     }
     if (!d2d_verify_timestamp(d2d_get_time(), $exploded_data['timestamp'])) {
-      $error_string = t('timestamp too old or too new');
+      $error_string = t('Timestamp too old or too new.');
       return FALSE;
     }
     if ($exploded_data['nonce'] !== $nonce) {
-      $error_string = t('returned nonce not equal to nonce sent');
+      $error_string = t('Returned nonce not equal to nonce sent.');
       return FALSE;
     }
     $exploded_return = d2d_explode($exploded_data['return']);
     if ($exploded_return === FALSE) {
-      $error_string = t('failed exploding return');
+      $error_string = t('Failed exploding return.');
       return FALSE;
     }
     if (!d2d_check_array($exploded_return, $return_check)) {
-      $error_string = t('exploded return not of desired structure');
+      $error_string = t('Exploded return not of desired structure.');
       return FALSE;
     }
     return $exploded_return;
@@ -309,7 +309,7 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
   elseif (d2d_check_array($exploded_result, array('signature' => 'is_string', 'signer' => 'is_string'))) {
     $signer = $exploded_result['signer'];
     if ($signer !== $instance['d2d_id']) {
-      $error_string = t('signer of return result mismatch');
+      $error_string = t('Signer of return result mismatch.');
       return FALSE;
     }
     $signed_array = array(
@@ -326,13 +326,13 @@ function d2d_send_single_outgoing_request($type, $arguments, $instance, $my_inst
     );
     $signed_string = d2d_implode($signed_array);
     if ($signed_string === FALSE || openssl_verify($signed_string, $exploded_result['signature'], $instance['public_key']) !== 1) {
-      $error_string = t('wrong signature');
+      $error_string = t('Wrong signature.');
       return FALSE;
     }
     return NULL;
   }
   else {
-    $error_string = t('exploded result is not of desired strucutre');
+    $error_string = t('Exploded result is not of desired structure.');
     return FALSE;
   }
 }
@@ -574,24 +574,54 @@ function d2d_secure_request($request64, $version) {
   $hks_preprocess = module_invoke_all('d2d_handle_incoming_request_preprocess');
   if (array_key_exists($exploded_data['request_type'], $hks_preprocess)) {
     $hk_preprocess = $hks_preprocess[$exploded_data['request_type']];
-    $preprocess_cb = $hk_preprocess['callback'];
+    $preprocess_cbs = $hk_preprocess['callback'];
 
     // In case the callback returns FALSE, return. No need to do more,
     // because everything is handled inside _d2d_execute_preprocess_request_cb.
-    if (!is_array($preprocess_cb)) {
-      if (!_d2d_execute_preprocess_request_cb($preprocess_cb,
-          $exploded_arguments,$rpc_info, $encrypted_data, $signature)) return;
+    if (!is_array($preprocess_cbs)) {
+      $preprocess_cbs = array($preprocess_cbs);
     }
-    else {
-      foreach ($preprocess_cb as $cb) {
-        if (!_d2d_execute_preprocess_request_cb($cb, $exploded_arguments,
-            $rpc_info, $encrypted_data, $signature)) return;
+
+    foreach ($preprocess_cbs as $preprocess_cb) {
+      $success = FALSE;
+      if (function_exists($preprocess_cb)) {
+        $error_string = '';
+        try {
+          // Cannot use call_user_func_array because it does not pass
+          // args by reference.
+          $success = $preprocess_cb($exploded_arguments,
+                     $rpc_info,
+                     $encrypted_data,
+                     $signature,
+                     $error_string);
+        }
+        catch (D2DRemoteException $e) {
+          return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
+        }
+        watchdog('ahahah', $success ? 'SUC' : 'FAIL');
+        if ($success !== TRUE) {
+          if ($error_string !== '') {
+            watchdog('ahahah', 'str');
+            return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
+          }
+          else {
+            watchdog('ahahah', 'nostr');
+            return xmlrpc_error(0, 'Error on pre-processing.');
+          }
+        }
+      }
+      else {
+        watchdog('d2d', 'Preprocess callback !cb for request %r does not exist.',
+          array(
+            '%r' => $exploded_data['request_type'],
+            '!cb' => $preprocess_cb,
+          ));
       }
     }
+    // Some infor could have been modified by the pre-process hook.
+    $instance = $rpc_info['instance'];
+    $signature_valid = $rpc_info['signature_valid'];
   }
-  // Some infor could have been modified by the pre-process hook.
-  $instance = $rpc_info['instance'];
-  $signature_valid = $rpc_info['signature_valid'];
 
   // Finally process the request.
   try {
@@ -691,61 +721,6 @@ function d2d_secure_request($request64, $version) {
 }
 
 /**
- * Executes a preprocess callback, and notify the instance in case of error.
- *
- * @param string $preprocess_cb
- *   The name of the callback.
- *
- * @param array &$rpc_info
- *   The associative array of info about the request.
- *
- * @param string $encrypted_data
- *   The original encrypted data.
- *
- * @param string $signature
- *   The signature attached to the message.
- *
- * @return bool
- *   TRUE on success.
- */
-function _d2d_execute_preprocess_request_cb($preprocess_cb, $exploded_arguments, &$rpc_info, $encrypted_data, $signature) {
-  $success = FALSE;
-  if (function_exists($preprocess_cb)) {
-    $error_string = '';
-    try {
-      // Cannot use call_user_func_array because it does not pass
-      // args by reference.
-      $success = $preprocess_cb($exploded_arguments,
-                 $rpc_info,
-                 $encrypted_data,
-                 $signature,
-                 $error_string);
-    }
-    catch (D2DRemoteException $e) {
-      return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
-    }
-    if ($success !== TRUE) {
-      if ($error_string !== '') {
-        return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
-      }
-      else {
-        return xmlrpc_error(0, 'Error on pre-processing.');
-      }
-    }
-  }
-  else {
-    watchdog('d2d', 'Preprocess callback !cb for request %r does not exist.',
-      array(
-        '%r' => $exploded_data['request_type'],
-        '!cb' => $preprocess_cb,
-      ));
-  }
-
-  return $success;
-}
-
-
-/**
  * Send outgoing requests specified by their ids.
  *
  * @param array $ids
@@ -767,7 +742,7 @@ function d2d_send_outgoing_requests($ids, $verbose = FALSE) {
   // Get current time and keys, url, d2d id of own instance.
   $t = d2d_get_time();
   $my_instance = d2d_api_own_instance_get();
-  $my_private_key = variable_get('d2d_private_key');
+  $my_private_key = d2d_api_own_private_key_get();
   // Get hooks that handle outgoing requests.
   $hooks = module_invoke_all('d2d_handle_outgoing_request');
   // Get information about all instances.
