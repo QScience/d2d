@@ -208,7 +208,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
 
       if (!$key_selected) {
         $error_string = 'Could not select public key for instance.';
-        return;
+        return FALSE;
       }
 
       $instance['public_key'] = $pkey;
@@ -226,22 +226,25 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       // At this point  we have modified the instance (either created from
       // scratch, or added a public key to it).
       $rpc_info['instance'] = $instance;
-
     }
-
-    if (isset($instance['is_friend']) && $instance['is_friend']) {
-      // Already friends: nothing to do.
-      return TRUE;
+    else {
+      $error_string = 'Could not retrieve the public key.';
+      return FALSE;
     }
+  }
 
-    // Setting friendship state to 2 = 'friendship request sent but not
-    // accepted'. This way, when the friendship request will be processed
-    // the instance will respond notifying the sender.
-    d2d_api_friendship_update($instance_id, 1);
-    $rpc_info['instance']['friendship_state'] = 1;
-    watchdog('d2d', print_r($rpc_info, TRUE));
+  if (isset($instance['is_friend']) && $instance['is_friend']) {
+    // Already friends: nothing to do.
     return TRUE;
   }
+
+  // Setting friendship state to 2 = 'friendship request sent but not
+  // accepted'. This way, when the friendship request will be processed
+  // the instance will respond notifying the sender.
+  d2d_api_friendship_update($instance_id, 1);
+  $rpc_info['instance']['friendship_state'] = 1;
+  watchdog('d2d', print_r($rpc_info, TRUE));
+  return TRUE;
 }
 
 /**
