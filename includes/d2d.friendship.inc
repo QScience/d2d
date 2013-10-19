@@ -153,23 +153,29 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  *   TRUE on success
  */
 function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $encrypted_data, $signature, &$error_string) {
+  watchdog('ahah', 'prepro1');
   if (variable_get('d2d_friendship_autoaccept') !== TRUE) {
     // Nothing to do.
     return TRUE;
   }
+  watchdog('ahah', 'prepro2');
   if ($exploded_arguments['state'] === 0) {
     // Nothing to do.
     return TRUE;
   }
+  watchdog('ahah', 'prepro3');
   $instance = $rpc_info['instance'];
 
   // Are friendship from localhost permitted?
   if (variable_get('d2d_friendship_autoaccept_localhost') === FALSE) {
+  watchdog('ahah', 'localhost check');
     if (!preg_match('/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/', $rpc_info['url'])) {
+  watchdog('ahah', 'localhost check failed');
       $error_string = 'Friendship from localhost are not allowed.';
       return FALSE;
     }
   }
+  watchdog('ahah', 'prepro4');
 
   // Instance previously not found in db, create instance array.
   if ($instance === FALSE) {
@@ -192,9 +198,11 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       $instance['id'] = $instance_id;
     }
   }
+  watchdog('ahah', 'prepro5');
 
   // Instance already added to db, but without public key: request one.
   if (!isset($instance['public_key']) || is_null($instance['public_key'])) {
+    watchdog('ahah', 'prepro6');
     $pkey = d2d_api_public_key_request($instance);
     if (!empty($pkey)) {
       // Requested public key must be new or belonging to the same instance
@@ -210,6 +218,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
         $error_string = 'Could not select public key for instance.';
         return FALSE;
       }
+      watchdog('ahah', 'prepro7');
 
       $instance['public_key'] = $pkey;
       $instance['public_key_id'] = $public_key_id;
@@ -222,21 +231,25 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
       else {
         $rpc_info['signature_valid'] = TRUE;
       }
+  watchdog('ahah', 'prepro8');
 
       // At this point  we have modified the instance (either created from
       // scratch, or added a public key to it).
       $rpc_info['instance'] = $instance;
     }
     else {
+  watchdog('ahah', 'prepro9');
       $error_string = 'Could not retrieve the public key.';
       return FALSE;
     }
   }
+  watchdog('ahah', 'prepro10');
 
   if (isset($instance['is_friend']) && $instance['is_friend']) {
     // Already friends: nothing to do.
     return TRUE;
   }
+  watchdog('ahah', 'prepro11');
 
   // Setting friendship state to 2 = 'friendship request sent but not
   // accepted'. This way, when the friendship request will be processed
