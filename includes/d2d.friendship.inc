@@ -165,7 +165,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
 
   // Are friendship from localhost permitted?
   if (variable_get('d2d_friendship_autoaccept_localhost') === FALSE) {
-    if (!preg_match('^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$', $rpc_info['url'])) {
+    if (!preg_match('/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/', $rpc_info['url'])) {
       $error_string = 'Friendship from localhost are not allowed.';
       return FALSE;
     }
