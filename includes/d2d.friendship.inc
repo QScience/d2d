@@ -153,13 +153,11 @@ function d2d_friendship_outgoing_process($arguments, $time_insert, $time_next_se
  *   TRUE on success
  */
 function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $encrypted_data, $signature, &$error_string) {
-  watchdog('ahah', 'prepro1');
   if (variable_get('d2d_friendship_autoaccept') !== TRUE) {
     // Nothing to do.
     return TRUE;
   }
-  watchdog('ahah', 'prepro2');
-  if ($exploded_arguments['state'] === 0) {
+  if ($exploded_arguments['state'] === 'FALSE' || empty($exploded_arguments['state'])) {
     // Nothing to do.
     return TRUE;
   }
@@ -256,7 +254,7 @@ function d2d_friendship_incoming_preprocess($exploded_arguments, &$rpc_info, $en
   // Setting friendship state to 2 = 'friendship request sent but not
   // accepted'. This way, when the friendship request will be processed
   // the instance will respond notifying the sender.
-  d2d_api_friendship_update($instance_id, 1);
+  d2d_api_friendship_update($instance['id'], 1);
   $rpc_info['instance']['friendship_state'] = 1;
   watchdog('d2d', print_r($rpc_info, TRUE));
   return TRUE;

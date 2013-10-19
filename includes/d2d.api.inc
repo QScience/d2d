@@ -719,39 +719,6 @@ function d2d_api_friendship_send($id, $send_now, $max_number_of_resends = D2D_RE
   }
 }
 
-//function d2d_api_friendship_send($id, $send_now, $max_number_of_resends = D2D_REQUEST_MAX_NUMBER_OF_RESENDS, $verbose = FALSE) {
-//  if ($send_now) {
-//    if (!d2d_is_online()) {
-//      $error_string = t('Instance is offline. Cannot send friendship request now.');
-//      return FALSE;
-//    }
-//
-//    $receiver = d2d_api_instance_get_by_id($id);
-//    if ($receiver === FALSE) {
-//      $error_string = t('Could not resolve receiver id: :id', array(
-//        ':id' => $id,
-//      ));
-//      return FALSE;
-//    }
-//    $me = d2d_api_own_instance_get();
-//    $my_private_key = d2d_api_own_private_key_get();
-//
-//    $return_check = array();
-//    $hooks = module_invoke_all('d2d_handle_outgoing_request');
-//    if (isset($hooks['d2d_friendship'])) {
-//      $arguments_return = $hooks['d2d_friendship']['arguments_return'];
-//    }
-//    return d2d_send_single_outgoing_request('d2d_friendship', array(), $receiver,
-//      $me, $my_private_key, $arguments_return, $error_string);
-//
-//  }
-//  else {
-//    $request_id = d2d_add_request($id, 'd2d_friendship', array(), $max_number_of_resends, TRUE);
-//    return $request_id;
-//  }
-//}
-
-
 /* GROUPS. */
 
 /**
