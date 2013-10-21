@@ -468,3 +468,11 @@ function d2d_check_nonce($nonce) {
 function d2d_random_nonce() {
   return d2d_random_hex_string(D2D_NONCE_LENGTH);
 }
+
+/**
+ * Returns TRUE if an address is localhost, 127.0.0.1, etc.
+ */
+function d2d_address_is_localhost($url) {
+  $regex = '/^(http|https):\/\/localhost|^(http|https):\/\/LOCALHOST|^(http|https):\/\/127(?:\.[0-9]+){0,2}\.[0-9]+$|^(http|https):\/\/(?:0*\:)*?:?0*1$/';
+  return preg_match($regex, $url);
+}

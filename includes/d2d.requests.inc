@@ -598,14 +598,11 @@ function d2d_secure_request($request64, $version) {
         catch (D2DRemoteException $e) {
           return xmlrpc_error(0, 'Error on pre-processing: ' . $e->getMessage());
         }
-        watchdog('ahahah', $success ? 'SUC' : 'FAIL');
         if ($success !== TRUE) {
           if ($error_string !== '') {
-            watchdog('ahahah', 'str');
             return xmlrpc_error(0, 'Error on pre-processing: ' . $error_string);
           }
           else {
-            watchdog('ahahah', 'nostr');
             return xmlrpc_error(0, 'Error on pre-processing.');
           }
         }
