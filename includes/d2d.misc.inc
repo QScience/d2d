@@ -305,46 +305,12 @@ function d2d_verify_timestamp($current_time, $timestamp) {
 function d2d_verify_nonce($timestamp, $nonce) {
   try {
     db_insert('d2d_nonces')->fields(array(
-        'nonce' => $nonce,
-        'timestamp' => $timestamp,
+      'nonce' => $nonce,
+      'timestamp' => $timestamp,
     ))->execute();
   }
   catch (Exception $e) {
     return FALSE;
   }
   return TRUE;
-}
-
-/**
- * Converts a d2d-id to an internal id.
- *
- * @param string $d2d_id
- *   The d2d id of an instance
- *
- * @return int|bool
- *   The id of the instance, or FALSE if no instance is found
- */
-function d2d_convert_d2d_id_to_id($d2d_id) {
-  if (empty($d2d_id)) {
-    return FALSE;
-  }
-  $instance = d2d_api_instance_get($d2d_id);
-  return $instance !== FALSE ? $instance['id'] : FALSE;
-}
-
-/**
- * Converts an internal id to a d2d-id.
- *
- * @param int $id
- *   The id of an instance
- *
- * @return string|bool
- *   The d2d id of the instance, or FALSE if no instance is found
- */
-function d2d_convert_id_to_d2d_id($id) {
-  if (empty($id)) {
-    return FALSE;
-  }
-  $instance = d2d_api_instance_get_by_id($id);
-  return $instance !== FALSE ? $instance['d2d_id'] : FALSE;
 }
